@@ -1,4 +1,7 @@
-.claude/
+.claude/worktrees/
+supabase/.temp/
+supabase/.branches/
+.env
 .DS_Store
 xcuserdata/
 DerivedData/
