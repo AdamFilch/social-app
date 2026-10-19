@@ -258,4 +258,4 @@ rpc unsend_note(n) ─► created_at < now() - 4h ─► P0001 unsend_window_pas
 | `supabase login` / DB password missing in the agent's env | High | AC15 blocked | The PRD is filed `partial` with clear steps for the user |
 
 ---
-*Status: READY — ticket [1]*
+*Status: COMPLETED — PR #2*
