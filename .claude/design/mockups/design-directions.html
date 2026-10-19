@@ -1,0 +1,405 @@
+<title>Buttercup Design Directions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap">
+<style>
+/* Layout: one working sheet for the chosen direction. Tokens and contrast, then each tab in light and dark side by side, then a component sheet in both modes. */
+:root {
+  --bg: #FFF8E2;
+  --card: #FFFDF5;
+  --fg: #1E2A1A;
+  --muted: #56634F;
+  --line: #1E2A1A;
+  --soft: #EDE6CC;
+  --mark: #FFC61A;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--round); font-size: 16px; line-height: 1.5; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 80px; display: grid; gap: 64px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(36px, 7vw, 60px); font-weight: 900; letter-spacing: -0.02em; }
+h2 { font-size: 30px; font-weight: 900; letter-spacing: -0.01em; }
+h3 { font-size: 18px; font-weight: 800; }
+p { margin: 0; max-width: 68ch; }
+.lede { font-size: 18px; }
+.muted { color: var(--muted); }
+.stack { display: grid; gap: 14px; }
+.stack-lg { display: grid; gap: 28px; }
+.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+.jump a { color: var(--fg); text-decoration: none; font-weight: 800; font-size: 15px; border: 2px solid var(--line); border-radius: 999px; padding: 8px 16px; background: var(--card); min-height: 44px; display: inline-flex; align-items: center; }
+.jump a:hover, .jump a:focus-visible { background: var(--mark); color: #1E2A1A; outline: none; }
+.panel { background: var(--card); border: 2.5px solid var(--line); border-radius: 22px; padding: 20px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 16px; }
+.cap { font-size: 14px; color: var(--muted); }
+.cap b { color: var(--fg); }
+ul.cap { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.code { font-family: var(--mono); font-size: 12px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1.5px solid var(--soft); vertical-align: top; }
+th { font-size: 13px; color: var(--muted); font-weight: 700; }
+td.num { font-variant-numeric: tabular-nums; font-family: var(--mono); font-size: 12.5px; white-space: nowrap; }
+.scroll { overflow-x: auto; }
+.phones { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+.phone-col { display: grid; gap: 8px; justify-items: center; min-width: 0; max-width: 100%; }
+.sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.sw-item { border: 2px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--card); font-size: 12px; }
+.sw-colors { display: grid; grid-template-columns: 1fr 1fr; height: 44px; }
+.sw-colors.one { grid-template-columns: 1fr; }
+.sw-meta { padding: 6px 8px; display: grid; gap: 1px; }
+.sw-meta b { font-size: 13px; }
+.sw-meta span { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tag { display: inline-block; font-size: 11px; font-weight: 800; padding: 0 7px; border-radius: 999px; border: 1.5px solid var(--line); margin-left: 4px; vertical-align: 1px; }
+.tabsec { display: grid; gap: 20px; padding-top: 20px; border-top: 2.5px solid var(--line); }
+
+/* phone + component surfaces: colours come from --p-* set per mode */
+.ph, .sheet-mode { --p-press: color-mix(in srgb, var(--p-acc) 88%, var(--p-onacc)); }
+.ph { width: 414px; max-width: 100%; height: 896px; border-radius: 48px; border: 3px solid var(--line); overflow: hidden; background: var(--p-bg); color: var(--p-text); font-family: var(--round); display: flex; flex-direction: column; position: relative; }
+.ph .status { height: 47px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 6px; font-size: 15px; font-weight: 700; flex: none; }
+.ph .bat { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; display: inline-block; }
+.ph .bat::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+.ph .body { flex: 1; padding: 6px 20px 16px; display: flex; flex-direction: column; gap: 16px; overflow: hidden; }
+.ph .top { display: flex; align-items: center; justify-content: space-between; padding: 4px 0 2px; }
+.title { font-size: 34px; font-weight: 900; letter-spacing: -0.01em; position: relative; display: inline-flex; align-items: center; gap: 8px; line-height: 1.1; }
+.date { font-size: 15px; font-weight: 600; color: var(--p-sec); }
+.card { background: var(--p-surf); border: 2.5px solid var(--p-out); border-radius: 22px; padding: 16px; display: grid; gap: 14px; }
+.who { display: flex; gap: 14px; align-items: center; }
+.ava { border-radius: 50%; border: 2.5px solid var(--p-out); color: #1E2A1A; display: grid; place-items: center; font-weight: 900; flex: none; position: relative; }
+.ava.s56 { width: 56px; height: 56px; font-size: 24px; }
+.ava.s40 { width: 40px; height: 40px; font-size: 17px; }
+.ava.s28 { width: 28px; height: 28px; font-size: 13px; border-width: 2px; }
+.ava.s24 { width: 24px; height: 24px; font-size: 12px; border-width: 2px; }
+.ava.done::after { content: ""; position: absolute; right: -5px; bottom: -5px; width: 15px; height: 15px; border-radius: 50%; background: var(--p-acc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E2A1A' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/9px no-repeat; border: 2px solid var(--p-out); }
+.name { font-size: 22px; font-weight: 900; line-height: 1.1; }
+.sub { font-size: 15px; color: var(--p-sec); font-weight: 500; }
+.btns { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn { height: 52px; border-radius: 999px; border: 2.5px solid var(--p-out); background: var(--p-surf); color: var(--p-text); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 17px; font-weight: 800; padding: 0 20px; white-space: nowrap; }
+.btn.call { background: var(--p-acc); color: var(--p-onacc); height: 56px; }
+.btn.pri { background: var(--p-acc); color: var(--p-onacc); box-shadow: 3px 3px 0 var(--p-out); }
+.btn.pri.pressed { background: var(--p-press); box-shadow: 0 0 0 var(--p-out); }
+.btn.sm { height: 40px; font-size: 15px; padding: 0 14px; border-width: 2px; }
+.btn.danger { color: var(--p-danger); }
+.btn.text { border-color: transparent; background: transparent; padding: 0 8px; }
+.note-row { display: flex; gap: 16px; align-items: center; }
+.tile { border-radius: 20px; border: 2.5px solid var(--p-out); flex: none; position: relative; }
+.tile.new { outline: 3px solid var(--p-hi); outline-offset: 3px; }
+.tile > svg { width: 100%; height: 100%; display: block; border-radius: 17.5px; }
+.tile .from { position: absolute; left: 8px; bottom: 8px; }
+.tile .tape { position: absolute; left: 50%; top: -10px; margin-left: -26px; width: 52px; height: 18px; pointer-events: none; }
+.meta { display: grid; gap: 4px; min-width: 0; }
+.badge { justify-self: start; font-size: 13px; font-weight: 800; padding: 1px 10px; border-radius: 999px; border: 2px solid var(--p-out); background: var(--p-hi); color: var(--p-onhi); }
+.h { font-size: 17px; font-weight: 800; }
+.section { font-size: 20px; font-weight: 900; margin-bottom: -6px; display: flex; justify-content: space-between; align-items: baseline; }
+.section small { font-size: 15px; font-weight: 600; color: var(--p-sec); }
+.list { background: var(--p-surf); border: 2.5px solid var(--p-out); border-radius: 22px; padding: 0 16px; }
+.row { display: flex; gap: 12px; align-items: center; min-height: 62px; border-bottom: 1.5px solid var(--p-div); }
+.row:last-child { border-bottom: 0; }
+.ico { width: 38px; height: 38px; border-radius: 12px; border: 2px solid var(--p-out); display: grid; place-items: center; background: var(--p-bg); flex: none; }
+.ico.miss { color: var(--p-danger); }
+.rt { flex: 1; min-width: 0; }
+.rt b { display: block; font-size: 17px; font-weight: 700; line-height: 1.25; }
+.rt span { font-size: 15px; color: var(--p-sec); }
+.rt span.miss { color: var(--p-danger); font-weight: 800; }
+.when { font-size: 15px; color: var(--p-sec); font-variant-numeric: tabular-nums; }
+.tabs { flex: none; background: var(--p-surf); border-top: 2.5px solid var(--p-out); padding: 8px 12px 0; height: 87px; display: grid; grid-template-columns: repeat(3, 1fr); }
+.tab { display: grid; justify-items: center; align-content: start; gap: 3px; font-size: 12px; font-weight: 800; color: var(--p-sec); }
+.tab .pill { width: 60px; height: 34px; border-radius: 999px; display: grid; place-items: center; border: 2px solid transparent; }
+.tab.on { color: var(--p-text); }
+.tab.on .pill { background: var(--p-acc); border-color: var(--p-out); color: var(--p-onacc); }
+.home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--p-text); }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.day { border: 2px solid var(--p-out); border-radius: 14px; height: 74px; display: grid; justify-items: center; align-content: start; padding-top: 6px; gap: 2px; background: var(--p-surf); font-variant-numeric: tabular-nums; }
+.day i { font-style: normal; font-size: 12px; font-weight: 700; color: var(--p-sec); }
+.day b { font-size: 15px; font-weight: 800; }
+.day.today { background: var(--p-acc); color: var(--p-onacc); }
+.day.today i { color: var(--p-onacc); }
+.stackmini { position: relative; width: 20px; height: 18px; }
+.stackmini span { position: absolute; width: 15px; height: 15px; border: 1.5px solid var(--p-out); border-radius: 4px; }
+.grid-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-notes .tile { width: 100%; aspect-ratio: 1; }
+.hob { padding: 14px 16px; gap: 10px; }
+.hob-head { display: flex; align-items: center; gap: 10px; }
+.hob-head .h { flex: 1; font-size: 20px; font-weight: 900; }
+.pair { display: flex; gap: 6px; }
+.item { display: flex; gap: 12px; align-items: center; }
+.cover { width: 42px; height: 56px; border-radius: 8px; border: 2px solid var(--p-out); flex: none; display: grid; place-items: center; font-weight: 900; color: #1E2A1A; font-size: 18px; }
+.bar { height: 12px; border-radius: 999px; border: 2px solid var(--p-out); background: var(--p-bg); overflow: hidden; margin-top: 6px; }
+.bar > span { display: block; height: 100%; background: var(--p-acc); border-right: 2px solid var(--p-out); }
+.plus { width: 48px; height: 48px; border-radius: 50%; border: 2.5px solid var(--p-out); background: var(--p-surf); display: grid; place-items: center; font-weight: 900; font-size: 16px; flex: none; color: var(--p-text); }
+.partner { font-size: 14px; color: var(--p-sec); display: flex; align-items: center; gap: 8px; }
+.chip { height: 36px; border-radius: 999px; border: 2px solid var(--p-out); background: var(--p-surf); color: var(--p-text); display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; font-size: 15px; font-weight: 700; }
+.chip.on { background: var(--p-acc); color: var(--p-onacc); }
+
+.sheet-mode { background: var(--p-bg); color: var(--p-text); border: 2.5px solid var(--line); border-radius: 28px; padding: 20px; display: grid; gap: 22px; min-width: 0; }
+.sheet-mode h3 { font-size: 17px; }
+.cs-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.cs-lbl { font-size: 13px; color: var(--p-sec); font-weight: 600; }
+.cs-group { display: grid; gap: 10px; }
+.widget { width: 169px; height: 169px; border-radius: 22px; overflow: hidden; position: relative; flex: none; box-shadow: 0 0 0 1px rgba(0,0,0,.08); }
+.widget svg.art { width: 100%; height: 100%; display: block; }
+.widget .from { position: absolute; left: 10px; bottom: 10px; }
+.widget.empty { background: var(--p-surf); display: grid; place-items: center; text-align: center; padding: 14px; gap: 4px; align-content: center; }
+.mini-sheet { width: 100%; max-width: 360px; background: var(--p-surf); border: 2.5px solid var(--p-out); border-radius: 28px 28px 0 0; border-bottom: 0; padding: 8px 16px 0; display: grid; gap: 10px; height: 230px; overflow: hidden; }
+.grabber { width: 36px; height: 5px; border-radius: 3px; background: var(--p-div); justify-self: center; }
+.sheet-top { display: flex; align-items: center; justify-content: space-between; }
+.canvas { justify-self: center; width: 200px; aspect-ratio: 1; border-radius: 20px; border: 2.5px solid var(--p-out); background: #FFE88A; }
+.doodles { display: flex; flex-wrap: wrap; gap: 18px; }
+.doodles figure { margin: 0; display: grid; gap: 6px; justify-items: center; font-size: 12px; color: var(--p-sec); }
+.doodles .box { width: 72px; height: 56px; display: grid; place-items: center; }
+@media (max-width: 440px) { .ph { height: auto; min-height: 860px; border-radius: 36px; } }
+@media (prefers-reduced-motion: no-preference) { .jump a { transition: background-color .15s ease-out; } }
+</style>
+
+<div class="wrap">
+  <header class="stack">
+    <p class="muted">buttercup · design system · approved direction · 2026-10-19</p>
+    <h1>Buttercup Field by day, Sticky Note by night</h1>
+    <p class="lede">Buttercup yellow is the action and leaf green means "new to you", in both modes. Light mode sits on a warm cream with dark leaf-green ink. Dark mode uses Sticky Note's brown-black paper, with the cream used as ink. Every outline, ring and sticker comes from the shared foundations. Mode follows the phone's setting.</p>
+    <nav class="jump" aria-label="Jump to section">
+      <a href="#tokens">Tokens</a>
+      <a href="#calling">Calling</a>
+      <a href="#notes">Notes</a>
+      <a href="#hobbies">Hobbies</a>
+      <a href="#components">Components</a>
+      <a href="#changes">Changes from the draft</a>
+    </nav>
+  </header>
+
+  <section id="tokens" class="stack-lg">
+    <div class="stack"><h2>Colour tokens</h2><p class="muted">Left half light, right half dark. The six existing asset-catalog names come first. Tokens marked <b>new</b> are proposals for <span class="code">technical-spec.md</span>.</p></div>
+    <div class="sw" id="swatches"></div>
+    <div class="grid2">
+      <div class="panel"><h3>Contrast (WCAG 2.x)</h3><div id="contrast"></div></div>
+      <div class="panel"><h3>How the two modes stay one brand</h3>
+        <ul class="cap">
+          <li><b>Same roles.</b> Accent is always buttercup yellow and is always the fill for the thing you can do. Highlight is always leaf green and only means "new to you".</li>
+          <li><b>Shared cream.</b> Light mode's Background (#FFF8E2) is dark mode's TextPrimary, so the cream that is paper by day becomes ink by night.</li>
+          <li><b>Tuned hexes.</b> Dark Accent moves from Sticky Note's lemon #FFD84A to buttercup #FFCB2E. Dark Highlight moves from Sticky Note's pink to leaf green #8BD06E. Dark Outline warms to #EDE3CC so it matches the cream text.</li>
+          <li><b>Accent is fill only.</b> In light mode it is 1.5:1 on cream, so it never carries text or meaning by itself. It always sits inside an outline, with OnAccent text (9.5:1 and 11.7:1).</li>
+          <li><b>Divider</b> is a quiet 1.2:1 by design. Rows are also separated by 62 pt of height, so the line is only a hint.</li>
+          <li><b>NotePaper</b> pastels don't change with the mode, because they are part of the note image. Ink on each is 10:1 or better.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="calling" class="tabsec">
+    <div class="stack"><h2>Calling</h2><p class="muted">The partner card puts the two call buttons in thumb reach. They are equal buttercup pills at 56 pt and neither gets a sticker shadow. Calling has no single primary action, so this tab has no sticker. The latest note's green ring and "New" badge are the one highlight. The flower next to the title is the tab's doodle.</p></div>
+    <div class="phones" data-screen="calling"></div>
+  </section>
+
+  <section id="notes" class="tabsec">
+    <div class="stack"><h2>Notes</h2><p class="muted">"Make a note" is the screen's one sticker-shadowed action. The week strip previews the calendar: each day stacks its notes as small cards, and today is a buttercup cell. Today's notes sit in a two-column grid of widget-shaped tiles, each tagged with the sender's initial. The unseen one has the ring. The tape on the newest tile is the doodle.</p></div>
+    <div class="phones" data-screen="notes"></div>
+  </section>
+
+  <section id="hobbies" class="tabsec">
+    <div class="stack"><h2>Hobbies</h2><p class="muted">One card per hobby. Both people's initials sit in the header, and a check badge plus a sentence ("You read today · Sam hasn't yet") shows who did it today, so colour isn't the only signal. Your current item has a progress bar and a 48 pt +1 button. The partner's item sits underneath in secondary text. Every +1 is equal, so there's no sticker. The sparkle by the title is the doodle.</p></div>
+    <div class="phones" data-screen="hobbies"></div>
+  </section>
+
+  <section id="components" class="stack-lg">
+    <div class="stack"><h2>Component sheet</h2><p class="muted">Every shared component in both modes. Sizes are in points at 1×.</p></div>
+    <div class="grid2" id="sheets"></div>
+    <div class="grid2">
+      <div class="panel"><h3>Type: SF Pro Rounded on Dynamic Type</h3>
+        <div style="display:grid;gap:6px">
+          <div style="font-size:34px;font-weight:900;line-height:1.1">Calling <span class="cap code">largeTitle 34 · heavy</span></div>
+          <div style="font-size:22px;font-weight:900">Sam <span class="cap code">title2 22 · heavy</span></div>
+          <div style="font-size:20px;font-weight:900">Recent calls <span class="cap code">title3 20 · heavy</span></div>
+          <div style="font-size:17px;font-weight:800">Make a note <span class="cap code">headline 17 · bold</span></div>
+          <div style="font-size:17px">Body copy and empty states <span class="cap code">body 17 · regular</span></div>
+          <div style="font-size:15px;font-weight:500" class="muted">Yesterday · 42 min <span class="code">subheadline 15 · medium</span></div>
+          <div style="font-size:13px;font-weight:800">New <span class="cap code">footnote 13 · bold (badge)</span></div>
+          <div style="font-size:12px;font-weight:800">Calling <span class="cap code">caption 12 · bold (tab label)</span></div>
+        </div>
+      </div>
+      <div class="panel"><h3>Spacing, radius, border width</h3>
+        <div class="scroll"><table>
+          <thead><tr><th>Scale</th><th>Values (pt)</th></tr></thead>
+          <tbody>
+            <tr><td>Spacing</td><td class="num">4 · 8 · 12 · 16 · 20 · 24 · 32</td></tr>
+            <tr><td>Radius</td><td class="num">8 · 12 · 20 · 22 · 28 · full</td></tr>
+            <tr><td>Border</td><td class="num">1.5 · 2 · 2.5 · ring 3 (+3 gap)</td></tr>
+            <tr><td>Sticker</td><td class="num">offset 3,3 · no blur</td></tr>
+            <tr><td>Touch</td><td class="num">min 44 · call 56 · row 62</td></tr>
+          </tbody>
+        </table></div>
+        <p class="cap">Buttons and chips are always pills. Cards are 22, note tiles 20 (matching the small widget's corner), sheets 28. Corners are continuous.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="changes" class="panel">
+    <h2>Changes from the draft</h2>
+    <ul class="cap">
+      <li><b>One direction:</b> Buttercup Field light with Sticky Note dark, tuned to share roles (see Tokens).</li>
+      <li><b>Call buttons are equal.</b> Both are buttercup pills, 56 pt, with no sticker. The sticker shadow moves to the one creating action on screens that have one ("Make a note"). Calling and Hobbies have none.</li>
+      <li><b>All buttons are pills.</b> The draft's 16 pt button corners looked half-decided next to the round tab pill and avatars. One shape for every tappable control reads as more deliberate.</li>
+      <li><b>"New" is now in sentence case.</b> The badge changed from "NEW" to "New" because tiny, spaced-out capitals are harder to read and feel generic.</li>
+      <li><b>Avatars are initials on a stable NotePaper tint</b> (Adam blue, Sam pink). The same tint appears wherever that person shows up, and a photo can replace the letter later inside the same outlined circle.</li>
+      <li><b>New tokens</b> OnAccent (replaces the "ink on accent" rule) and the five NotePaper pastels. The draft's per-direction tables are gone.</li>
+      <li><b>Pressed state</b> stays as the draft proposed: the sticker shadow drops to 0 and the fill mixes 12% OnAccent, over 0.1 s, with no scale.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+const T = {
+  light: { Accent:'#FFC61A', Background:'#FFF8E2', Surface:'#FFFDF5', TextPrimary:'#1E2A1A', TextSecondary:'#56634F', Danger:'#C2362B', OnAccent:'#1E2A1A', Outline:'#1E2A1A', Highlight:'#377D33', OnHighlight:'#FFFDF5', Divider:'#EDE6CC' },
+  dark:  { Accent:'#FFCB2E', Background:'#1B1814', Surface:'#28241F', TextPrimary:'#FFF8E2', TextSecondary:'#B7AC9E', Danger:'#FF7A6E', OnAccent:'#1B1814', Outline:'#EDE3CC', Highlight:'#8BD06E', OnHighlight:'#1B1814', Divider:'#3A342D' }
+};
+const NEWTOK = ['OnAccent','Outline','Highlight','OnHighlight','Divider'];
+const PAPER = { NotePaperYellow:'#FFE88A', NotePaperPink:'#FFC6D9', NotePaperBlue:'#BFDDFF', NotePaperGreen:'#C9EDB6', NotePaperLilac:'#DCCDFF' };
+const ME = { i:'A', tint: PAPER.NotePaperBlue }, SAM = { i:'S', tint: PAPER.NotePaperPink };
+
+const ICON = {
+  phone: '<path d="M6.5 3.5h3l1.5 4-2 1.3a10.5 10.5 0 0 0 6.2 6.2l1.3-2 4 1.5v3a2 2 0 0 1-2 2A16.5 16.5 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/>',
+  video: '<rect x="3" y="6" width="12.5" height="12" rx="3"/><path d="M15.5 10.5 21 7.5v9l-5.5-3z"/>',
+  note: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 9.5h8M8 13h8M8 16.5h5"/>',
+  star: '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  missed: '<path d="M6.5 3.5h3l1.5 4-2 1.3a10.5 10.5 0 0 0 6.2 6.2l1.3-2 4 1.5v3a2 2 0 0 1-2 2A16.5 16.5 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/><path d="m15 3 6 6M21 3l-6 6"/>',
+  pencil: '<path d="M4 20l1-4L16 5l3 3L8 19z"/>',
+  book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5"/>',
+  tv: '<rect x="3" y="5" width="18" height="12" rx="3"/><path d="M8 21h8"/>',
+  game: '<path d="M7 8h10a4 4 0 0 1 4 4v1.5a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.3A3 3 0 0 1 3 13.5V12a4 4 0 0 1 4-4z"/><path d="M8 10.5v3M6.5 12h3"/>',
+  check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  trash: '<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13"/>',
+  heart: '<path d="M12 20s-7.5-4.5-7.5-10A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7.5 3c0 5.5-7.5 10-7.5 10z"/>'
+};
+const ic = (n, s = 22, fill = false) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]}</svg>`;
+
+const DOODLE = {
+  flower: t => `<svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true"><g stroke="${t.Outline}" stroke-width="2.4" fill="${t.Accent}" stroke-linejoin="round">${[0,72,144,216,288].map(r=>`<ellipse cx="20" cy="10" rx="6.5" ry="8.5" transform="rotate(${r} 20 20)"/>`).join('')}</g><circle cx="20" cy="20" r="5" fill="${t.Highlight}" stroke="${t.Outline}" stroke-width="2.4"/></svg>`,
+  sparkle: t => `<svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3c1.5 9 4.5 12.5 15 17-10.5 3.5-13.5 7-15 17-1.5-10-4.5-13.5-15-17 10.5-4.5 13.5-8 15-17z" fill="${t.Accent}" stroke="${t.Outline}" stroke-width="2.4" stroke-linejoin="round"/></svg>`,
+  tape: t => `<svg viewBox="0 0 52 18" aria-hidden="true" class="tape"><path d="M2 3l48-1-1 14-47 1z" fill="${t.Accent}" fill-opacity=".8" stroke="${t.Outline}" stroke-width="1.5" stroke-linejoin="round" transform="rotate(-4 26 9)"/></svg>`,
+  squiggle: t => `<svg width="110" height="14" viewBox="0 0 110 14" aria-hidden="true"><path d="M2 8c10-8 18 6 28 0s18-8 28 0 18 6 28 0 14-6 22-2" fill="none" stroke="${t.Accent}" stroke-width="4" stroke-linecap="round"/></svg>`
+};
+
+const INK = '#1E2A1A';
+const ART = {
+  heart: p => `<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="${p}"/><path d="M56 82c-20-12-30-22-30-34 0-9 7-15 15-15 7 0 12 4 15 10 3-6 8-10 15-10 8 0 15 6 15 15 0 12-10 22-30 34z" fill="none" stroke="${INK}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><text x="56" y="102" text-anchor="middle" font-family="ui-rounded, Nunito, sans-serif" font-weight="900" font-size="14" fill="${INK}">miss u</text></svg>`,
+  sun: p => `<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="${p}"/><circle cx="56" cy="50" r="16" fill="#FFC61A" stroke="${INK}" stroke-width="3"/>${[0,45,90,135,180,225,270,315].map(r=>`<path d="M56 24v-9" stroke="${INK}" stroke-width="3" stroke-linecap="round" transform="rotate(${r} 56 50)"/>`).join('')}<text x="56" y="100" text-anchor="middle" font-family="ui-rounded, Nunito, sans-serif" font-weight="900" font-size="13" fill="${INK}">gm sleepy</text></svg>`,
+  photo: p => `<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="#7FA7C9"/><rect y="66" width="112" height="46" fill="#5E8A4E"/><circle cx="82" cy="30" r="11" fill="#FFE88A"/><path d="M0 70c20-14 40-14 60-4s38 8 52-2v8H0z" fill="#4B7340"/><path d="M28 58c3-6 9-6 12 0" stroke="${INK}" stroke-width="3" fill="none" stroke-linecap="round"/><text x="56" y="100" text-anchor="middle" font-family="ui-rounded, Nunito, sans-serif" font-weight="900" font-size="13" fill="#FFFDF5">walk later?</text></svg>`,
+  cat: p => `<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="${p}"/><path d="M34 76V44l10 10h24l10-10v32c0 8-10 14-22 14S34 84 34 76z" fill="none" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/><circle cx="48" cy="68" r="2.5" fill="${INK}"/><circle cx="64" cy="68" r="2.5" fill="${INK}"/><text x="56" y="28" text-anchor="middle" font-family="ui-rounded, Nunito, sans-serif" font-weight="900" font-size="13" fill="${INK}">miso says hi</text></svg>`
+};
+
+const ava = (p, size, done) => `<span class="ava s${size}${done ? ' done' : ''}" style="background:${p.tint}">${p.i}</span>`;
+const vars = t => `--p-bg:${t.Background};--p-surf:${t.Surface};--p-text:${t.TextPrimary};--p-sec:${t.TextSecondary};--p-acc:${t.Accent};--p-onacc:${t.OnAccent};--p-danger:${t.Danger};--p-out:${t.Outline};--p-hi:${t.Highlight};--p-onhi:${t.OnHighlight};--p-div:${t.Divider}`;
+
+function tabbar(on){
+  return `<div class="tabs">${[['calling','phone','Calling'],['notes','note','Notes'],['hobbies','star','Hobbies']].map(([k,i,l])=>`<div class="tab${k===on?' on':''}"><span class="pill">${ic(i,21,k===on)}</span>${l}</div>`).join('')}</div>`;
+}
+function shell(t, mode, screen, inner){
+  return `<div class="ph" style="${vars(t)}" role="img" aria-label="${screen} tab, ${mode} mode"><div class="status"><span>9:41</span><span class="bat"></span></div><div class="body">${inner}</div>${tabbar(screen)}<span class="home"></span></div>`;
+}
+
+const SCREENS = {
+  calling: t => `
+    <div class="top"><span class="title">Calling${DOODLE.flower(t)}</span><span class="date">Mon 19 Oct</span></div>
+    <div class="card">
+      <div class="who">${ava(SAM,56)}<div><div class="name">Sam</div><div class="sub">Last call yesterday · 42 min</div></div></div>
+      <div class="btns"><div class="btn call">${ic('phone',20)}Audio</div><div class="btn call">${ic('video',20)}Video</div></div>
+    </div>
+    <div class="card"><div class="note-row">
+      <div class="tile new" style="width:112px;height:112px">${ART.heart(PAPER.NotePaperPink)}</div>
+      <div class="meta"><span class="badge">New</span><span class="h">Note from Sam</span><span class="sub">12 min ago</span><span class="btn sm" style="margin-top:6px;justify-self:start">${ic('pencil',16)}Send one back</span></div>
+    </div></div>
+    <div class="section">Recent calls</div>
+    <div class="list">
+      <div class="row"><span class="ico">${ic('video',19)}</span><span class="rt"><b>Video call</b><span>Today · 38 min</span></span><span class="when">9:12 pm</span></div>
+      <div class="row"><span class="ico miss">${ic('missed',19)}</span><span class="rt"><b>Audio call</b><span class="miss">Missed</span></span><span class="when">2:04 pm</span></div>
+      <div class="row"><span class="ico">${ic('phone',19)}</span><span class="rt"><b>Audio call</b><span>Yesterday · 42 min</span></span><span class="when">10:30 pm</span></div>
+    </div>`,
+  notes: t => {
+    const days = [['M',13,[PAPER.NotePaperPink,PAPER.NotePaperBlue]],['T',14,[PAPER.NotePaperYellow]],['W',15,[]],['T',16,[PAPER.NotePaperGreen,PAPER.NotePaperPink,PAPER.NotePaperLilac]],['F',17,[PAPER.NotePaperBlue]],['S',18,[PAPER.NotePaperYellow,PAPER.NotePaperPink]],['M',19,[PAPER.NotePaperPink,PAPER.NotePaperBlue]]];
+    return `
+    <div class="top"><span class="title">Notes</span><span class="date">October</span></div>
+    <div class="btn pri" style="height:56px">${ic('pencil',20)}Make a note</div>
+    <div class="week">${days.map(([d,n,c],i)=>`<div class="day${i===6?' today':''}"><i>${d}</i><b>${n}</b><span class="stackmini">${c.slice(0,3).map((col,j)=>`<span style="background:${col};left:${j*2.5}px;top:${3-j*1.5}px"></span>`).join('')}</span></div>`).join('')}</div>
+    <div class="section">Today<small>4 notes</small></div>
+    <div class="grid-notes">
+      <div class="tile new">${ART.heart(PAPER.NotePaperPink)}${DOODLE.tape(t)}<span class="from">${ava(SAM,24)}</span></div>
+      <div class="tile">${ART.photo()}<span class="from">${ava(ME,24)}</span></div>
+      <div class="tile">${ART.sun(PAPER.NotePaperBlue)}<span class="from">${ava(SAM,24)}</span></div>
+      <div class="tile">${ART.cat(PAPER.NotePaperGreen)}<span class="from">${ava(ME,24)}</span></div>
+    </div>`;
+  },
+  hobbies: t => {
+    const hob = (icon, name, line, cover, title, prog, pct, plus, partner) => `
+      <div class="card hob">
+        <div class="hob-head"><span class="ico">${ic(icon,19)}</span><span class="h">${name}</span><span class="pair">${ava(ME,28,line[0])}${ava(SAM,28,line[1])}</span></div>
+        <div class="sub" style="margin-top:-6px">${line[2]}</div>
+        <div class="item"><span class="cover" style="background:${cover}">${title[0]}</span><span class="rt"><b>${title}</b><span>${prog}</span><div class="bar" role="progressbar" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div></span><span class="plus" aria-label="Add one">+1</span></div>
+        <div class="partner">${ava(SAM,24)}${partner}</div>
+      </div>`;
+    return `
+    <div class="top"><span class="title">Hobbies${DOODLE.sparkle(t)}</span><span class="date">Mon 19 Oct</span></div>
+    ${hob('book','Reading',[true,false,'You read today · Sam hasn’t yet'],PAPER.NotePaperYellow,'Piranesi','Chapter 12 of 19',63,'','The Hobbit · chapter 8')}
+    ${hob('tv','TV',[true,true,'You both watched today'],PAPER.NotePaperLilac,'Severance','Season 2 · episode 6',60,'','Severance · S2 E6')}
+    ${hob('game','Games',[false,false,'No one has played today'],PAPER.NotePaperGreen,'Echoes of Wisdom','64% · 22 h',64,'','Stardew Valley · 40% · 51 h')}`;
+  }
+};
+
+document.querySelectorAll('[data-screen]').forEach(el => {
+  const s = el.dataset.screen;
+  el.innerHTML = ['light','dark'].map(m => `<div class="phone-col">${shell(T[m], m, s, SCREENS[s](T[m]))}<span class="cap"><b>${m === 'light' ? 'Light' : 'Dark'}</b></span></div>`).join('');
+});
+
+document.getElementById('swatches').innerHTML =
+  Object.keys(T.light).map(k => `<div class="sw-item"><div class="sw-colors"><span style="background:${T.light[k]}"></span><span style="background:${T.dark[k]}"></span></div><div class="sw-meta"><b>${k}${NEWTOK.includes(k)?'<span class="tag">new</span>':''}</b><span>L ${T.light[k]}</span><span>D ${T.dark[k]}</span></div></div>`).join('') +
+  Object.entries(PAPER).map(([k,v]) => `<div class="sw-item"><div class="sw-colors one"><span style="background:${v}"></span></div><div class="sw-meta"><b>${k.replace('NotePaper','Paper ')}<span class="tag">new</span></b><span>${k}</span><span>${v} both</span></div></div>`).join('');
+
+function lum(h){const c=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(x=>x<=0.03928?x/12.92:((x+0.055)/1.055)**2.4);return .2126*c[0]+.7152*c[1]+.0722*c[2];}
+function cr(a,b){const [x,y]=[lum(a),lum(b)].sort((p,q)=>q-p);return (x+.05)/(y+.05);}
+const PAIRS = [['TextPrimary','Background',4.5],['TextPrimary','Surface',4.5],['TextSecondary','Background',4.5],['TextSecondary','Surface',4.5],['OnAccent','Accent',4.5],['OnHighlight','Highlight',4.5],['Danger','Surface',4.5],['Danger','Background',4.5],['Outline','Background',3],['Highlight','Background',3],['Highlight','Surface',3]];
+document.getElementById('contrast').innerHTML = `<div class="scroll"><table><thead><tr><th>Text or mark</th><th>On</th><th>Needs</th><th>Light</th><th>Dark</th></tr></thead><tbody>${PAIRS.map(([a,b,n])=>`<tr><td>${a}</td><td>${b}</td><td class="num">${n}:1</td>${['light','dark'].map(m=>{const r=cr(T[m][a],T[m][b]);return `<td class="num">${r.toFixed(2)} ${r>=n?'pass':'FAIL'}</td>`;}).join('')}</tr>`).join('')}</tbody></table></div><p class="cap">Ink (#1E2A1A) on every NotePaper pastel: 10.2:1 to 12.3:1.</p>`;
+
+function sheet(m){
+  const t = T[m];
+  return `<div class="sheet-mode" style="${vars(t)}">
+    <h3>${m === 'light' ? 'Light' : 'Dark'}</h3>
+    <div class="cs-group"><span class="cs-lbl">Buttons: primary (sticker), primary pressed, secondary, small, text, destructive</span>
+      <div class="cs-row"><span class="btn pri">${ic('pencil',18)}Make a note</span><span class="btn pri pressed">${ic('pencil',18)}Make a note</span></div>
+      <div class="cs-row"><span class="btn">Add a book</span><span class="btn sm">${ic('pencil',16)}Send one back</span><span class="btn text">Cancel</span><span class="btn sm danger">${ic('trash',16)}Unsend</span></div>
+    </div>
+    <div class="cs-group"><span class="cs-lbl">Call buttons: equal pair, 56 pt, no sticker</span>
+      <div class="btns" style="max-width:340px"><span class="btn call">${ic('phone',20)}Audio</span><span class="btn call">${ic('video',20)}Video</span></div>
+    </div>
+    <div class="cs-group"><span class="cs-lbl">Chips (36 visible, 44 hit) and +1</span>
+      <div class="cs-row"><span class="chip">Did it today?</span><span class="chip on">${ic('check',16)}Done today</span><span class="chip">Reading</span><span class="plus">+1</span></div>
+    </div>
+    <div class="cs-group"><span class="cs-lbl">Avatar: initial on a stable tint, 56 / 40 / 28 / 24. Photo later, same frame</span>
+      <div class="cs-row">${ava(SAM,56)}${ava(SAM,40)}${ava(ME,28,true)}${ava(ME,24)}<span class="ava s56" style="background:repeating-linear-gradient(45deg,${t.Surface} 0 6px,${t.Divider} 6px 12px);color:${t.TextSecondary};font-size:11px;font-weight:700">photo</span></div>
+    </div>
+    <div class="cs-group"><span class="cs-lbl">Card with list row, and progress</span>
+      <div class="card" style="padding:0 16px;gap:0"><div class="row"><span class="ico miss">${ic('missed',19)}</span><span class="rt"><b>Audio call</b><span class="miss">Missed</span></span><span class="when">2:04 pm</span></div></div>
+      <div class="bar" style="max-width:260px"><span style="width:63%"></span></div>
+    </div>
+    <div class="cs-group"><span class="cs-lbl">Note tile: seen, new (ring + badge), with tape doodle</span>
+      <div class="cs-row" style="gap:20px;padding:6px 0"><div class="tile" style="width:96px;height:96px">${ART.sun(PAPER.NotePaperBlue)}<span class="from">${ava(SAM,24)}</span></div><div class="tile new" style="width:96px;height:96px">${ART.heart(PAPER.NotePaperPink)}<span class="from">${ava(SAM,24)}</span></div><div class="tile" style="width:96px;height:96px">${ART.cat(PAPER.NotePaperGreen)}${DOODLE.tape(t)}</div><span class="badge">New</span></div>
+    </div>
+    <div class="cs-group"><span class="cs-lbl">Small widget (169 pt): latest note, and before the first note</span>
+      <div class="cs-row"><div class="widget">${ART.heart(PAPER.NotePaperPink).replace('<svg','<svg class="art"')}<span class="from">${ava(SAM,28)}</span></div><div class="widget empty">${DOODLE.flower(t)}<b style="font-size:15px">No notes yet</b><span class="sub" style="font-size:13px">Ask Sam to send one</span></div></div>
+    </div>
+    <div class="cs-group"><span class="cs-lbl">Sheet: Surface, 28 pt top corners, text Cancel, one primary</span>
+      <div class="mini-sheet"><span class="grabber"></span><div class="sheet-top"><span class="btn text sm">Cancel</span><b class="h">New note</b><span class="btn pri sm">Send</span></div><div class="canvas"></div></div>
+    </div>
+    <div class="cs-group"><span class="cs-lbl">Doodle assets (decorative, one per screen)</span>
+      <div class="doodles">
+        <figure><span class="box">${DOODLE.flower(t)}</span>doodle-flower</figure>
+        <figure><span class="box">${DOODLE.sparkle(t)}</span>doodle-sparkle</figure>
+        <figure><span class="box" style="position:relative">${DOODLE.tape(t).replace('class="tape"','width="52" height="18"')}</span>doodle-tape</figure>
+        <figure><span class="box">${DOODLE.squiggle(t)}</span>doodle-squiggle</figure>
+      </div>
+    </div>
+  </div>`;
+}
+document.getElementById('sheets').innerHTML = sheet('light') + sheet('dark');
+</script>
