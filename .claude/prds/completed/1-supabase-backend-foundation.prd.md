@@ -225,21 +225,21 @@ rpc unsend_note(n) ─► created_at < now() - 4h ─► P0001 unsend_window_pas
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: `supabase db reset` applies the migration and seed cleanly on an empty local stack.
-- [ ] AC2: All 12 tables exist with RLS enabled (`select count(*) from pg_tables where schemaname='public' and rowsecurity` = 12).
-- [ ] AC3: Inserting into `auth.users` creates a matching `profiles` row (pgTAP).
-- [ ] AC4: An unpaired stranger reads 0 rows from `profiles` (other than their own), `notes`, `items`, `logs`, `checkins`, `favourites`, `calls` and `pairs` (pgTAP).
-- [ ] AC5: A partner can read but not insert, update or delete the other person's `notes`, `items` and `checkins` (pgTAP).
-- [ ] AC6: A partner cannot read the other person's `devices` or `widget_push_tokens` (pgTAP).
-- [ ] AC7: The `authenticated` role cannot insert into `calls` or `catalog_entries` (pgTAP).
-- [ ] AC8: `accept_invite` rejects expired, used, self and already-paired cases with their error messages, and on success creates `pairs` with `user_a < user_b` (pgTAP).
-- [ ] AC9: `log_increment` adds a chapter (reading) and an hour (games); rolls TV from S1E3 to S2E1; leaves S2E3 unchanged; and a repeated `log_id` changes nothing (pgTAP).
-- [ ] AC10: `check_in` called twice leaves 1 row; `finish_item` sets `finished` and `finished_at` (pgTAP).
-- [ ] AC11: `unsend_note` sets `unsent_at` and deletes favourites within 4 h, and fails after 4 h or for a non-sender (pgTAP).
-- [ ] AC12: Storage: the sender can upload to their own folder but not their partner's; the partner can select the object; a stranger cannot (pgTAP on `storage.objects`).
-- [ ] AC13: `notes`, `items`, `checkins` and `calls` are in `supabase_realtime` (`pg_publication_tables`).
-- [ ] AC14: `supabase test db` and `supabase db lint` pass.
-- [ ] AC15: The hosted project `nxqcwchrigseounzkvvz` is linked, `supabase db push` has applied the migration, and `supabase migration list --linked` shows local = remote. No password or key is committed.
+- [x] AC1: `supabase db reset` applies the migration and seed cleanly on an empty local stack.
+- [x] AC2: All 12 tables exist with RLS enabled (`select count(*) from pg_tables where schemaname='public' and rowsecurity` = 12).
+- [x] AC3: Inserting into `auth.users` creates a matching `profiles` row (pgTAP).
+- [x] AC4: An unpaired stranger reads 0 rows from `profiles` (other than their own), `notes`, `items`, `logs`, `checkins`, `favourites`, `calls` and `pairs` (pgTAP).
+- [x] AC5: A partner can read but not insert, update or delete the other person's `notes`, `items` and `checkins` (pgTAP).
+- [x] AC6: A partner cannot read the other person's `devices` or `widget_push_tokens` (pgTAP).
+- [x] AC7: The `authenticated` role cannot insert into `calls` or `catalog_entries` (pgTAP).
+- [x] AC8: `accept_invite` rejects expired, used, self and already-paired cases with their error messages, and on success creates `pairs` with `user_a < user_b` (pgTAP).
+- [x] AC9: `log_increment` adds a chapter (reading) and an hour (games); rolls TV from S1E3 to S2E1; leaves S2E3 unchanged; and a repeated `log_id` changes nothing (pgTAP).
+- [x] AC10: `check_in` called twice leaves 1 row; `finish_item` sets `finished` and `finished_at` (pgTAP).
+- [x] AC11: `unsend_note` sets `unsent_at` and deletes favourites within 4 h, and fails after 4 h or for a non-sender (pgTAP).
+- [x] AC12: Storage: the sender can upload to their own folder but not their partner's; the partner can select the object; a stranger cannot (pgTAP on `storage.objects`).
+- [x] AC13: `notes`, `items`, `checkins` and `calls` are in `supabase_realtime` (`pg_publication_tables`).
+- [x] AC14: `supabase test db` and `supabase db lint` pass.
+- [x] AC15: The hosted project `nxqcwchrigseounzkvvz` is linked, `supabase db push` has applied the migration, and `supabase migration list --linked` shows local = remote. No password or key is committed.
 
 ## Required Changes
 - **Init**: `supabase init`; keep the generated `config.toml` defaults (see [File Reference](#file-reference)).
