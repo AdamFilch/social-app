@@ -1,0 +1,949 @@
+<title>Buttercup In-call Screen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap">
+<style>
+/* Layout: a working sheet. Decision legend, then the call states, then the sticker states, each phone at iPhone 11 size with its decisions and notes beside it. Call chrome is always dark; tray and pad panels use light or dark tokens as labelled. */
+:root {
+  --bg: #FFF8E2;
+  --card: #FFFDF5;
+  --fg: #1E2A1A;
+  --muted: #56634F;
+  --line: #1E2A1A;
+  --soft: #EDE6CC;
+  --mark: #FFC61A;
+  --bezel: #12100E;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; --bezel: #000; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; --bezel: #000; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--round); font-size: 16px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 96px; display: grid; gap: 72px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(36px, 7vw, 60px); font-weight: 900; letter-spacing: -0.02em; }
+h2 { font-size: 30px; font-weight: 900; letter-spacing: -0.01em; }
+h3 { font-size: 20px; font-weight: 900; }
+p { margin: 0; max-width: 68ch; }
+.lede { font-size: 18px; }
+.muted { color: var(--muted); }
+.stack { display: grid; gap: 14px; }
+.sec { display: grid; gap: 32px; }
+.states { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 48px 32px; }
+.state { display: grid; gap: 16px; align-content: start; justify-items: center; min-width: 0; }
+.note { display: grid; gap: 8px; width: 100%; max-width: 434px; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 15px; }
+.note ul li::marker { color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; font-weight: 800; padding: 1px 9px; border-radius: 999px; border: 2px solid var(--line); background: var(--card); }
+.chip.mode { background: var(--soft); border-color: transparent; }
+.legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px 28px; font-size: 15px; }
+.legend div { display: grid; grid-template-columns: 40px 1fr; gap: 8px; }
+.legend b { font-weight: 900; }
+.panel { background: var(--card); border: 2.5px solid var(--line); border-radius: 22px; padding: 24px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; }
+.panel ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1.5px solid var(--soft); vertical-align: top; }
+th { font-size: 14px; color: var(--muted); font-weight: 800; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700; }
+
+/* device */
+.dev { padding: 10px; border-radius: 60px; background: var(--bezel); flex: none; }
+@media (max-width: 480px) { .dev { zoom: 0.8; } }
+@media (max-width: 380px) { .dev { zoom: 0.72; } }
+.ph { position: relative; width: 414px; height: 896px; border-radius: 50px; overflow: hidden; background: #1B1814; color: #FFF8E2; font-family: var(--round); isolation: isolate; }
+.ph svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.vid { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.sb { position: absolute; top: 0; left: 0; right: 0; height: 48px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 8px 34px; font-size: 15px; font-weight: 800; z-index: 5; color: #FFF8E2; }
+.bat { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; display: inline-block; margin-left: 6px; vertical-align: -1px; }
+.bat::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+.home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #FFF8E2; z-index: 6; }
+.fr { background: rgba(52, 47, 41, 0.55); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); color: #FFF8E2; }
+.who { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); height: 32px; border-radius: 999px; padding: 0 14px; display: flex; gap: 8px; align-items: center; font-size: 15px; font-weight: 800; white-space: nowrap; z-index: 2; }
+.who span { font-weight: 600; font-variant-numeric: tabular-nums; color: #E6DCC6; }
+.cb { position: absolute; left: 16px; right: 16px; top: 794px; display: flex; justify-content: space-evenly; z-index: 4; }
+.cbtn { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; }
+.cbtn svg.i { width: 26px; height: 26px; }
+.cbtn.on { background: #FFCB2E; color: #1B1814; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.cbtn.end { background: #FF7A6E; color: #1B1814; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.cbtn.end svg.i { fill: currentColor; stroke: none; }
+.st { position: absolute; width: 100px; height: 150px; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); z-index: 3; background: #2a2622; }
+.st.tr { top: 56px; right: 16px; }
+.st.tl { top: 56px; left: 16px; }
+.st.bl { top: 628px; left: 16px; }
+.st.br { top: 628px; right: 16px; }
+.ghost { position: absolute; width: 100px; height: 150px; border-radius: 20px; border: 2px dashed rgba(255, 248, 226, 0.5); z-index: 2; }
+.ghost.tr { top: 56px; right: 16px; } .ghost.tl { top: 56px; left: 16px; } .ghost.br { top: 628px; right: 16px; }
+.snap { position: absolute; z-index: 3; font-size: 13px; font-weight: 800; color: #FFF8E2; background: rgba(27, 24, 20, 0.7); border-radius: 8px; padding: 2px 8px; }
+.drag { position: absolute; z-index: 2; left: 66px; top: 206px; width: 282px; height: 422px; pointer-events: none; }
+.dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 3; }
+.mt { position: absolute; left: 62px; top: 182px; width: 290px; height: 435px; border-radius: 28px; overflow: hidden; z-index: 4; box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45); }
+.mbtn { position: absolute; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; }
+.mbtn svg.i { width: 22px; height: 22px; }
+.mbtn.tl { top: 12px; left: 12px; } .mbtn.tr { top: 12px; right: 12px; } .mbtn.br { bottom: 12px; right: 12px; }
+.trash { position: absolute; left: 179px; top: 722px; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; color: #FF7A6E; z-index: 4; }
+.trash svg.i { width: 26px; height: 26px; }
+.stk { position: absolute; z-index: 1; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.sel { position: absolute; z-index: 2; border: 2.5px solid #FFCB2E; border-radius: 16px; }
+.off { position: absolute; inset: 0; background: #1B1814; display: grid; place-content: center; justify-items: center; gap: 14px; text-align: center; }
+.big-ava { width: 128px; height: 128px; border-radius: 50%; background: #FFC6D9; border: 2.5px solid #EDE3CC; color: #1E2A1A; display: grid; place-items: center; font-size: 58px; font-weight: 900; }
+.off b { font-size: 22px; font-weight: 900; }
+.off span { font-size: 15px; font-weight: 600; color: #B7AC9E; display: inline-flex; gap: 6px; align-items: center; }
+.off span svg.i { width: 18px; height: 18px; }
+
+/* panels */
+.lt { --q-bg: #FFF8E2; --q-surf: #FFFDF5; --q-text: #1E2A1A; --q-sec: #56634F; --q-acc: #FFC61A; --q-onacc: #1E2A1A; --q-out: #1E2A1A; --q-div: #EDE6CC; --k-bg: #D3D5DB; --k-key: #FFFFFF; --k-mod: #ACB0BA; --k-txt: #000; }
+.dk { --q-bg: #1B1814; --q-surf: #28241F; --q-text: #FFF8E2; --q-sec: #B7AC9E; --q-acc: #FFCB2E; --q-onacc: #1B1814; --q-out: #EDE3CC; --q-div: #3A342D; --k-bg: #2C2C2E; --k-key: #6B6B6E; --k-mod: #46464A; --k-txt: #fff; }
+.pn { position: absolute; left: 0; right: 0; bottom: 0; height: 448px; border-radius: 28px 28px 0 0; background: var(--q-surf); color: var(--q-text); z-index: 5; }
+.pn.kb { bottom: 300px; height: 292px; }
+.grab { position: absolute; top: 7px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--q-sec); opacity: 0.45; }
+.phead { position: absolute; top: 20px; left: 16px; right: 16px; height: 44px; display: flex; align-items: center; gap: 8px; }
+.phead .t { flex: 1; text-align: center; font-size: 17px; font-weight: 800; }
+.ibtn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--q-out); background: var(--q-bg); color: var(--q-text); display: grid; place-items: center; flex: none; }
+.ibtn svg.i { width: 20px; height: 20px; stroke-width: 2.6; }
+.ibtn.acc { background: var(--q-acc); color: var(--q-onacc); border-width: 2.5px; }
+.ibtn.dis { opacity: 0.4; }
+.ibtn.ghosted { background: transparent; border-color: transparent; }
+.tabsc { flex: 1; min-width: 0; overflow: hidden; height: 44px; display: flex; align-items: center; margin-right: -16px; }
+.tabsr { display: flex; gap: 4px; padding-left: 4px; padding-right: 16px; }
+.tb { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; display: flex; align-items: center; font-size: 15px; font-weight: 800; color: var(--q-sec); border: 2px solid transparent; }
+.tb.on { background: var(--q-acc); color: var(--q-onacc); border-color: var(--q-out); }
+.grid { position: absolute; top: 80px; left: 16px; right: 0; display: grid; grid-template-rows: repeat(3, 84px); grid-auto-flow: column; grid-auto-columns: 84px; gap: 8px; overflow: hidden; }
+.cell { border-radius: 16px; background: var(--q-bg); display: grid; place-items: center; font-size: 44px; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.cell svg { width: 58px; height: 58px; }
+.cell.fx { display: grid; place-items: center; align-content: center; gap: 7px; font-family: var(--round); }
+.sw { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; border: 2px solid transparent; }
+.sw svg { width: 100%; height: 100%; display: block; }
+.cell.fx b { font-size: 12px; font-weight: 800; color: var(--q-sec); line-height: 1; }
+.cell.fx.on .sw { box-shadow: 0 0 0 2.5px var(--q-bg), 0 0 0 5px var(--q-out); }
+.cell.fx.on b { color: var(--q-text); }
+.estrip { position: absolute; top: 76px; left: 0; right: 0; overflow: hidden; }
+.etrack { display: flex; gap: 20px; padding-left: 16px; width: max-content; }
+.eg { display: grid; gap: 6px; align-content: start; }
+.eg > b { font-size: 13px; font-weight: 800; color: var(--q-sec); height: 18px; line-height: 18px; }
+.eg-g { display: grid; grid-template-rows: repeat(3, 72px); grid-auto-flow: column; grid-auto-columns: 72px; gap: 4px; }
+.eg-g span { display: grid; place-items: center; font-size: 40px; line-height: 1; border-radius: 14px; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.cats { position: absolute; top: 346px; left: 9px; right: 9px; display: flex; justify-content: space-between; }
+.cat { width: 44px; height: 44px; display: grid; place-items: center; color: var(--q-sec); flex: none; }
+.cat span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; }
+.cat svg.i { width: 20px; height: 20px; }
+.cat.on { color: var(--q-text); }
+.cat.on span { background: var(--q-div); }
+.offt { background: #1B1814; display: grid; place-items: center; }
+.sm-ava { width: 56px; height: 56px; border-radius: 50%; background: #BFDDFF; border: 2px solid #EDE3CC; color: #1E2A1A; font-weight: 900; font-size: 26px; display: grid; place-items: center; }
+.hint { position: absolute; top: 364px; left: 16px; right: 16px; font-size: 15px; font-weight: 600; color: var(--q-sec); text-align: center; }
+.pn .home { background: var(--q-text); }
+.row { position: absolute; left: 16px; right: 16px; display: flex; gap: 10px; align-items: center; }
+.field { flex: 1; height: 48px; border: 2px solid var(--q-out); border-radius: 999px; background: var(--q-bg); padding: 0 18px; font-size: 17px; font-weight: 600; display: flex; align-items: center; min-width: 0; }
+.caret { width: 2px; height: 22px; background: #2F7BF6; margin-left: 1px; }
+.add { height: 48px; padding: 0 20px; border-radius: 999px; background: var(--q-acc); color: var(--q-onacc); border: 2.5px solid var(--q-out); box-shadow: 3px 3px 0 var(--q-out); font-size: 17px; font-weight: 800; display: flex; align-items: center; }
+.dots { display: flex; }
+.dot { width: 44px; height: 44px; display: grid; place-items: center; flex: none; }
+.dot i { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--q-out); display: block; }
+.dot.on i { box-shadow: 0 0 0 3px var(--q-surf), 0 0 0 5.5px var(--q-out); }
+.checker { background-color: var(--q-bg); background-image: conic-gradient(var(--q-div) 25%, transparent 0 50%, var(--q-div) 0 75%, transparent 0); background-size: 24px 24px; }
+.prev { height: 80px; border-radius: 16px; display: grid; place-items: center; }
+.tsticker { font-size: 40px; font-weight: 900; letter-spacing: -0.01em; -webkit-text-stroke: 7px #1E2A1A; paint-order: stroke fill; line-height: 1; }
+.kbd { position: absolute; left: 0; right: 0; bottom: 0; height: 300px; background: var(--k-bg); z-index: 5; padding: 10px 3px 0; display: grid; gap: 12px; align-content: start; font-family: -apple-system, system-ui, sans-serif; }
+.kr { display: flex; justify-content: center; gap: 6px; }
+.k { height: 43px; flex: 0 0 34px; border-radius: 5px; background: var(--k-key); color: var(--k-txt); display: grid; place-items: center; font-size: 22px; box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.k.m { background: var(--k-mod); flex-basis: 44px; font-size: 15px; }
+.k.sp { flex: 1 1 auto; max-width: 190px; font-size: 15px; }
+.k.rt { flex-basis: 92px; font-size: 15px; }
+.cv { position: absolute; top: 80px; left: 16px; right: 16px; height: 262px; border-radius: 20px; border: 2px solid var(--q-out); overflow: hidden; display: grid; place-items: center; }
+.cv p { font-size: 15px; font-weight: 600; color: var(--q-sec); background: var(--q-surf); padding: 4px 12px; border-radius: 999px; }
+.cv svg { width: 100%; height: 100%; }
+.tools { position: absolute; top: 354px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; }
+.tools .g { display: flex; gap: 6px; }
+.tool { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--q-text); border: 2px solid transparent; }
+.tool svg.i { width: 22px; height: 22px; }
+.tool.on { background: var(--q-acc); color: var(--q-onacc); border-color: var(--q-out); }
+.tool.dis { opacity: 0.4; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></symbol>
+    <symbol id="i-micoff" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 3.5l16 17"/></symbol>
+    <symbol id="i-video" viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="13" height="11" rx="3"/><path d="M15.5 10.5l6-3.5v10l-6-3.5z"/></symbol>
+    <symbol id="i-videooff" viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="13" height="11" rx="3"/><path d="M15.5 10.5l6-3.5v10l-6-3.5zM3 3l18 18"/></symbol>
+    <symbol id="i-speaker" viewBox="0 0 24 24"><path d="M3.5 9h4l5-4v14l-5-4h-4zM16 8.5a5 5 0 0 1 0 7M18.8 5.8a9 9 0 0 1 0 12.4"/></symbol>
+    <symbol id="i-end" viewBox="0 0 24 24"><path d="M2.6 13.2c5.2-4.6 13.6-4.6 18.8 0 .5.4.6 1.1.3 1.7l-1.2 2c-.3.5-1 .7-1.5.5l-3.1-1.2c-.5-.2-.8-.7-.7-1.2l.2-1.9c-2.2-.7-4.6-.7-6.8 0l.2 1.9c.1.5-.2 1-.7 1.2L5 17.4c-.5.2-1.2 0-1.5-.5l-1.2-2c-.3-.6-.2-1.3.3-1.7z"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-6.5 6.5M10 20H4v-6M4 20l6.5-6.5"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path d="M4 7.5h3L8.5 5h7L17 7.5h3a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18V9A1.5 1.5 0 0 1 4 7.5z"/><path d="M8.8 13.6a3.3 3.3 0 0 1 5.9-1.9M15.2 13.4a3.3 3.3 0 0 1-5.9 1.9M14.9 10.2v1.7h-1.7M9.1 16.8v-1.7h1.7"/></symbol>
+    <symbol id="i-sticker" viewBox="0 0 24 24"><path d="M19 12.5A8 8 0 1 1 11.5 4.5"/><path d="M8 15c1.8 1.7 5.2 1.7 7 0"/><path d="M9 10.5v.5M14 10.5v.5"/><path d="M18.5 2.5v6M15.5 5.5h6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.5h16M9 6.5V4h6v2.5M6 6.5l1 13.5h10l1-13.5M10 10.5v6M14 10.5v6"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M15.5 3.5l5 5L9 20H4v-5z M13.5 5.5l5 5"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M9 20h11M4.5 14.5l9-9a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11 20H8z M8.8 10.2l5 5"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+
+    <symbol id="v-sam" viewBox="0 0 414 896" preserveAspectRatio="xMidYMid slice">
+      <rect width="414" height="896" fill="#5E5462"/>
+      <rect x="250" y="90" width="190" height="330" rx="6" fill="#7E7488"/>
+      <rect x="262" y="104" width="78" height="140" fill="#A79BB0"/><rect x="350" y="104" width="78" height="140" fill="#A79BB0"/>
+      <rect x="-20" y="560" width="140" height="190" rx="20" fill="#4C4350"/>
+      <path d="M40 896c0-170 70-250 167-250s167 80 167 250z" fill="#D97B5E"/>
+      <path d="M170 560h74v100c-20 18-54 18-74 0z" fill="#B8826A"/>
+      <path d="M90 420c-10-190 70-270 117-270s128 80 118 270c-10 120-40 190-50 230H140c-10-40-40-110-50-230z" fill="#3A2722"/>
+      <ellipse cx="207" cy="400" rx="100" ry="132" fill="#C99076"/>
+      <path d="M110 360c10-110 60-150 97-150s92 30 100 120c-40-40-90-60-130-60-30 0-50 50-67 90z" fill="#3A2722"/>
+      <circle cx="170" cy="400" r="8" fill="#2A1C18"/><circle cx="244" cy="400" r="8" fill="#2A1C18"/>
+      <path d="M175 465c18 16 46 16 64 0" fill="none" stroke="#7A3F35" stroke-width="7" stroke-linecap="round"/>
+      <ellipse cx="150" cy="445" rx="18" ry="10" fill="#D99A86"/><ellipse cx="264" cy="445" rx="18" ry="10" fill="#D99A86"/>
+    </symbol>
+    <symbol id="v-adam" viewBox="0 0 414 896" preserveAspectRatio="xMidYMid slice">
+      <rect width="414" height="896" fill="#45524A"/>
+      <rect x="-30" y="120" width="170" height="250" rx="8" fill="#56665C"/>
+      
+      <path d="M30 896c0-180 75-250 177-250s177 70 177 250z" fill="#3E5F7E"/>
+      <path d="M165 560h84v100c-24 20-60 20-84 0z" fill="#C59A7E"/>
+      <ellipse cx="207" cy="395" rx="104" ry="135" fill="#D8AC8C"/>
+      <path d="M104 360c-6-110 50-160 105-160 62 0 104 46 98 160-10-50-40-82-100-82-56 0-90 30-103 82z" fill="#5A3E2B"/>
+      <path d="M120 440c10 90 50 128 87 128s78-38 88-128c-14 30-40 40-88 40s-74-10-87-40z" fill="#6B4A34"/>
+      <circle cx="168" cy="395" r="8" fill="#2A1C18"/><circle cx="246" cy="395" r="8" fill="#2A1C18"/>
+      <path d="M180 470c16 12 38 12 54 0" fill="none" stroke="#3B2618" stroke-width="7" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <header class="stack">
+    <h1>In-call screen</h1>
+    <p class="lede">The call, the self and partner tiles, the sticker tray and the drawing pad, quiet over video. Draft for Adam, 20 October 2026, built from decisions C1–C18 and Adam's answers N1–N7.</p>
+    <p class="muted">Every phone is an iPhone 11 at 414 × 896 pt. Video is illustrated placeholder. Dashed outlines and dark labels inside a phone are annotations, not UI.</p>
+  </header>
+
+  <section class="stack" aria-labelledby="legend-h">
+    <h2 id="legend-h">Decisions on show</h2>
+    <div class="legend">
+      <div><b>C1</b><span>Quiet over video: dark frosted circles, no outlines or sticker shadow, Danger for End, Accent only on the active thing</span></div>
+      <div><b>C2</b><span>Call chrome always dark; tray and pad use Surface and Background in both modes</span></div>
+      <div><b>C3</b><span>Open panel covers the bottom half, control bar included; ✕ or swipe down brings it back</span></div>
+      <div><b>C4</b><span>Tray is a fixed 50% panel, no detents; closes when a sticker lands on the face</span></div>
+      <div><b>C5</b><span>Tabs on top, tap only; each tab is a 3-row grid scrolling left to right</span></div>
+      <div><b>C6</b><span>Pad has its own toolbar over a checkerboard canvas, no tool picker</span></div>
+      <div><b>C7</b><span>Pad header: ✕ left cancels, ✓ Accent right confirms, disabled until a stroke</span></div>
+      <div><b>C8</b><span>Small tile drags and snaps to a corner with an ease-out; top corner while a panel is open</span></div>
+      <div><b>C9</b><span>Tap small tile: centred medium tile at 70% width, background dimmed 40%</span></div>
+      <div><b>C10</b><span>Medium (me): Expand top-left, Flip top-right, Add stickers bottom-right</span></div>
+      <div><b>C11</b><span>Medium (partner): Expand only</span></div>
+      <div><b>C12</b><span>Control bar: Mute, Camera, Audio route, End call on the right</span></div>
+      <div><b>C13</b><span>Trash: 56 pt circle above the bar, only while a sticker is selected</span></div>
+      <div><b>C14</b><span>Draw tab swaps the panel to the pad in place</span></div>
+      <div><b>C15</b><span>Me big: a Stickers button joins the bar</span></div>
+      <div><b>C16</b><span>Text tab: field and Add on one row, 6 colour dots, live preview</span></div>
+      <div><b>C18</b><span>Fades and ease-outs only; quiet haptics</span></div>
+      <div><b>N1</b><span>Text tab shrinks to about 292 pt and sits on the keyboard while typing</span></div>
+      <div><b>N2</b><span>Pad keeps five colours: Ink, Accent, Pink, Blue, Green</span></div>
+      <div><b>N3</b><span>Pill tabs for every effect, scrolling: Stickers, Emoji, Text, Draw, Hats, Glasses, Filters</span></div>
+      <div><b>N4</b><span>All of Apple's emoji in the tray grid, with inline category labels and jump chips; no search</span></div>
+      <div><b>N5</b><span>Camera off fills Accent like mic muted</span></div>
+      <div><b>N6</b><span>No text labels under control circles; VoiceOver labels only</span></div>
+      <div><b>N7</b><span>The tray reopens on the last tab used</span></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="call-h">
+    <div class="stack">
+      <h2 id="call-h">The call</h2>
+      <p class="muted">Face first. Chrome is four dark circles at the bottom, a name and timer at the top, and your own tile in a corner.</p>
+    </div>
+    <div class="states">
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-sam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>4:12</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-adam"/></svg></div>
+          <div class="cb">
+            <div class="cbtn fr" aria-label="Mute"><svg class="i"><use href="#i-mic"/></svg></div>
+            <div class="cbtn fr" aria-label="Turn camera off"><svg class="i"><use href="#i-video"/></svg></div>
+            <div class="cbtn fr" aria-label="Audio route, speaker"><svg class="i"><use href="#i-speaker"/></svg></div>
+            <div class="cbtn end" aria-label="End call"><svg class="i"><use href="#i-end"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>1 · Default call</h3>
+          <div class="chips"><span class="chip">C1</span><span class="chip">C2</span><span class="chip">C8</span><span class="chip">C12</span></div>
+          <ul>
+            <li>Sam fills the screen. Your tile is 100 × 150 pt, radius 20, 16 pt in from the top-right, with a soft shadow because it floats. No outline over video.</li>
+            <li>Name and timer sit in a frosted pill at the top centre, so no corner the tile can snap to ever covers them.</li>
+            <li>Four 56 pt circles spread evenly 46 pt above the home indicator. End call is the only coloured one, on the right where the thumb lands last.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-sam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>4:20</span></div>
+          <div class="ghost tl"></div><div class="ghost tr"></div><div class="ghost br"></div>
+          <svg class="drag" viewBox="0 0 282 422" aria-hidden="true"><path d="M250 0 C 210 160, 90 260, 30 410" fill="none" stroke="rgba(255,248,226,.6)" stroke-width="2.5" stroke-dasharray="6 7" stroke-linecap="round"/><path d="M22 392l8 20 16-14" fill="none" stroke="rgba(255,248,226,.8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div class="snap" style="right:16px; top:212px;">dragged from here</div>
+          <div class="st bl offt"><span class="sm-ava" aria-label="Adam, camera off">A</span></div>
+          <div class="cb">
+            <div class="cbtn on" aria-label="Unmute, muted"><svg class="i"><use href="#i-micoff"/></svg></div>
+            <div class="cbtn on" aria-label="Turn camera on, camera off"><svg class="i"><use href="#i-videooff"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-speaker"/></svg></div>
+            <div class="cbtn end"><svg class="i"><use href="#i-end"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>2 · Small tile in another corner, muted and camera off</h3>
+          <div class="chips"><span class="chip">C8</span><span class="chip">C1</span><span class="chip">C18</span><span class="chip">N5</span><span class="chip">N6</span></div>
+          <ul>
+            <li>Dashed shapes are the four snap corners. Let go anywhere and the tile eases out to the nearest one over 0.3 s. No spring, no overshoot, no haptic.</li>
+            <li>The bottom corners stop 16 pt above the control bar (tile top at 628 pt), so the tile never sits on a button.</li>
+            <li>Both "off" states fill Accent and swap to a crossed icon: mic muted and camera off. With your camera off, your tile shows your initial on NotePaperBlue.</li>
+            <li>No text under the circles; each has a VoiceOver label that names its state ("Turn camera on, camera off").</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-sam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>4:31</span></div>
+          <div class="dim"></div>
+          <div class="mt">
+            <svg class="vid"><use href="#v-adam"/></svg>
+            <div class="mbtn fr tl" aria-label="Make my view big"><svg class="i"><use href="#i-expand"/></svg></div>
+            <div class="mbtn fr tr" aria-label="Flip camera"><svg class="i"><use href="#i-flip"/></svg></div>
+            <div class="mbtn fr br" aria-label="Add stickers"><svg class="i"><use href="#i-sticker"/></svg></div>
+          </div>
+          <div class="cb">
+            <div class="cbtn fr"><svg class="i"><use href="#i-mic"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-video"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-speaker"/></svg></div>
+            <div class="cbtn end"><svg class="i"><use href="#i-end"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>3 · Medium tile, me</h3>
+          <div class="chips"><span class="chip">C9</span><span class="chip">C10</span><span class="chip">C12</span><span class="chip">C18</span></div>
+          <ul>
+            <li>Tap the small tile and it scales up from its corner to 290 × 435 pt, centred in the space above the bar, while a 40% black dim fades in. Tap the dim to send it back.</li>
+            <li>Three 44 pt frosted circles 12 pt in from the corners: Expand, Flip camera, Add stickers. Add stickers goes to the big self view with the tray open.</li>
+            <li>The control bar stays above the dim and works, because C12 says it is always there.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>6:02</span></div>
+          <div class="dim"></div>
+          <div class="mt">
+            <svg class="vid"><use href="#v-sam"/></svg>
+            <div class="mbtn fr tl" aria-label="Make Sam big"><svg class="i"><use href="#i-expand"/></svg></div>
+          </div>
+          <div class="cb">
+            <div class="cbtn fr" aria-label="Stickers"><svg class="i"><use href="#i-sticker"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-mic"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-video"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-speaker"/></svg></div>
+            <div class="cbtn end"><svg class="i"><use href="#i-end"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>4 · Medium tile, Sam (after swap)</h3>
+          <div class="chips"><span class="chip">C9</span><span class="chip">C11</span><span class="chip">C15</span></div>
+          <ul>
+            <li>Same size, dim and motion as state 3. Only Expand, top-left, in the same spot as on your own tile, so it is always found in one place.</li>
+            <li>Stickers on Sam arrive with the later partner-stickers feature; the empty corners leave room for that button.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>6:10</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="cb">
+            <div class="cbtn fr" aria-label="Stickers"><svg class="i"><use href="#i-sticker"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-mic"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-video"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-speaker"/></svg></div>
+            <div class="cbtn end"><svg class="i"><use href="#i-end"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>5 · Swapped: you big</h3>
+          <div class="chips"><span class="chip">C15</span><span class="chip">C12</span><span class="chip">C8</span></div>
+          <ul>
+            <li>Stickers joins the bar on the far left. The four call controls keep their order, and the creative button sits as far from End call as it can.</li>
+            <li>Five 56 pt circles still fit with about 17 pt between them.</li>
+            <li>Tap Sam's small tile for state 4; Expand there swaps back.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <div class="off">
+            <div class="big-ava" aria-label="Sam">S</div>
+            <b>Sam</b>
+            <span><svg class="i" aria-hidden="true"><use href="#i-videooff"/></svg>Camera off</span>
+          </div>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>8:05</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-adam"/></svg></div>
+          <div class="cb">
+            <div class="cbtn fr"><svg class="i"><use href="#i-mic"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-video"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-speaker"/></svg></div>
+            <div class="cbtn end"><svg class="i"><use href="#i-end"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>9 · Sam's camera off</h3>
+          <div class="chips"><span class="chip">C2</span><span class="chip">C1</span></div>
+          <ul>
+            <li>The video area becomes the dark Background with Sam's initial on NotePaperPink in a 128 pt avatar, then "Sam" and "Camera off" with a crossed camera.</li>
+            <li>This is not video, so the avatar keeps its usual Outline from design.md. Everything else is unchanged.</li>
+            <li>The swap is a 0.2 s cross-fade when Sam's camera turns off or on.</li>
+          </ul>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="stk-h">
+    <div class="stack">
+      <h2 id="stk-h">Stickers</h2>
+      <p class="muted">The tray and pad take the bottom half. Your face stays in the top half to drop onto. Panels are shown in both modes; the chrome around them stays dark.</p>
+    </div>
+    <div class="states">
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>6:40</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn lt">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Close stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <div class="tabsc"><div class="tabsr" role="tablist" data-tab="Emoji"></div></div>
+            </div>
+            <div class="estrip" data-emoji="Smileys"></div>
+            <div class="cats" data-cat="Smileys"></div>
+            <div class="home"></div>
+          </div>
+        </div></div>
+        <div class="note">
+          <h3>6 · Tray, Emoji at the start (light panel)</h3>
+          <div class="chips"><span class="chip mode">Light panel</span><span class="chip">C3</span><span class="chip">C4</span><span class="chip">C5</span><span class="chip">N3</span><span class="chip">N4</span></div>
+          <ul>
+            <li>Fixed 448 pt panel covering the control bar. Your face stays in the top half, and Sam's tile has moved to the top-right.</li>
+            <li>The pill row holds every effect and scrolls sideways; Hats peeks in at the right edge to show there is more. ✕ stays fixed on the left.</li>
+            <li>Every Apple emoji in one long 3-row strip of 72 pt cells. A small label marks where each category starts.</li>
+            <li>Nine category chips along the bottom jump the strip to that category. The chip for whatever category is on screen is highlighted as you scroll. Nine 44 pt chips fill the width exactly, so this row doesn't scroll.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>6:41</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn dk">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Close stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <div class="tabsc"><div class="tabsr" role="tablist" data-tab="Emoji"></div></div>
+            </div>
+            <div class="estrip" data-emoji="Animals"></div>
+            <div class="cats" data-cat="Animals"></div>
+            <div class="home"></div>
+          </div>
+        </div></div>
+        <div class="note">
+          <h3>6 · Tray, Emoji after jumping to Animals (dark panel)</h3>
+          <div class="chips"><span class="chip mode">Dark panel</span><span class="chip">C2</span><span class="chip">N4</span><span class="chip">C18</span></div>
+          <ul>
+            <li>Tap the paw chip and the strip scrolls with an ease-out until the Animals label sits near the left. The end of People stays visible, so you can tell you moved along one strip.</li>
+            <li>The selected chip gets a Divider-tone disc. Accent stays on the selected tab, so there is only one yellow thing in the panel.</li>
+            <li>Emoji sit straight on the panel with no cell boxes: with hundreds of them, boxes would just be noise.</li>
+            <li>When a sticker is dragged out over the face, the panel fades and slides down over 0.25 s ease-out, the bar fades back, and the drop gives the light haptic (T3).</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>6:52</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn lt kb">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Close stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <div class="tabsc"><div class="tabsr" role="tablist" data-tab="Text"></div></div>
+            </div>
+            <div class="row" style="top:80px">
+              <div class="field">hi sam<span class="caret"></span></div>
+              <div class="add">Add</div>
+            </div>
+            <div class="row dots" style="top:140px; justify-content:center; gap:4px">
+              <div class="dot"><i style="background:#1E2A1A"></i></div>
+              <div class="dot"><i style="background:#FFC61A"></i></div>
+              <div class="dot on"><i style="background:#FFC6D9"></i></div>
+              <div class="dot"><i style="background:#BFDDFF"></i></div>
+              <div class="dot"><i style="background:#C9EDB6"></i></div>
+              <div class="dot"><i style="background:#DCCDFF"></i></div>
+            </div>
+            <div class="row" style="top:196px"><div class="prev checker" style="flex:1"><span class="tsticker" style="color:#FFC6D9">hi sam</span></div></div>
+          </div>
+          <div class="kbd lt" data-fill="kbd"></div>
+          <div class="home" style="background:#000"></div>
+        </div></div>
+        <div class="note">
+          <h3>6 · Tray, Text with the keyboard up (light panel)</h3>
+          <div class="chips"><span class="chip mode">Light panel</span><span class="chip">C16</span><span class="chip">N1</span><span class="chip">N3</span></div>
+          <ul>
+            <li>Field and Add on one row. Add is the one creating action in the tray, so it alone gets the sticker shadow. Add is disabled while the field is empty.</li>
+            <li>Six dots: Ink, Accent, NotePaper Pink, Blue, Green, Lilac. 30 pt visible, 44 pt hit. The selected dot gets an Outline ring with a gap, never just colour.</li>
+            <li>The preview shows the real sticker (heavy rounded, ink outline) on the checkerboard and updates as you type.</li>
+            <li>While typing, the panel shrinks to its content and rides on the keyboard so your face stays visible. It returns to 448 pt when the keyboard goes.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>7:03</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn dk">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Close stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <div class="tabsc"><div class="tabsr" role="tablist" data-tab="Stickers"></div></div>
+            </div>
+            <div class="grid" data-fill="images"></div>
+            <p class="hint">Drag one onto your face</p>
+            <div class="home"></div>
+          </div>
+        </div></div>
+        <div class="note">
+          <h3>6 · Tray, Stickers (dark panel)</h3>
+          <div class="chips"><span class="chip mode">Dark panel</span><span class="chip">C5</span><span class="chip">C4</span><span class="chip">N3</span><span class="chip">N7</span></div>
+          <ul>
+            <li>"Images" is now "Stickers" and comes first. It shows every PNG from <code>assets/stickers</code> in the 3-row grid; the art brings the colour.</li>
+            <li>With no PNGs bundled, the grid is replaced by one centred line: "No stickers yet."</li>
+            <li>At 10 on the face, cells fade to 40% and the hint reads "That's 10. Remove one to add more."</li>
+            <li>The tray reopens on the last tab used, so the first open of a call is Stickers and later opens are wherever you left off.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>7:06</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn lt">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Close stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <div class="tabsc"><div class="tabsr" role="tablist" data-tab="Hats"></div></div>
+            </div>
+            <div class="grid" data-fill="hats"></div>
+            <div class="home"></div>
+          </div>
+        </div></div>
+        <div class="note">
+          <h3>6 · Tray, Hats (light panel)</h3>
+          <div class="chips"><span class="chip mode">Light panel</span><span class="chip">N3</span><span class="chip">C5</span></div>
+          <ul>
+            <li>The pill row has scrolled so Hats is in view, with Draw cut off on the left and Glasses on the right.</li>
+            <li>Placeholder flat hats in the same 84 pt grid as Stickers. The real art comes from Adam's assets folder.</li>
+            <li>How a hat goes on (drag like a sticker, or tap to wear and follow the head) belongs to the hats ticket; see open questions.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>7:08</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn dk">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Close stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <div class="tabsc"><div class="tabsr" role="tablist" data-tab="Glasses"></div></div>
+            </div>
+            <div class="grid" data-fill="glasses"></div>
+            <div class="home"></div>
+          </div>
+        </div></div>
+        <div class="note">
+          <h3>6 · Tray, Glasses (dark panel)</h3>
+          <div class="chips"><span class="chip mode">Dark panel</span><span class="chip">N3</span><span class="chip">C5</span></div>
+          <ul>
+            <li>Same grid and cells as Hats. Glasses are flat images that will follow the eyes once that ticket lands.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true" style="filter: sepia(0.45) saturate(1.3) hue-rotate(-12deg)"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>7:10</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn lt">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Close stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <div class="tabsc"><div class="tabsr" role="tablist" data-tab="Filters"></div></div>
+            </div>
+            <div class="grid" data-fill="filters"></div>
+            <p class="hint">Tap a look to try it. None turns it off</p>
+            <div class="home"></div>
+          </div>
+        </div></div>
+        <div class="note">
+          <h3>6 · Tray, Filters (light panel)</h3>
+          <div class="chips"><span class="chip mode">Light panel</span><span class="chip">N3</span><span class="chip">C5</span></div>
+          <ul>
+            <li>Round 52 pt swatches show your own face in each colour look, with the name underneath. "Warm" is on: its swatch has the ring, and the video above already shows it.</li>
+            <li>A filter has no spot on the face, so tapping applies it straight away and the panel stays open to compare looks. None is always first.</li>
+            <li>One look at a time. Face-only looks (paint, blush) join this grid later.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>7:15</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn lt">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Back to stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <span class="t">Draw</span>
+              <div class="ibtn acc dis" aria-label="Use drawing, unavailable"><svg class="i"><use href="#i-check"/></svg></div>
+            </div>
+            <div class="cv checker"><p>Draw something to wear</p></div>
+            <div class="tools">
+              <div class="g">
+                <div class="tool on" aria-label="Pen, selected"><svg class="i"><use href="#i-pen"/></svg></div>
+                <div class="tool" aria-label="Eraser"><svg class="i"><use href="#i-eraser"/></svg></div>
+                <div class="tool dis" aria-label="Undo, unavailable"><svg class="i"><use href="#i-undo"/></svg></div>
+              </div>
+              <div class="dots">
+                <div class="dot"><i style="background:#1E2A1A"></i></div>
+                <div class="dot"><i style="background:#FFC61A"></i></div>
+                <div class="dot on"><i style="background:#FFC6D9"></i></div>
+                <div class="dot"><i style="background:#BFDDFF"></i></div>
+                <div class="dot"><i style="background:#C9EDB6"></i></div>
+              </div>
+            </div>
+            <div class="home"></div>
+          </div>
+        </div></div>
+        <div class="note">
+          <h3>7 · Pad, empty (light panel)</h3>
+          <div class="chips"><span class="chip mode">Light panel</span><span class="chip">C6</span><span class="chip">C7</span><span class="chip">C14</span></div>
+          <ul>
+            <li>Tapping Draw swaps the tab row for the pad header in place, with a 0.15 s cross-fade. ✕ stays exactly where the tray's ✕ was and goes back to the tray.</li>
+            <li>✓ is Accent but at 40% while the canvas is empty, as is Undo.</li>
+            <li>The canvas sits on a checkerboard so you can see only strokes become the sticker. One hint pill in the middle until the first stroke.</li>
+            <li>Toolbar: pen, eraser, undo, then five colour dots. Five colours (N2): Ink, Accent, Pink, Blue, Green. Lilac stays in the Text tab only.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>7:31</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="pn dk">
+            <div class="grab"></div>
+            <div class="phead">
+              <div class="ibtn" aria-label="Back to stickers"><svg class="i"><use href="#i-x"/></svg></div>
+              <span class="t">Draw</span>
+              <div class="ibtn acc" aria-label="Use drawing"><svg class="i"><use href="#i-check"/></svg></div>
+            </div>
+            <div class="cv checker">
+              <svg viewBox="0 0 378 258" aria-hidden="true">
+                <path d="M150 92c-14-34-62-24-58 14 4 34 44 54 58 76 14-22 54-42 58-76 4-38-44-48-58-14z" fill="#FFC6D9" stroke="#FFC6D9" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>
+                <path d="M238 70v88M238 116c6-16 34-18 34 6v36M296 84v2M296 112v46" fill="none" stroke="#FFC61A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="tools">
+              <div class="g">
+                <div class="tool on"><svg class="i"><use href="#i-pen"/></svg></div>
+                <div class="tool"><svg class="i"><use href="#i-eraser"/></svg></div>
+                <div class="tool"><svg class="i"><use href="#i-undo"/></svg></div>
+              </div>
+              <div class="dots">
+                <div class="dot"><i style="background:#1E2A1A"></i></div>
+                <div class="dot on"><i style="background:#FFC61A"></i></div>
+                <div class="dot"><i style="background:#FFC6D9"></i></div>
+                <div class="dot"><i style="background:#BFDDFF"></i></div>
+                <div class="dot"><i style="background:#C9EDB6"></i></div>
+              </div>
+            </div>
+            <div class="home"></div>
+          </div>
+        </div></div>
+        <div class="note">
+          <h3>7 · Pad, drawn (dark panel)</h3>
+          <div class="chips"><span class="chip mode">Dark panel</span><span class="chip">C6</span><span class="chip">C7</span><span class="chip">C14</span></div>
+          <ul>
+            <li>After the first stroke, ✓ and Undo come to full strength. ✓ crops to the strokes, makes a sticker in drag mode under your finger and closes the panel.</li>
+            <li>✕ or swipe down drops the drawing with no confirmation (C7). A drawing in a call is a few seconds of work.</li>
+            <li>Only the selected tool takes Accent. The selected colour gets a ring, so the two "selected" signals never compete.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph">
+          <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
+          <svg class="vid" style="z-index:1" viewBox="0 0 414 896" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <path d="M196 258c-7-17-31-12-29 7 2 17 22 27 29 38 7-11 27-21 29-38 2-19-22-24-29-7z" fill="#FFC6D9" stroke="#1E2A1A" stroke-width="3" stroke-linejoin="round"/>
+          </svg>
+          <span class="stk" style="left:244px; top:418px; font-size:60px">🌸</span>
+          <div class="sel" style="left:236px; top:410px; width:80px; height:80px"></div>
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="who fr">Sam <span>7:48</span></div>
+          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
+          <div class="trash fr" aria-label="Remove sticker"><svg class="i"><use href="#i-trash"/></svg></div>
+          <div class="cb">
+            <div class="cbtn fr"><svg class="i"><use href="#i-sticker"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-mic"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-video"/></svg></div>
+            <div class="cbtn fr"><svg class="i"><use href="#i-speaker"/></svg></div>
+            <div class="cbtn end"><svg class="i"><use href="#i-end"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>8 · Sticker selected, with trash</h3>
+          <div class="chips"><span class="chip">C13</span><span class="chip">C1</span><span class="chip">C15</span></div>
+          <ul>
+            <li>Tap the flower on your cheek: a 2.5 pt Accent outline with 16 pt corners appears around it, in your preview only. Sam's video never shows it.</li>
+            <li>The trash fades in as a 56 pt frosted circle, centred 16 pt above the bar, with the trash icon in Danger. It is frosted rather than filled so it reads as a different action from End call.</li>
+            <li>Tap trash to remove. Tap anywhere else to deselect, and the trash fades out over 0.15 s.</li>
+          </ul>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="calls-h">
+    <h2 id="calls-h">Notes for review</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Design calls the decisions didn't cover</h3>
+        <ul>
+          <li><b>Name and timer</b> in a frosted pill at the top centre, so no snap corner covers them.</li>
+          <li><b>Tray ✕ on the left of the tab row</b>, matching the pad's ✕, so Draw ↔ tray keeps the close button still.</li>
+          <li><b>Stickers button on the far left</b> of the bar when you are big, away from End call.</li>
+          <li><b>Control bar stays above the 40% dim</b> in the medium-tile states.</li>
+          <li><b>Small tile shadow</b>: a soft shadow and no outline, the one floating thing over video.</li>
+          <li><b>End call fill is dark-mode Danger</b> (#FF7A6E) with dark ink icon, so it follows C2 like everything else. Contrast is about 6.9:1.</li>
+          <li><b>Trash is frosted with a Danger icon</b>, not a red fill, so it can't be mistaken for End call.</li>
+          <li><b>Panel cells have no outlines</b>, only the Background tone step. Outlines are kept for the ✕, selected tab, field, Add and canvas.</li>
+          <li><b>Hint line</b> "Drag one onto your face" under the Stickers grid.</li>
+          <li><b>Tab order</b> follows Adam's list: Stickers, Emoji, Text, Draw, Hats, Glasses, Filters. The row scrolls and the selected pill is always scrolled fully into view.</li>
+          <li><b>Emoji strip</b>: 72 pt cells with no boxes, a 13 pt label above the first column of each category, and 20 pt between categories.</li>
+          <li><b>Category chips</b> sit at the bottom of the panel, nine 44 pt slots edge to edge with 36 pt discs. The current one gets a Divider-tone disc, not Accent.</li>
+          <li><b>Filters apply on tap</b> and keep the tray open. Swatches preview your own face, and None comes first.</li>
+          <li><b>Your camera off</b>: your small tile shows your initial on NotePaperBlue, like Sam's camera-off view.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Still open</h3>
+        <ul>
+          <li>Hats and glasses: drag onto the face like a sticker, or tap to wear and snap to the head? Probably tap, one of each at a time. Can wait for the hats ticket.</li>
+          <li>Do hats and glasses count toward the 10-sticker cap?</li>
+          <li>The full emoji set is large (about 1,900 with skin tones folded in). Should long-press offer skin tones, or show only the default yellow?</li>
+        </ul>
+        <h3>Where the skills were overruled</h3>
+        <ul>
+          <li>taste-skill bans glass and shadows. C1's frosted controls and the floating tile's shadow are kept because the brief chose them and video needs them to stay legible.</li>
+          <li>ui-ux-pro-max prefers springs and scale press feedback. Motion here is fades and ease-outs only (C18); a press darkens the fill over 0.1 s.</li>
+          <li>Type is SF Pro Rounded (Nunito stands in on the web), not either skill's font picks.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Measurements</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Element</th><th>Size and position (pt)</th><th>Fill</th></tr></thead>
+          <tbody>
+            <tr><td>Control circle</td><td class="n">56, spaced evenly, top at 794 (46 above home indicator)</td><td>Background dark at 50% + blur 18</td></tr>
+            <tr><td>End call</td><td class="n">56</td><td>Danger (dark) with Background (dark) icon</td></tr>
+            <tr><td>Mute on</td><td class="n">56</td><td>Accent with OnAccent mic.slash</td></tr>
+            <tr><td>Name and timer pill</td><td class="n">32 tall, centred, top 58</td><td>Frosted; timer in monospaced digits</td></tr>
+            <tr><td>Small tile</td><td class="n">100 × 150, radius 20, 16 inset; bottom corners top at 628</td><td>Video, shadow 0 6 20 at 35%</td></tr>
+            <tr><td>Medium tile</td><td class="n">290 × 435, radius 28, left 62, top 182</td><td>Dim 40% black behind</td></tr>
+            <tr><td>Medium tile buttons</td><td class="n">44, 12 from corners</td><td>Frosted</td></tr>
+            <tr><td>Tray and pad panel</td><td class="n">414 × 448, top radius 28</td><td>Surface</td></tr>
+            <tr><td>Tab pill</td><td class="n">36 visible, 44 hit</td><td>Selected: Accent, 2 pt Outline</td></tr>
+            <tr><td>Grid cell (Stickers, Hats, Glasses, Filters)</td><td class="n">84 × 84, radius 16, gap 8, 3 rows</td><td>Background</td></tr>
+            <tr><td>Emoji cell</td><td class="n">72 × 72, gap 4, 3 rows; 20 between categories; label 13 bold</td><td>None, emoji 40</td></tr>
+            <tr><td>Category chip</td><td class="n">44 slot, 36 disc, nine edge to edge from x 9, top 346</td><td>Selected: Divider disc</td></tr>
+            <tr><td>Filter swatch</td><td class="n">52 circle + 12 bold label, 7 gap</td><td>Selected: 3 pt gap + 2.5 pt Outline ring</td></tr>
+            <tr><td>Colour dot</td><td class="n">30 visible, 44 hit</td><td>Selected: 3 pt gap + 2.5 pt Outline ring</td></tr>
+            <tr><td>Pad canvas</td><td class="n">382 × 262, radius 20, 2 pt Outline</td><td>Checkerboard 12 pt squares, Background and Divider</td></tr>
+            <tr><td>Trash</td><td class="n">56, centred, top at 722</td><td>Frosted, Danger (dark) icon</td></tr>
+            <tr><td>Selected sticker</td><td class="n">2.5 pt, radius 16</td><td>Accent, preview only</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var emoji = ["🌸","✨","💛","😎","🐝","🌼","👑","🎀","😘","🥸","⭐","🍓","🦋","🌈","🫶","🐸","🌻","💋"];
+  var O = 'stroke="#1E2A1A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
+  var imgs = [
+    '<path d="M29 18c-4-9-17-7-16 4 1 9 12 15 16 21 4-6 15-12 16-21 1-11-12-13-16-4z" fill="#FFC6D9" ' + O + '/>',
+    '<path d="M29 8l6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2z" fill="#FFC61A" ' + O + '/>',
+    '<path d="M10 40l-3-22 12 9 10-15 10 15 12-9-3 22z" fill="#FFE88A" ' + O + '/>',
+    '<path d="M17 40a9 9 0 0 1 1-18 12 12 0 0 1 23 2 8 8 0 0 1 0 16z" fill="#BFDDFF" ' + O + '/>',
+    '<circle cx="29" cy="29" r="11" fill="#FFC61A" ' + O + '/><path d="M29 8v5M29 45v5M8 29h5M45 29h5M14 14l4 4M40 40l4 4M44 14l-4 4M18 40l-4 4" fill="none" ' + O + '/>',
+    '<rect x="8" y="22" width="18" height="14" rx="7" fill="#DCCDFF" ' + O + '/><rect x="32" y="22" width="18" height="14" rx="7" fill="#DCCDFF" ' + O + '/><path d="M26 28h6" fill="none" ' + O + '/>',
+    '<path d="M10 38a19 19 0 0 1 38 0" fill="none" stroke="#FFC6D9" stroke-width="6"/><path d="M16 38a13 13 0 0 1 26 0" fill="none" stroke="#FFE88A" stroke-width="6"/><path d="M22 38a7 7 0 0 1 14 0" fill="none" stroke="#BFDDFF" stroke-width="6"/>',
+    '<path d="M29 10c8 8 14 15 14 22a14 14 0 0 1-28 0c0-7 6-14 14-22z" fill="#C9EDB6" ' + O + '/>',
+    '<path d="M14 30c6-6 24-6 30 0-4 8-26 8-30 0z" fill="#FF7A6E" ' + O + '/><path d="M14 30c8 4 22 4 30 0" fill="none" ' + O + '/>'
+  ];
+  document.querySelectorAll('[data-fill="emoji"]').forEach(function (g) {
+    g.innerHTML = emoji.map(function (e) { return '<div class="cell">' + e + '</div>'; }).join('');
+  });
+  document.querySelectorAll('[data-fill="images"]').forEach(function (g) {
+    var all = imgs.concat(imgs.slice(0, 6));
+    g.innerHTML = all.map(function (s) { return '<div class="cell"><svg viewBox="0 0 58 58" aria-hidden="true">' + s + '</svg></div>'; }).join('');
+  });
+  var rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
+  document.querySelectorAll('[data-fill="kbd"]').forEach(function (k) {
+    var h = rows.map(function (r, i) {
+      var keys = r.split('').map(function (c) { return '<span class="k">' + c + '</span>'; }).join('');
+      if (i === 2) keys = '<span class="k m">⇧</span>' + keys + '<span class="k m">⌫</span>';
+      return '<div class="kr">' + keys + '</div>';
+    }).join('');
+    h += '<div class="kr"><span class="k m">123</span><span class="k m">☺</span><span class="k sp">space</span><span class="k m rt">return</span></div>';
+    k.innerHTML = h;
+  });
+
+  var TABS = ["Stickers", "Emoji", "Text", "Draw", "Hats", "Glasses", "Filters"];
+  document.querySelectorAll('[data-tab]').forEach(function (r) {
+    var cur = r.getAttribute('data-tab');
+    r.innerHTML = TABS.map(function (t) {
+      return '<span class="tb' + (t === cur ? ' on' : '') + '" role="tab" aria-selected="' + (t === cur) + '">' + t + '</span>';
+    }).join('');
+  });
+
+  var CATS = [
+    ["Smileys", '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c2 2.2 5 2.2 7 0M9.5 9.5v.5M14.5 9.5v.5"/>', "😀 😃 😄 😁 😆 🥹 😅 😂 🤣 🥲 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘 😗 😙 😚 😋 😛 😝 😜 🤪 🤨 🧐 🤓 😎 🥸 🤩 🥳 🙂‍↕️ 😏 😒 🙂‍↔️ 😞 😔 😟 😕 🙁 ☹️ 😣 😖 😫 😩 🥺 😢 😭 😮‍💨 😤 😠 😡 🤬 🤯 😳 🥵 🥶 😱 😨 😰 😥 😓 🫣 🤗 🫡 🤔 🫢 🤭 🤫 🤥 😶 🫠 😐 😑 😬 🙄 😯 😦 😧 😮 😲 🥱 😴 🤤 😪 😵 🫥 🤐 🥴 🤢 🤮 🤧 😷 🤒 🤕 🤑 🤠 😈 👿 👹 👺 🤡 💩 👻 💀 👽 🤖 🎃 😺 😸 😹 😻 😼 😽 🙀 😿 😾"],
+    ["People", '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/>', "👋 🤚 🖐️ ✋ 🖖 👌 🤌 🤏 ✌️ 🤞 🫰 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ 👍 👎 ✊ 👊 🤛 🤜 👏 🙌 🫶 👐 🤲 🤝 🙏 💅 🤳 💪 🦾 👂 👃 🧠 🫀 👀 👁️ 👅 👄 🫦 💋 👶 🧒 👦 👧 🧑 👱 👨 🧔 👩 🧓 👴 👵 💁 🙋 🙆 🙅 🤷 🤦 👸 🤴 🥷 🧙 🧚 🧛 🧜 🧝 🦸 🦹 👯 💃 🕺 👫 💑 💏"],
+    ["Animals", '<ellipse cx="12" cy="15.5" rx="4.5" ry="3.5"/><circle cx="6" cy="10.5" r="1.7"/><circle cx="9.5" cy="6.5" r="1.7"/><circle cx="14.5" cy="6.5" r="1.7"/><circle cx="18" cy="10.5" r="1.7"/>', "🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐻‍❄️ 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐔 🐧 🐦 🐤 🦆 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🪱 🐛 🦋 🐌 🐞 🐜 🪲 🐢 🐍 🦎 🐙 🦑 🦀 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🐘 🦛 🦒 🐪 🦘 🐃 🐄 🐎 🐑 🦙 🐐 🦌 🐕 🐩 🐈 🐓 🦃 🦚 🦜 🦢 🦩 🕊️ 🐇 🦝 🦨 🦡 🦫 🦦 🦥 🐁 🐿️ 🦔 🌵 🌲 🌳 🌴 🌱 🌿 ☘️ 🍀 🍃 🍂 🍁 🍄 🐚 🌾 💐 🌷 🌹 🥀 🌺 🌸 🌼 🌻 🌞 🌝 🌛 🌚 🌕 🌙 🌎 🪐 💫 ⭐ 🌟 ✨ ⚡ ☄️ 💥 🔥 🌈 ☀️ ⛅ ☁️ 🌧️ ⛈️ ❄️ ☃️ ⛄ 💨 💧 💦 🌊"],
+    ["Food", '<path d="M12 7.5c-4-2.2-8 .8-7 5.8.9 4.6 4 7.7 7 6.7 3 1 6.1-2.1 7-6.7 1-5-3-8-7-5.8zM12 7.5c0-2 1-3.5 3-4"/>', "🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🫐 🍈 🍒 🍑 🥭 🍍 🥥 🥝 🍅 🍆 🥑 🥦 🥬 🥒 🌶️ 🫑 🌽 🥕 🧄 🧅 🥔 🍠 🥐 🥯 🍞 🥖 🥨 🧀 🥚 🍳 🧈 🥞 🧇 🥓 🥩 🍗 🍖 🌭 🍔 🍟 🍕 🥪 🌮 🌯 🥗 🍝 🍜 🍲 🍛 🍣 🍱 🥟 🍤 🍙 🍚 🍘 🍥 🥠 🍢 🍡 🍧 🍨 🍦 🥧 🧁 🍰 🎂 🍮 🍭 🍬 🍫 🍿 🍩 🍪 🌰 🥜 🍯 🥛 ☕ 🫖 🍵 🧃 🥤 🧋 🍶 🍺 🍻 🥂 🍷 🥃 🍸 🍹 🧉 🍾 🧊"],
+    ["Activity", '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c-3 3-3 14 0 17M12 3.5c3 3 3 14 0 17"/>', "⚽ 🏀 🏈 ⚾ 🥎 🎾 🏐 🏉 🥏 🎱 🪀 🏓 🏸 🏒 🏑 🥍 🏏 🪃 🥅 ⛳ 🪁 🏹 🎣 🤿 🥊 🥋 🎽 🛹 🛼 🛷 ⛸️ 🥌 🎿 ⛷️ 🏂 🏋️ 🤸 ⛹️ 🤺 🤾 🏌️ 🏇 🧘 🏄 🏊 🤽 🚣 🧗 🚵 🚴 🏆 🥇 🥈 🥉 🏅 🎖️ 🎗️ 🎫 🎟️ 🎪 🤹 🎭 🩰 🎨 🎬 🎤 🎧 🎼 🎹 🥁 🪘 🎷 🎺 🪗 🎸 🪕 🎻 🎲 ♟️ 🎯 🎳 🎮 🎰 🧩"],
+    ["Travel", '<path d="M4 16.5v-4l2-5h12l2 5v4zM4 12.5h16"/><circle cx="8" cy="16.5" r="1.6"/><circle cx="16" cy="16.5" r="1.6"/>', "🚗 🚕 🚙 🚌 🚎 🏎️ 🚓 🚑 🚒 🚐 🛻 🚚 🚛 🚜 🦯 🦽 🦼 🛴 🚲 🛵 🏍️ 🛺 🚨 🚔 🚍 🚘 🚖 🚡 🚠 🚟 🚃 🚋 🚞 🚝 🚄 🚅 🚈 🚂 🚆 🚇 🚊 🚉 ✈️ 🛫 🛬 🛩️ 💺 🛰️ 🚀 🛸 🚁 🛶 ⛵ 🚤 🛥️ 🛳️ ⛴️ 🚢 ⚓ 🪝 ⛽ 🚧 🚦 🚥 🚏 🗺️ 🗿 🗽 🗼 🏰 🏯 🏟️ 🎡 🎢 🎠 ⛲ ⛱️ 🏖️ 🏝️ 🏜️ 🌋 ⛰️ 🏔️ 🗻 🏕️ ⛺ 🛖 🏠 🏡 🏘️ 🏚️ 🏗️ 🏭 🏢 🏬 🏣 🏤 🏥 🏦 🏨 🏪 🏫 🏩 💒 🏛️ ⛪ 🕌 🕍 🛕 🕋 ⛩️ 🛤️ 🛣️ 🗾 🎑 🏞️ 🌅 🌄 🌠 🎇 🎆 🌇 🌆 🏙️ 🌃 🌌 🌉 🌁"],
+    ["Objects", '<path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3z"/>', "⌚ 📱 💻 ⌨️ 🖥️ 🖨️ 🖱️ 🕹️ 💽 💾 💿 📀 📼 📷 📸 📹 🎥 📽️ 🎞️ 📞 ☎️ 📟 📠 📺 📻 🎙️ 🎚️ 🎛️ 🧭 ⏱️ ⏲️ ⏰ 🕰️ ⌛ ⏳ 📡 🔋 🔌 💡 🔦 🕯️ 🪔 🧯 🛢️ 💸 💵 💴 💶 💷 🪙 💰 💳 💎 ⚖️ 🪜 🧰 🪛 🔧 🔨 ⚒️ 🛠️ ⛏️ 🪚 🔩 ⚙️ 🪤 🧱 ⛓️ 🧲 🔫 💣 🧨 🪓 🔪 🗡️ ⚔️ 🛡️ 🚬 ⚰️ 🪦 ⚱️ 🏺 🔮 📿 🧿 💈 ⚗️ 🔭 🔬 🕳️ 🩹 🩺 💊 💉 🩸 🧬 🦠 🧫 🧪 🌡️ 🧹 🪠 🧺 🧻 🚽 🚰 🚿 🛁 🛀 🧼 🪥 🪒 🧽 🪣 🧴 🛎️ 🔑 🗝️ 🚪 🪑 🛋️ 🛏️ 🛌 🧸 🪆 🖼️ 🪞 🪟 🛍️ 🛒 🎁 🎈 🎏 🎀 🪄 🪅 🎊 🎉 🎎 🏮 🎐 🧧 ✉️ 📩 📨 📧 💌 📥 📤 📦 🏷️ 🪧 📪 📫 📬 📭 📮 📯 📜 📃 📄 📑 🧾 📊 📈 📉 🗒️ 🗓️ 📆 📅 🗑️ 📇 🗃️ 🗳️ 🗄️ 📋 📁 📂 🗂️ 🗞️ 📰 📓 📔 📒 📕 📗 📘 📙 📚 📖 🔖 🧷 🔗 📎 🖇️ 📐 📏 🧮 📌 📍 ✂️ 🖊️ 🖋️ ✒️ 🖌️ 🖍️ 📝 ✏️ 🔍 🔎 🔏 🔐 🔒 🔓"],
+    ["Symbols", '<path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', "❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 🩷 🩵 🩶 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 ☮️ ✝️ ☪️ 🕉️ ☸️ ✡️ 🔯 🕎 ☯️ ☦️ 🛐 ⛎ ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ 🆔 ⚛️ 🉑 ☢️ ☣️ 📴 📳 🈶 🈚 🈸 🈺 🈷️ ✴️ 🆚 💮 🉐 ㊙️ ㊗️ 🈴 🈵 🈹 🈲 🅰️ 🅱️ 🆎 🆑 🅾️ 🆘 ❌ ⭕ 🛑 ⛔ 📛 🚫 💯 💢 ♨️ 🚷 🚯 🚳 🚱 🔞 📵 🚭 ❗ ❕ ❓ ❔ ‼️ ⁉️ 🔅 🔆 〽️ ⚠️ 🚸 🔱 ⚜️ 🔰 ♻️ ✅ 🈯 💹 ❇️ ✳️ ❎ 🌐 💠 Ⓜ️ 🌀 💤 🏧 🚾 ♿ 🅿️ 🛗 🈳 🈂️ 🛂 🛃 🛄 🛅 🚹 🚺 🚼 ⚧️ 🚻 🚮 🎦 📶 🈁 🔣 ℹ️ 🔤 🔡 🔠 🆖 🆗 🆙 🆒 🆕 🆓 0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣ 🔟 🔢 #️⃣ *️⃣ ⏏️ ▶️ ⏸️ ⏯️ ⏹️ ⏺️ ⏭️ ⏮️ ⏩ ⏪ ⏫ ⏬ ◀️ 🔼 🔽 ➡️ ⬅️ ⬆️ ⬇️ ↗️ ↘️ ↙️ ↖️ ↕️ ↔️ ↪️ ↩️ ⤴️ ⤵️ 🔀 🔁 🔂 🔄 🔃 🎵 🎶 ➕ ➖ ➗ ✖️ 🟰 ♾️ 💲 💱 ™️ ©️ ®️ 〰️ ➰ ➿ 🔚 🔙 🔛 🔝 🔜 ✔️ ☑️ 🔘 🔴 🟠 🟡 🟢 🔵 🟣 ⚫ ⚪ 🟤 🔺 🔻 🔸 🔹 🔶 🔷 🔳 🔲 ▪️ ▫️ ◾ ◽ ◼️ ◻️ 🟥 🟧 🟨 🟩 🟦 🟪 ⬛ ⬜ 🟫 🔈 🔇 🔉 🔊 🔔 🔕 📣 📢 💬 💭 🗯️ ♠️ ♣️ ♥️ ♦️ 🃏 🎴 🀄"],
+    ["Flags", '<path d="M5.5 21V4M5.5 4h11.5l-2.2 4 2.2 4H5.5"/>', "🏳️ 🏴 🏁 🚩 🏳️‍🌈 🏳️‍⚧️ 🏴‍☠️ 🇦🇺 🇦🇹 🇧🇪 🇧🇷 🇨🇦 🇨🇱 🇨🇳 🇨🇴 🇭🇷 🇨🇿 🇩🇰 🇪🇬 🇪🇺 🇫🇮 🇫🇷 🇩🇪 🇬🇷 🇭🇰 🇭🇺 🇮🇸 🇮🇳 🇮🇩 🇮🇪 🇮🇱 🇮🇹 🇯🇵 🇰🇪 🇰🇷 🇲🇽 🇳🇱 🇳🇿 🇳🇬 🇳🇴 🇵🇰 🇵🇪 🇵🇭 🇵🇱 🇵🇹 🇷🇴 🇸🇦 🇸🇬 🇿🇦 🇪🇸 🇸🇪 🇨🇭 🇹🇼 🇹🇭 🇹🇷 🇺🇦 🇦🇪 🇬🇧 🇺🇸 🇻🇳"]
+  ];
+  document.querySelectorAll('[data-emoji]').forEach(function (s) {
+    var start = s.getAttribute('data-emoji');
+    s.innerHTML = '<div class="etrack">' + CATS.map(function (c) {
+      return '<div class="eg" data-c="' + c[0] + '"><b>' + c[0] + '</b><div class="eg-g">' +
+        c[2].split(' ').map(function (e) { return '<span>' + e + '</span>'; }).join('') + '</div></div>';
+    }).join('') + '</div>';
+    var g = s.querySelector('[data-c="' + start + '"]');
+    if (g.offsetLeft > 16) s.firstChild.style.transform = 'translateX(' + (120 - g.offsetLeft) + 'px)';
+  });
+  document.querySelectorAll('[data-cat]').forEach(function (r) {
+    var cur = r.getAttribute('data-cat');
+    r.innerHTML = CATS.map(function (c) {
+      return '<div class="cat' + (c[0] === cur ? ' on' : '') + '" aria-label="' + c[0] + '"><span><svg class="i" viewBox="0 0 24 24">' + c[1] + '</svg></span></div>';
+    }).join('');
+  });
+
+  function cells(list) { return list.map(function (s) { return '<div class="cell"><svg viewBox="0 0 58 58" aria-hidden="true">' + s + '</svg></div>'; }).join(''); }
+  var hats = [
+    '<path d="M29 8l13 34H16z" fill="#FFC6D9" ' + O + '/><path d="M21 28l12-4M18 36l18-6" fill="none" stroke="#FFC61A" stroke-width="3"/><circle cx="29" cy="8" r="4" fill="#FFC61A" ' + O + '/>',
+    '<path d="M11 42l-3-24 12 9 9-14 9 14 12-9-3 24z" fill="#FFC61A" ' + O + '/>',
+    '<path d="M6 36c8 6 38 6 46 0-4 8-42 8-46 0z" fill="#C9A06A" ' + O + '/><path d="M17 36c0-12 3-20 12-20s12 8 12 20c-8 3-16 3-24 0z" fill="#C9A06A" ' + O + '/>',
+    '<path d="M13 38c0-14 7-22 16-22s16 8 16 22z" fill="#BFDDFF" ' + O + '/><rect x="11" y="36" width="36" height="8" rx="4" fill="#FFFDF5" ' + O + '/><circle cx="29" cy="14" r="5" fill="#FFC6D9" ' + O + '/>',
+    '<rect x="18" y="10" width="22" height="26" rx="2" fill="#1E2A1A" ' + O + '/><rect x="8" y="36" width="42" height="7" rx="3.5" fill="#1E2A1A" ' + O + '/><rect x="18" y="28" width="22" height="5" fill="#FF7A6E"/>',
+    '<ellipse cx="29" cy="38" rx="24" ry="7" fill="#FFE88A" ' + O + '/><path d="M17 37c0-10 5-16 12-16s12 6 12 16" fill="#FFE88A" ' + O + '/><circle cx="38" cy="28" r="4" fill="#FFC6D9" ' + O + '/>',
+    '<path d="M29 4l12 40H17z" fill="#FFFDF5" ' + O + '/><text x="29" y="38" text-anchor="middle" font-size="13" font-weight="900" fill="#1E2A1A" font-family="ui-rounded, Nunito, sans-serif">?</text>',
+    '<path d="M10 38c2-10 10-16 19-16s17 6 19 16z" fill="#C9EDB6" ' + O + '/><path d="M44 36h10" ' + O + '/><circle cx="29" cy="21" r="3" fill="#C9EDB6" ' + O + '/>',
+    '<circle cx="13" cy="34" r="6" fill="#FFC6D9" ' + O + '/><circle cx="23" cy="28" r="6" fill="#FFE88A" ' + O + '/><circle cx="35" cy="28" r="6" fill="#DCCDFF" ' + O + '/><circle cx="45" cy="34" r="6" fill="#BFDDFF" ' + O + '/>',
+    '<path d="M18 26l11 6 11-6v14l-11-6-11 6z" fill="#FF7A6E" ' + O + '/><circle cx="29" cy="33" r="3.5" fill="#FF7A6E" ' + O + '/>'
+  ];
+  var glasses = [
+    '<circle cx="18" cy="30" r="9" fill="#BFDDFF" ' + O + '/><circle cx="40" cy="30" r="9" fill="#BFDDFF" ' + O + '/><path d="M27 29h4M9 28l-5-3M49 28l5-3" fill="none" ' + O + '/>',
+    '<path d="M18 24c-3-6-12-4-11 3 1 6 8 9 11 13 3-4 10-7 11-13 1-7-8-9-11-3zM40 24c-3-6-12-4-11 3 1 6 8 9 11 13 3-4 10-7 11-13 1-7-8-9-11-3z" fill="#FFC6D9" ' + O + '/>',
+    '<path d="M17 19l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1zM41 19l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z" fill="#FFC61A" ' + O + '/>',
+    '<path d="M6 25h46M8 25c0 10 4 14 10 14s9-5 9-14M31 25c0 9 3 14 9 14s10-4 10-14" fill="#3E4A3A" ' + O + '/>',
+    '<path d="M6 24c8-4 14 0 20 4 0 6-4 10-10 10S6 32 6 24zM52 24c-8-4-14 0-20 4 0 6 4 10 10 10s10-6 10-14z" fill="#DCCDFF" ' + O + '/><path d="M26 28h6" ' + O + '/>',
+    '<rect x="6" y="22" width="20" height="14" rx="3" fill="#FF7A6E" ' + O + '/><rect x="32" y="22" width="20" height="14" rx="3" fill="#7FB8FF" ' + O + '/><path d="M26 27h6" ' + O + '/>',
+    '<circle cx="36" cy="28" r="11" fill="#FFFDF5" ' + O + '/><path d="M36 39c-2 6-6 10-10 12" fill="none" ' + O + '/>',
+    '<rect x="5" y="21" width="22" height="15" rx="4" fill="#FFFDF5" ' + O + '/><rect x="31" y="21" width="22" height="15" rx="4" fill="#FFFDF5" ' + O + '/><path d="M8 25h16M8 29h16M8 33h16M34 25h16M34 29h16M34 33h16" stroke="#1E2A1A" stroke-width="2"/>',
+    '<path d="M6 24h46l-3 10c-2 5-12 5-14 0l-2-5h-8l-2 5c-2 5-12 5-14 0z" fill="#1E2A1A" ' + O + '/>'
+  ];
+  var looks = [["None", "none"], ["Warm", "sepia(.45) saturate(1.3) hue-rotate(-12deg)"], ["Cool", "hue-rotate(25deg) saturate(.9) brightness(1.05)"], ["Mono", "grayscale(1)"], ["Sepia", "sepia(.9)"], ["Vivid", "saturate(1.8) contrast(1.1)"], ["Fade", "contrast(.75) brightness(1.15) saturate(.7)"], ["Dusk", "hue-rotate(-40deg) saturate(1.2) brightness(.9)"], ["Mint", "hue-rotate(70deg) saturate(.8)"], ["Rose", "hue-rotate(-25deg) saturate(1.4) brightness(1.05)"], ["Noir", "grayscale(1) contrast(1.5) brightness(.85)"], ["Gold", "sepia(.6) saturate(2) brightness(1.05)"], ["Pop", "saturate(2.4)"], ["Soft", "blur(.5px) brightness(1.1) saturate(.85)"], ["Night", "hue-rotate(180deg) saturate(.6) brightness(.8)"]];
+  document.querySelectorAll('[data-fill="hats"]').forEach(function (g) { g.innerHTML = cells(hats.concat(hats.slice(0, 5))); });
+  document.querySelectorAll('[data-fill="glasses"]').forEach(function (g) { g.innerHTML = cells(glasses.concat(glasses.slice(0, 6))); });
+  document.querySelectorAll('[data-fill="filters"]').forEach(function (g) {
+    g.innerHTML = looks.map(function (l) {
+      return '<div class="cell fx' + (l[0] === 'Warm' ? ' on' : '') + '"><span class="sw"><svg viewBox="80 230 254 254" style="filter:' + l[1] + '"><use href="#v-adam" width="414" height="896"/></svg></span><b>' + l[0] + '</b></div>';
+    }).join('');
+  });
+
+  document.querySelectorAll('.tabsc').forEach(function (c) {
+    var on = c.querySelector('.tb.on');
+    if (!on) return;
+    var over = on.offsetLeft - c.offsetLeft + on.offsetWidth + 24 - c.clientWidth;
+    if (over > 0) c.firstChild.style.transform = 'translateX(' + (-over) + 'px)';
+  });
+})();
+</script>

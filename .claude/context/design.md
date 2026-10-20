@@ -45,6 +45,8 @@ The six existing asset-catalog names first, then proposed additions (*new*). Eac
 | Highlight *new* | #377D33 | #8BD06E | "New to you" ring and badge fill |
 | OnHighlight *new* | #FFFDF5 | #1B1814 | Text on Highlight (the "New" badge) |
 | Divider *new* | #EDE6CC | #3A342D | 1.5 pt row dividers inside list groups |
+| CallFrost *new* | n/a | #342F29 at 55% | Fill of frosted call controls, over `.ultraThinMaterial` (dark). Call chrome only |
+| OnDanger *new* | n/a | #1B1814 | Symbol on a Danger fill (End call). Call chrome only |
 
 **NotePaper pastels** (*new*, the same in both modes because they are part of the note image):
 
@@ -85,6 +87,8 @@ Avatar tints are per person, not per device: each person keeps the same tint on 
 | Accent | Background | n/a | 1.48 | 11.65 |
 | Divider | Surface | n/a | 1.23 | 1.25 |
 | TextPrimary (light) | each NotePaper | 4.5 | 10.15–12.25 | same |
+| OnDanger | Danger | 4.5 | n/a | 6.9 |
+| TextPrimary (dark) | CallFrost over white video (≈#8F8B86) | 3 (non-text) | n/a | 3.1 |
 
 Everything passes AA. Two pairs are low on purpose:
 - **Accent on Background (light)** is a fill colour. It always has an Outline around it and OnAccent text on it, so its own contrast doesn't carry meaning.
@@ -157,6 +161,8 @@ A solid copy of the shape in `Outline`, offset 3 pt right and 3 pt down, with no
 | Notes | "Make a note" |
 | Hobbies | Nothing. Every +1 is equal. |
 | Sheets | The confirming action ("Send", "Add") |
+
+**Exception, floating video tiles:** the small and medium call tiles get a soft black shadow (small `radius 10, y 6, 35%`; medium `radius 20, y 12, 45%`). These are the only blurred shadows in the app, because the tiles really do float over moving video.
 
 ## 6. Components
 
@@ -247,6 +253,24 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 - Each cell shows the day letter (caption), the date (headline, monospaced digits), and up to three stacked mini-cards in that day's NotePaper colours.
 - Today is an Accent cell. Tapping a day opens that day's notes, as the calendar does.
 
+### Icon circle button
+
+- 44 pt circle with a 20 pt symbol. `.plain`: Background fill, 2 pt Outline, TextPrimary. `.accent`: Accent fill, 2.5 pt Outline, OnAccent. Disabled: 40%.
+- Used for panel ✕ and ✓.
+
+### Colour dots
+
+- 44 pt hit area, 30 pt visible circle with a 2 pt Outline. Selected: a 3 pt gap in the surface colour, then a 2.5 pt Outline ring, fading in over 0.15 s.
+- The same ring marks selected filter swatches.
+
+### Checkerboard
+
+- 12 pt squares alternating Background and Divider. Marks transparency (drawing pad, text-sticker preview).
+
+### Selection inside a panel
+
+- Accent fill for the one selected tab or tool. Outline ring for the selected colour or swatch. Divider disc for the current category chip. Never two Accent selections in one row.
+
 ## 7. Screens (as mocked up)
 
 - **Calling:**
@@ -267,6 +291,13 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 
 These are design-system references, not feature specs. Each tab still gets its own spec run.
 
+### Call chrome
+
+- Always dark: the in-call view forces the dark scheme. The effects panel (tray and pad) follows the system scheme.
+- Over video there are no Outlines and no sticker shadow. Controls are frosted circles: `.ultraThinMaterial` (dark) plus CallFrost, with TextPrimary (dark) symbols. With Reduce Transparency, CallFrost goes to 90% with no material.
+- Accent over video only marks an active or "off" state (mute on, camera off) or a selected sticker. End call is Danger with OnDanger.
+- Spec: [in-call-screen.md](../design/specs/in-call-screen.md).
+
 ## 8. Motion and haptics
 
 - **Colour and opacity fades only:**
@@ -282,6 +313,7 @@ These are design-system references, not feature specs. Each tab still gets its o
   - `.error` on failure.
   - `.impact(weight: .light)` when a sticker drops.
   - Nothing on ordinary buttons, chips or +1.
+  - No `.selection` haptic on tabs inside the effects tray. The tab-change haptic is only for the app's tab bar.
 
 ## 9. Iconography
 
@@ -394,3 +426,12 @@ Applied on 2026-10-19 to [technical-spec.md](technical-spec.md) and [decisions.m
 7. **Motion › Tab bar:** per-tab pills that cross-fade (no shared moving indicator), the selected icon uses `.fill`, Surface background with a 2.5 pt Outline top edge. This replaces `.background(.bar)` and `Color.primary/.secondary` in `ContentView.swift`.
 8. **Database › profiles (later):** an optional `avatar_path` for the photo avatar, and optionally an `avatar_tint` if the fixed tint per person should be stored rather than assigned.
 9. **Decision log:** add a T-decision: "Brand look is Buttercup Field (light) / Sticky Note (dark); sticker shadow at most once per screen; all buttons are pills."
+
+## 15. Changes from the in-call design (2026-10-20)
+
+Approved by Adam with the [in-call spec](../design/specs/in-call-screen.md) and [mockup](https://claude.ai/artifact/Ug28oBLwcbFWh3Gacp3LC4):
+- Call chrome section: always dark, no outlines or sticker shadow over video, frosted controls, Accent only for active or "off" states.
+- New tokens CallFrost and OnDanger, with contrast rows.
+- Shadow exception for the floating video tiles.
+- New components: icon circle button, colour dots, checkerboard; a selection rule inside panels.
+- No tab-change haptic inside the effects tray.
