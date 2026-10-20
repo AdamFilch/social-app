@@ -1,3 +1,4 @@
+import ButtercupKit
 import SwiftUI
 
 enum AppTab: CaseIterable {
@@ -27,8 +28,14 @@ struct ContentView: View {
         TabView(selection: $selection) {
             ForEach(AppTab.allCases, id: \.self) { tab in
                 Tab(value: tab) {
-                    Text(tab.title)
-                        .toolbar(.hidden, for: .tabBar)
+                    Group {
+                        if tab == .calling {
+                            CallingTab()
+                        } else {
+                            Text(tab.title)
+                        }
+                    }
+                    .toolbar(.hidden, for: .tabBar)
                 }
             }
         }
@@ -67,6 +74,19 @@ struct TabBar: View {
     }
 }
 
+struct CallingTab: View {
+    @Environment(SessionStore.self) private var session
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(session.partner?.displayName ?? "")
+                .font(.title2.weight(.heavy))
+            Button("Sign out", role: .destructive) { Task { await session.signOut() } }
+        }
+    }
+}
+
 #Preview {
     ContentView()
+        .environment(SessionStore())
 }
