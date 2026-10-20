@@ -107,7 +107,7 @@ Non-obvious design decisions:
 
 ## Data Model
 ### `calls` table (unchanged, for reference)
-> Source: [supabase/migrations/20261019102934_init.sql](../../supabase/migrations/20261019102934_init.sql)
+> Source: [supabase/migrations/20261019102934_init.sql](../../../supabase/migrations/20261019102934_init.sql)
 
 | Column | Type | Description |
 |---|---|---|
@@ -236,8 +236,8 @@ No end-call ─► sweep at next minute (≥ 60 s) ─► missed
 | `supabase/functions/tests/calls.test.ts` | **new** Deno tests |
 | `supabase/functions/.env.example` | **new** keys with local dev values (`devkey` / `secret`) |
 | `supabase/tests/database/calls_rules.test.sql` | **new** pgTAP |
-| [supabase/seed.sql](../../supabase/seed.sql) | seed users get `encrypted_password = crypt('password', gen_salt('bf'))` |
-| [claude.md](../../claude.md) | add `brew install livekit`, `livekit-server --dev`, `supabase functions serve --env-file supabase/functions/.env`, function tests |
+| [supabase/seed.sql](../../../supabase/seed.sql) | seed users get `encrypted_password = crypt('password', gen_salt('bf'))` |
+| [claude.md](../../../claude.md) | add `brew install livekit`, `livekit-server --dev`, `supabase functions serve --env-file supabase/functions/.env`, function tests |
 
 ---
 
