@@ -239,7 +239,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adamfilchoir.buttercup;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPABASE_ANON_KEY = "";
+				SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54cWN3Y2hyaWdzZW91bnprdnZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzOTg4MzAsImV4cCI6MjEwNzk3NDgzMH0.z9GyHWmw0Vy15PK7pA6IAbC3phfrlDyLLfGwb_rwR3Q";
 				SUPABASE_URL = "https://nxqcwchrigseounzkvvz.supabase.co";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;

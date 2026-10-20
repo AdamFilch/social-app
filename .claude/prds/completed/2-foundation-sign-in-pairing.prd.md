@@ -229,4 +229,4 @@ Tap buttercup://invite/X while signedOut
 | Simulator can't reach local Supabase from a second device type | Low | AC4 blocked | Both simulators use `127.0.0.1`, which they share with the Mac |
 
 ---
-*Status: COMPLETED — PR #TBD*
+*Status: COMPLETED — PR #3*
