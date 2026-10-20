@@ -44,4 +44,5 @@ Full spec: [hobby-tracker-spec.md](hobby-tracker-spec.md).
 - [ios-limits.md](ios-limits.md): what iOS won't let the app do.
 - [feature-ideas.md](feature-ideas.md): the original feature overview and later ideas.
 - [decisions.md](decisions.md): every product decision settled on 2026-10-19.
+- [features.md](features.md): features catalog, what is built today and where the code lives.
 - [../../assets/README.md](../../assets/README.md): formats for face-effect assets.

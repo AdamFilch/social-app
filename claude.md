@@ -7,6 +7,7 @@ Private iOS 26 app (Swift/SwiftUI) with a Supabase backend. Start with [.claude/
 | Path | What |
 | --- | --- |
 | `Buttercup/` | iOS app target |
+| `ButtercupKit/` | Local Swift package: Supabase client, models, `SessionStore` |
 | `supabase/migrations/` | Postgres schema, RLS, RPCs, storage and realtime setup |
 | `supabase/seed.sql` | Local test data: two paired users plus a sample catalog |
 | `supabase/tests/database/` | pgTAP tests |
