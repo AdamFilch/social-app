@@ -1,7 +1,7 @@
-insert into auth.users (instance_id, id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
-  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'adam@example.com', '{"provider":"apple","providers":["apple"]}', '{}', now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222', 'authenticated', 'authenticated', 'partner@example.com', '{"provider":"apple","providers":["apple"]}', '{}', now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated', 'stranger@example.com', '{"provider":"apple","providers":["apple"]}', '{}', now(), now());
+insert into auth.users (instance_id, id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, confirmation_token, recovery_token, email_change_token_new, email_change) values
+  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'adam@example.com', '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222', 'authenticated', 'authenticated', 'partner@example.com', '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''),
+  ('00000000-0000-0000-0000-000000000000', '33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated', 'stranger@example.com', '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', '');
 
 update public.profiles set display_name = 'Adam', time_zone = 'Europe/London', avatar_tint = 'NotePaperBlue'
 where id = '11111111-1111-1111-1111-111111111111';
