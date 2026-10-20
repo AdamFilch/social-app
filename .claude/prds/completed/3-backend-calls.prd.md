@@ -274,4 +274,4 @@ No end-call ─► sweep at next minute (≥ 60 s) ─► missed
 | `host.docker.internal` unreachable from edge runtime | Low | AC7 | `LIVEKIT_API_URL` is configurable |
 
 ---
-*Status: COMPLETED — PR #PENDING*
+*Status: COMPLETED — PR #4*
