@@ -22,6 +22,9 @@ public final class CallStore: NSObject {
     public private(set) var micOn = true
     public private(set) var cameraOn = false
     public var failure: Failure?
+    public var showsCallScreen: Bool {
+        (phase == .outgoing && call != nil) || [.connecting, .active, .reconnecting].contains(phase)
+    }
     public var videoSource: ((BufferCapturer) -> Void)?
 
     private let session: SessionStore
@@ -83,7 +86,9 @@ public final class CallStore: NSObject {
             }
             timeout = Task {
                 try? await Task.sleep(for: .seconds(45))
-                if !Task.isCancelled, phase == .outgoing { await end("missed") }
+                guard !Task.isCancelled, phase == .outgoing else { return }
+                timeout = nil
+                await end("missed")
             }
             try await join(response, camera: video)
         } catch {
@@ -208,7 +213,9 @@ public final class CallStore: NSObject {
             phase = .reconnecting
             timeout = Task {
                 try? await Task.sleep(for: .seconds(30))
-                if !Task.isCancelled, phase == .reconnecting { await end("ended") }
+                guard !Task.isCancelled, phase == .reconnecting else { return }
+                timeout = nil
+                await end("ended")
             }
         }
     }
