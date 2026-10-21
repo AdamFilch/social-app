@@ -17,6 +17,14 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>buttercup uses the camera so your partner can see you on video calls.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>buttercup uses the microphone so your partner can hear you on calls.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

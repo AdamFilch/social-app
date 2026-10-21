@@ -22,6 +22,8 @@ enum AppTab: CaseIterable {
 }
 
 struct ContentView: View {
+    @Environment(SessionStore.self) private var session
+    @Environment(CallStore.self) private var calls
     @State private var selection: AppTab = .calling
 
     var body: some View {
@@ -30,7 +32,7 @@ struct ContentView: View {
                 Tab(value: tab) {
                     Group {
                         if tab == .calling {
-                            CallingTab()
+                            CallingView()
                         } else {
                             Text(tab.title)
                         }
@@ -42,6 +44,24 @@ struct ContentView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             TabBar(selection: $selection)
         }
+        .overlay {
+            if calls.phase == .outgoing && calls.call != nil {
+                OutgoingView().transition(.opacity)
+            } else if [.connecting, .active, .reconnecting].contains(calls.phase) {
+                InCallView().transition(.opacity)
+            }
+        }
+        .animation(.easeOut(duration: 0.2), value: calls.phase)
+        .sheet(isPresented: .constant(calls.phase == .incoming)) { IncomingSheet() }
+        .alert(failureMessage, isPresented: Binding(get: { calls.failure != nil }, set: { if !$0 { calls.failure = nil } })) {}
+        .sensoryFeedback(.success, trigger: calls.connectedAt) { _, new in new != nil }
+        .sensoryFeedback(.error, trigger: calls.failure) { _, new in new != nil }
+        .task { await calls.listen() }
+    }
+
+    private var failureMessage: String {
+        let name = session.partner?.displayName ?? ""
+        return calls.failure == .busy ? "\(name) is on another call" : "Couldn't reach \(name). Try again"
     }
 }
 
@@ -74,19 +94,8 @@ struct TabBar: View {
     }
 }
 
-struct CallingTab: View {
-    @Environment(SessionStore.self) private var session
-
-    var body: some View {
-        VStack(spacing: 16) {
-            Text(session.partner?.displayName ?? "")
-                .font(.title2.weight(.heavy))
-            Button("Sign out", role: .destructive) { Task { await session.signOut() } }
-        }
-    }
-}
-
 #Preview {
     ContentView()
         .environment(SessionStore())
+        .environment(CallStore(session: SessionStore()))
 }
