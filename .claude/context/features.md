@@ -7,6 +7,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 | # | Feature | Status |
 |---|---|---|
 | 1 | [Accounts and pairing](#1-accounts-and-pairing) | Built |
+| 2 | [Calls](#2-calls) | Built (partial) |
 
 ---
 
@@ -38,3 +39,33 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 - Sign in with Apple is not built (needs a paid Apple Developer account).
 - No unpairing.
 - Screens are plain SwiftUI, not yet restyled to the design system.
+
+---
+
+## 2. Calls
+
+**Status:** Built (partial): backend only, the app has no call screens yet ([3] Frontend).
+
+**What it does:** Creates, answers and ends 1:1 audio and video calls between paired partners. A call is one `calls` row plus a LiveKit room named after its id; the functions return LiveKit tokens, and the apps follow status changes over Realtime.
+
+**Flow:**
+1. `start-call {kind}` finds the partner, inserts a `ringing` row with `room_name = id`, and returns `{call, token, livekit_url}`.
+2. The callee's app sees the insert over Realtime `postgres_changes` on `calls`.
+3. `answer-call {call_id}` (callee) sets `answered` + `answered_at` and returns the callee's token. Repeating it on an answered call returns a fresh token (reconnect).
+4. `end-call {call_id, reason}` sets `declined` (callee, from ringing), `cancelled` / `missed` (caller, from ringing) or `ended` (either, from answered), with `ended_at`.
+5. A `pg_cron` job (`sweep-ringing-calls`, every minute) marks calls still ringing after 60 s as `missed`.
+
+**Rules:**
+- One active (`ringing` or `answered`) call per pair, enforced by the `calls_one_active_per_pair` index. If the partner's call is already ringing, `start-call` returns `{call, incoming: true}` and no token; repeating my own ringing call returns it again.
+- An `answered` call whose LiveKit room is empty (both apps died) is ended by the next `start-call`; if someone is in the room, `start-call` returns 409 `busy`.
+- Errors are `{error}`: 400 `bad_request`, 401 `unauthorized`, 403 `not_paired`, 404 `call_not_found`, 409 `busy` / `call_not_ringing` (with `status`) / `invalid_transition`. `end-call` on a finished call returns it unchanged.
+- Tokens: identity = user id, 2 h TTL, join/publish/subscribe for that room only. Never stored in `calls`.
+- The app only reads `calls` (RLS: caller or callee); all writes go through the functions with the service role.
+- Local LiveKit is `livekit-server --dev` (`devkey` / `secret`). Functions reach it at `LIVEKIT_API_URL` (`http://host.docker.internal:7880`); apps use `LIVEKIT_URL` (`ws://127.0.0.1:7880`).
+
+**Code:** `supabase/functions/start-call/index.ts`, `supabase/functions/answer-call/index.ts`, `supabase/functions/end-call/index.ts`, `supabase/functions/_shared/supabase.ts` (admin client, auth, `loadCall`, `transition`), `supabase/functions/_shared/livekit.ts` (tokens, room participant check), `supabase/functions/.env.example`, `supabase/migrations/20261020082738_calls_rules.sql` (index, sweep, cron), `supabase/functions/tests/calls.test.ts`, `supabase/tests/database/calls_rules.test.sql`. Spec: [prds/completed/3-backend-calls.prd.md](../prds/completed/3-backend-calls.prd.md).
+
+**Known gaps:**
+- No call screens, incoming sheet or call history in the app yet ([3] Frontend).
+- No VoIP, cancel or missed-call pushes ([8]).
+- Functions are not deployed to the hosted project; that needs a LiveKit Cloud project and `supabase secrets set`.

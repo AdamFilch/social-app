@@ -2,7 +2,7 @@
 
 This ticket adds the server side of a buttercup call: the three Edge Functions that create, answer and end calls, the database rules that keep the `calls` table consistent, and a local LiveKit server for development. A call is one row in `calls` (from PRD [1]) plus a LiveKit room named after that row's id. `start-call` creates the row as `ringing` and returns a LiveKit token for the caller. The callee's app sees the new row over Realtime. `answer-call` marks it `answered` and returns the callee's token, and `end-call` moves it to a final status. A one-minute `pg_cron` sweep marks forgotten ringing calls as missed. Pushes are not part of this ticket; [8] adds them to these same functions.
 
-Frontend half: [[3]: Frontend — Calls](3-frontend-calls.prd.md), built on the contract at the end of this document.
+Frontend half: [[3]: Frontend — Calls](../3-frontend-calls.prd.md), built on the contract at the end of this document.
 
 ## Summary
 Adds one migration (an index allowing one active call per pair, plus the missed-call sweep), three Edge Functions with shared helpers, function tests, passwords for the two seed users so tests can sign in, and backend commands for the local LiveKit dev server. The `calls` columns and RLS from PRD [1] don't change, so the app still only reads `calls`.
@@ -107,7 +107,7 @@ Non-obvious design decisions:
 
 ## Data Model
 ### `calls` table (unchanged, for reference)
-> Source: [supabase/migrations/20261019102934_init.sql](../../supabase/migrations/20261019102934_init.sql)
+> Source: [supabase/migrations/20261019102934_init.sql](../../../supabase/migrations/20261019102934_init.sql)
 
 | Column | Type | Description |
 |---|---|---|
@@ -236,21 +236,21 @@ No end-call ─► sweep at next minute (≥ 60 s) ─► missed
 | `supabase/functions/tests/calls.test.ts` | **new** Deno tests |
 | `supabase/functions/.env.example` | **new** keys with local dev values (`devkey` / `secret`) |
 | `supabase/tests/database/calls_rules.test.sql` | **new** pgTAP |
-| [supabase/seed.sql](../../supabase/seed.sql) | seed users get `encrypted_password = crypt('password', gen_salt('bf'))` |
-| [claude.md](../../claude.md) | add `brew install livekit`, `livekit-server --dev`, `supabase functions serve --env-file supabase/functions/.env`, function tests |
+| [supabase/seed.sql](../../../supabase/seed.sql) | seed users get `encrypted_password = crypt('password', gen_salt('bf'))` |
+| [claude.md](../../../claude.md) | add `brew install livekit`, `livekit-server --dev`, `supabase functions serve --env-file supabase/functions/.env`, function tests |
 
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: pgTAP: a second `ringing` row for the same pair (either direction) violates `calls_one_active_per_pair`; an `ended` row doesn't block a new one.
-- [ ] AC2: pgTAP: `sweep_ringing_calls()` marks a 61-second-old ringing call `missed` with `ended_at`, leaves a 30-second-old one alone, and `authenticated` can't execute it. `cron.job` contains `sweep-ringing-calls`.
-- [ ] AC3: Deno: `start-call` as Adam returns `ringing`, `room_name = id`, and a JWT token whose `video.room` is that id.
-- [ ] AC4: Deno: `start-call` from the stranger → 403 `not_paired`; Partner calling while Adam's call rings → `incoming: true`.
-- [ ] AC5: Deno: `answer-call` by the callee → `answered` + token; by the caller → 404; on a `cancelled` call → 409 `call_not_ringing`.
-- [ ] AC6: Deno: every allowed `end-call` transition in the State Machine table succeeds, and `declined` by the caller and `ended` on a `ringing` call return 409 `invalid_transition`. A repeated call returns the row unchanged.
-- [ ] AC7: Deno: with an `answered` call whose room is empty, `start-call` marks it `ended` and creates a new call (D38).
-- [ ] AC8: `lk room join --url ws://127.0.0.1:7880 --token <token from start-call>` connects to the dev server.
-- [ ] AC9: `supabase db reset && supabase test db && supabase db lint` pass, and the Deno tests pass with `supabase functions serve` and `livekit-server --dev` running. No secrets are committed.
+- [x] AC1: pgTAP: a second `ringing` row for the same pair (either direction) violates `calls_one_active_per_pair`; an `ended` row doesn't block a new one.
+- [x] AC2: pgTAP: `sweep_ringing_calls()` marks a 61-second-old ringing call `missed` with `ended_at`, leaves a 30-second-old one alone, and `authenticated` can't execute it. `cron.job` contains `sweep-ringing-calls`.
+- [x] AC3: Deno: `start-call` as Adam returns `ringing`, `room_name = id`, and a JWT token whose `video.room` is that id.
+- [x] AC4: Deno: `start-call` from the stranger → 403 `not_paired`; Partner calling while Adam's call rings → `incoming: true`.
+- [x] AC5: Deno: `answer-call` by the callee → `answered` + token; by the caller → 404; on a `cancelled` call → 409 `call_not_ringing`.
+- [x] AC6: Deno: every allowed `end-call` transition in the State Machine table succeeds, and `declined` by the caller and `ended` on a `ringing` call return 409 `invalid_transition`. A repeated call returns the row unchanged.
+- [x] AC7: Deno: with an `answered` call whose room is empty, `start-call` marks it `ended` and creates a new call (D38).
+- [x] AC8: `lk room join --url ws://127.0.0.1:7880 --token <token from start-call>` connects to the dev server.
+- [x] AC9: `supabase db reset && supabase test db && supabase db lint` pass, and the Deno tests pass with `supabase functions serve` and `livekit-server --dev` running. No secrets are committed.
 
 ## Required Changes
 - **Migration**: `supabase migration new calls_rules` → [Data Model](#data-model).
@@ -274,4 +274,4 @@ No end-call ─► sweep at next minute (≥ 60 s) ─► missed
 | `host.docker.internal` unreachable from edge runtime | Low | AC7 | `LIVEKIT_API_URL` is configurable |
 
 ---
-*Status: READY — ticket [3] backend*
+*Status: COMPLETED — PR #4*
