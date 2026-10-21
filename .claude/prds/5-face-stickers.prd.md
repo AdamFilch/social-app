@@ -22,7 +22,7 @@ Adds a sticker model, an anchor that maps a point on the face to the screen ever
 
 **Out of scope**
 - Drawing pad — [6]
-- Glasses, hats, filters — build steps 6–7
+- Glasses, hats and face paint — build steps 6–7
 - Partner's stickers on you — build step 8
 - Saving stickers between calls — the spec clears them (D34)
 
@@ -108,7 +108,7 @@ isTracked = false ─► last transforms reused ─► stickers frozen ─► fa
 ## Blast Radius
 | Change | What breaks |
 |---|---|
-| Compositor input (`CIImage` + anchor) | [6] drawings, later hats and filters |
+| Compositor input (`CIImage` + anchor) | [6] drawings, later hats and face paint |
 | `PlacedSticker` anchor scheme | Every sticker kind; partner stickers (step 8) will send these fields |
 | Mid tile buttons | [3] D39–D40 layout |
 

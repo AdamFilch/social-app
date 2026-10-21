@@ -261,7 +261,6 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 ### Colour dots
 
 - 44 pt hit area, 30 pt visible circle with a 2 pt Outline. Selected: a 3 pt gap in the surface colour, then a 2.5 pt Outline ring, fading in over 0.15 s.
-- The same ring marks selected filter swatches.
 
 ### Checkerboard
 
@@ -269,7 +268,7 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 
 ### Selection inside a panel
 
-- Accent fill for the one selected tab or tool. Outline ring for the selected colour or swatch. Divider disc for the current category chip. Never two Accent selections in one row.
+- Accent fill for the one selected tab or tool. Outline ring for the selected colour. Divider disc for the current category chip. Never two Accent selections in one row.
 
 ## 7. Screens (as mocked up)
 

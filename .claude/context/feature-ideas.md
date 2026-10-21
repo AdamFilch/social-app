@@ -12,7 +12,7 @@ buttercup is a private iPhone app for Adam and his partner, with 1:1 video calls
 
 ## Video calls with face effects
 
-Calls ring like a real phone call. Stickers, text, pad drawings, flat glasses and hats (with editable text) pin to a spot on your face, and filters change the whole video or just your face. Everything is baked into the video your partner sees and cleared after each call. Your partner putting stickers on you comes later, then a Mac app. FaceTime dropped its effects in iOS 26, so nothing built in does this anymore.
+Calls ring like a real phone call. Stickers, text, pad drawings, flat glasses and hats (with editable text) pin to a spot on your face, and face paint can go on later. Everything is baked into the video your partner sees and cleared after each call. Your partner putting stickers on you comes later, then a Mac app. FaceTime dropped its effects in iOS 26, so nothing built in does this anymore.
 
 Full spec: [Video calls with face effects spec](https://claude.ai/code/artifact/0f35d9c6-2985-42b5-930b-221656129b74)
 

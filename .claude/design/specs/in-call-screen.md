@@ -1,7 +1,7 @@
 # In-call screen: tiles, control bar, effects tray and drawing pad
 
 Oct 20, 2026 · approved by Adam (mockup v2) · designer run 2
-**Mockup**: https://claude.ai/artifact/Ug28oBLwcbFWh3Gacp3LC4 (default call; small tile in another corner, muted and camera off; medium tile me; medium tile partner after swap; swapped with Stickers in the bar; partner camera off; tray Emoji at start and after a category jump, Text with keyboard, Stickers, Hats, Glasses, Filters; pad empty and drawn; sticker selected with trash; panels in light and dark)
+**Mockup**: https://claude.ai/artifact/Ug28oBLwcbFWh3Gacp3LC4 (default call; small tile in another corner, muted and camera off; medium tile me; medium tile partner after swap; swapped with Stickers in the bar; partner camera off; tray Emoji at start and after a category jump, Text with keyboard, Stickers, Hats, Glasses; pad empty and drawn; sticker selected with trash; panels in light and dark)
 **Source**: [mockups/in-call-screen.html](../mockups/in-call-screen.html)
 **Tickets**: restyles [3] Frontend Calls (D7) and the UI of [5] Face stickers and [6] Drawing-pad stickers
 **Decisions**: C1–C18 (Adam, 2026-10-20, `~/.claude/plans/please-use-taste-skills-binary-pelican.md`) and N1–N7 (Adam's answers to the run 1 open questions), listed in the mockup's legend
@@ -16,7 +16,7 @@ This spec changes these tickets. The PRDs themselves are not edited here; the de
 | R2 | [6] D22 "PencilKit canvas + `PKToolPicker`" | `PKCanvasView` with its tool picker hidden, driven by the pad's own toolbar (pen, eraser, undo, 5 colour dots) | C6, N2 |
 | R3 | [6] "Done" / "Cancel" buttons, full-height pad sheet | ✕ icon circle (left) and ✓ Accent icon circle (right) in the pad header; the pad replaces the tray panel in place | C7, C14 |
 | R4 | [3] D40 / [5] main bar "keeps mute, camera on/off, audio route, hang up" | Unchanged while the partner is big. While your own view is big, a Stickers button joins the bar on the far left | C15 |
-| R5 | [5] tabs Emoji · Text · Images, [6] adds Draw | Pill tabs Stickers · Emoji · Text · Draw · Hats · Glasses · Filters. "Images" is renamed "Stickers" and comes first. Hats, Glasses and Filters appear only when their tickets ship | N3 |
+| R5 | [5] tabs Emoji · Text · Images, [6] adds Draw | Pill tabs Stickers · Emoji · Text · Draw · Hats · Glasses. "Images" is renamed "Stickers" and comes first. Hats and Glasses appear only when their tickets ship | N3 |
 | R6 | [5] "Emoji grid (system emoji keyboard input)" | Apple's full emoji set in the tray's own grid, grouped into categories with jump chips. Long-press opens the skin-tone picker. No system keyboard and no search | N4 |
 | R7 | [5] "Images tab empty: No image stickers yet." | "No stickers yet." | N3 |
 | R8 | [5]/[6] "sticker in drag mode" (undefined) | Defined in §3.6: the new sticker appears pinned to the nose point, already selected, ready to drag | Spec |
@@ -89,11 +89,7 @@ Goal: during a call the partner's face is the screen. Controls are quiet, dark a
 - Tap a sticker on your face: it is selected and the trash appears (C13). Tap the trash: removed. Tap anywhere else: deselected and the trash fades out.
 - Pinch to resize and twist to rotate a sticker as in [5] D19. These work whether or not it is selected.
 
-### 3.7 Filters (when the filters ticket ships)
-
-Tap a swatch: the look applies to the video at once, the tray stays open, and the swatch shows the selection ring. Tap None to clear. One look at a time.
-
-### 3.8 Hats and glasses (deferred)
+### 3.7 Hats and glasses (deferred)
 
 How a hat or glasses go on (drag like a sticker, or tap to wear and follow the head), how many at once, and whether they count toward the 10 cap are **deferred to the hats ticket**. This spec only fixes their tabs and grid look (§4.8).
 
@@ -187,7 +183,7 @@ State C: ( ☺︎+ ) joins on the far left: ( ☺︎+ ) ( 🎙 ) ( 📹 ) ( 🔊
   - The partner's small tile moves to the top corner on its side (C8).
   - The name pill stays.
 
-### 4.5 Stickers tab (grid tabs: Stickers, Hats, Glasses, Filters)
+### 4.5 Stickers tab (grid tabs: Stickers, Hats, Glasses)
 
 - `LazyHGrid` with 3 fixed rows of 84, cells 84 × 84, 8 pt spacing both ways, 16 pt leading inset. It scrolls horizontally. Cell width and inset are chosen so a fifth column peeks in at the trailing edge on a 414 pt screen.
 - Cell: Background fill, radius 16, no border. Image `scaledToFit` in a 58 pt box, centred.
@@ -254,14 +250,9 @@ State C: ( ☺︎+ ) joins on the far left: ( ☺︎+ ) ( 🎙 ) ( 📹 ) ( 🔊
 - **Row 2 (top 140):** six colour dots centred, 4 pt apart (§6.5): Ink (`TextPrimary` light value #1E2A1A), Accent, NotePaperPink, NotePaperBlue, NotePaperGreen, NotePaperLilac. Ink is the default.
 - **Row 3 (top 196):** preview, full width minus 16 pt insets, height 80, radius 16, checkerboard (§6.6). It shows the text exactly as the sticker will render: `.system(size: 40, weight: .heavy, design: .rounded)` in the chosen colour, with a 7 pt Ink (#1E2A1A) outline drawn behind the fill. It shrinks to fit (`minimumScaleFactor(0.4)`, one line). With an empty field, the preview shows the placeholder text "Type something" at 40% opacity.
 
-### 4.8 Hats, Glasses and Filters tabs
+### 4.8 Hats and Glasses tabs
 
-- **Hats and Glasses:** the Stickers grid (§4.5) with the hat or glasses PNGs. No hint line until the hats ticket decides behaviour (§3.8).
-- **Filters:** the same grid; each cell is a filter swatch.
-  - **Swatch:** a 52 pt circle showing a still frame of your own face (captured when the tab opens) with the look applied, then the name 7 pt below it in `.caption.weight(.heavy)` (12). The name is TextSecondary, or TextPrimary when selected.
-  - **Selected:** a 2.5 pt Background gap and a 2.5 pt Outline ring around the circle.
-  - None is first. Hint: "Tap a look to try it. None turns it off".
-  - Ticket [7] (heat test) may upgrade swatches to live crops if iPhone 11 has the headroom.
+- **Hats and Glasses:** the Stickers grid (§4.5) with the hat or glasses PNGs. No hint line until the hats ticket decides behaviour (§3.7).
 
 ### 4.9 Pad (Draw tab)
 
@@ -316,7 +307,7 @@ State C: ( ☺︎+ ) joins on the far left: ( ☺︎+ ) ( 🎙 ) ( 📹 ) ( 🔊
 | `TrashButton` | `onRemove` | 56 frosted, Danger symbol |
 | `Checkerboard` | `square: 12` | §6.6 |
 
-`EffectTab` is an enum: `stickers, emoji, text, draw, hats, glasses, filters`. A tab is listed only when its feature is enabled.
+`EffectTab` is an enum: `stickers, emoji, text, draw, hats, glasses`. A tab is listed only when its feature is enabled.
 
 ## 6. Visual details
 
@@ -348,7 +339,6 @@ Over a white frame the result is about #8F8B86, which gives the cream symbol abo
 | Pad title | `.headline` |
 | Text field | `.body.weight(.semibold)` |
 | Add | `.headline` |
-| Filter name | `.caption.weight(.heavy)` |
 
 The root `.fontDesign(.rounded)` applies (T13).
 
@@ -454,7 +444,6 @@ Fades and ease-outs only; no springs, no bounce, nothing idles (C18, design.md �
 | Sticker selected | §4.10 |
 | Text empty / long | Add disabled; preview shows the placeholder. Beyond 30 characters, input stops; the preview shrinks to fit |
 | Pad empty / drawn | ✓ and Undo 40% / full |
-| Filter selected | Ring on the swatch; video shows the look |
 
 No loading states: all tray content is bundled.
 
@@ -467,7 +456,7 @@ No loading states: all tray content is bundled.
   - OnDanger on Danger (dark) is about 6.9:1.
   - Panel text pairs as design.md §3.
   - The selected-sticker outline (Accent) is a selection hint; selection is also announced and shown by the trash.
-- **Never colour alone:** mute and camera off change their symbol; the selected tab, dot, chip and filter each have a fill change or ring; the selected pad tool has a fill.
+- **Never colour alone:** mute and camera off change their symbol; the selected tab, dot and chip each have a fill change or ring; the selected pad tool has a fill.
 - **Dynamic Type:**
   - Name pill and tab pills scale up to `.accessibility1` (`.dynamicTypeSize(...DynamicTypeSize.accessibility1)`), then stop. The tab row already scrolls.
   - Hints and labels in the panel wrap.
@@ -502,7 +491,6 @@ No loading states: all tray content is bundled.
 | Colour dot | "Ink", "Yellow", "Pink", "Blue", "Green", "Lilac" | `.isSelected` |
 | Text preview | "Preview, hi sam, pink" | — |
 | Add | "Add sticker" | — |
-| Filter swatch | "Warm" | `.isSelected`; hint "Double-tap to apply" |
 | Pad canvas | "Drawing canvas" | — |
 | Pen / Eraser / Undo | "Pen" / "Eraser" / "Undo" | `.isSelected` on the tool |
 | ✓ | "Use drawing" | disabled when empty |
@@ -531,7 +519,7 @@ Panel
 - [ ] Tray and pad are an in-view panel of 50% screen height with 28 pt top corners, not a `.sheet`; it covers the bar and the bar returns on close.
 - [ ] The partner's small tile moves to a top corner while the panel is open.
 - [ ] ✕, swipe down past 30% (or fast), and the escape gesture all close it.
-- [ ] Pill row lists Stickers · Emoji · Text · Draw (plus Hats · Glasses · Filters when enabled), scrolls horizontally, and scrolls the selected pill into view. Tabs change only on tap.
+- [ ] Pill row lists Stickers · Emoji · Text · Draw (plus Hats · Glasses when enabled), scrolls horizontally, and scrolls the selected pill into view. Tabs change only on tap.
 - [ ] The tray reopens on the last tab used in the session; the first open of a session shows Stickers.
 - [ ] Stickers grid: 3 rows of 84 pt cells, scrolls horizontally, fifth column peeks; hint line shown; empty state reads "No stickers yet."
 - [ ] Emoji: Apple's full set in a 3-row strip of 72 pt cells, sections with labels at their start, nine chips that jump with a 0.35 s ease-out and highlight the current category.
@@ -559,7 +547,6 @@ None open. Closed on 2026-10-20 by the main session:
 1. **Hats and glasses** (how they go on, how many at once, the 10 cap): deferred to the hats ticket.
 2. **Orientation:** the call screen is portrait-only in v1.
 3. **Tap to add:** yes, for everyone. Tapping a cell adds the sticker at the nose point (§3.3 step 6).
-4. **Filter swatches:** a still frame of your face, captured when the Filters tab opens. Ticket [7] (heat test) may upgrade them to live crops.
 
 ## 12. Design-system changes (approved by Adam, applied to design.md on 2026-10-20)
 
@@ -574,11 +561,11 @@ None open. Closed on 2026-10-20 by the main session:
 3. **Shadow exception:** floating video tiles (small and medium) get a soft black shadow. They are the only blurred shadows in the app, because they genuinely float over moving video.
 4. **New shared pieces:**
    - `IconCircleButton` (44, `.plain` / `.accent`).
-   - `ColourDots` with the gap-and-ring selection, also used for filter swatches.
+   - `ColourDots` with the gap-and-ring selection.
    - `Checkerboard` for transparency.
 5. **Selection grammar inside panels:**
    - Accent fill for the one selected tab or tool.
-   - Outline ring for selected colours and swatches.
+   - Outline ring for selected colours.
    - Divider disc for the current category chip.
    - Never two Accent selections in one row.
 6. **Haptics:** no `.selection` haptic on in-panel tabs. T3's tab-change haptic stays limited to the app's tab bar.

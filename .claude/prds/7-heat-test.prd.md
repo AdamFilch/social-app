@@ -2,10 +2,10 @@
 
 **Depends on:** [5]: Face stickers merged (and [6] if built first).
 
-This ticket has no code (D3). It is a test Adam and his partner run on their two iPhone 11s before hats and filters are built. They hold a 30-minute video call with face tracking and stickers on, write down how hot and how smooth it gets every 5 minutes, and use the result to decide whether the sticker cap, frame rate or resolution need to come down before more effects are added. The iPhone 11 is the oldest phone that runs iOS 26 and the one most likely to heat up (video-calls-spec Phones).
+This ticket has no code (D3). It is a test Adam and his partner run on their two iPhone 11s before hats and face paint are built. They hold a 30-minute video call with face tracking and stickers on, write down how hot and how smooth it gets every 5 minutes, and use the result to decide whether the sticker cap, frame rate or resolution need to come down before more effects are added. The iPhone 11 is the oldest phone that runs iOS 26 and the one most likely to heat up (video-calls-spec Phones).
 
 ## Summary
-A checklist and a results table. The outcome is either "go: build hats and filters as planned" or a list of settings to change, which becomes a small follow-up ticket.
+A checklist and a results table. The outcome is either "go: build hats and face paint as planned" or a list of settings to change, which becomes a small follow-up ticket.
 
 ## Users
 - **Primary**: Adam and his partner, holding both phones.

@@ -20,7 +20,7 @@ Adam and his partner, for personal use. Both use an iPhone 11. Opening the app t
 
 ### 1. Calls with face effects (most important)
 
-1:1 audio and video calls that ring like a real phone call (CallKit and VoIP push) and keep going in Picture-in-Picture. You can turn the camera on or off during a call, and missed calls show in a call history. You pin stickers, emoji, text, pad drawings, and flat glasses and hats (with editable text) to a spot on your face, and add filters to the whole video or just your face. Effects are baked into the video your partner sees and cleared after each call. Later: your partner putting stickers on you, a voice changer, and a Mac app.
+1:1 audio and video calls that ring like a real phone call (CallKit and VoIP push) and keep going in Picture-in-Picture. You can turn the camera on or off during a call, and missed calls show in a call history. You pin stickers, emoji, text, pad drawings, and flat glasses and hats (with editable text) to a spot on your face, and later add face paint. Effects are baked into the video your partner sees and cleared after each call. Later: your partner putting stickers on you, a voice changer, and a Mac app.
 
 Full spec: [video-calls-spec.md](video-calls-spec.md). Face tracking choices: [face-tracking-options.md](face-tracking-options.md).
 

@@ -116,12 +116,6 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700
 .grid { position: absolute; top: 80px; left: 16px; right: 0; display: grid; grid-template-rows: repeat(3, 84px); grid-auto-flow: column; grid-auto-columns: 84px; gap: 8px; overflow: hidden; }
 .cell { border-radius: 16px; background: var(--q-bg); display: grid; place-items: center; font-size: 44px; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
 .cell svg { width: 58px; height: 58px; }
-.cell.fx { display: grid; place-items: center; align-content: center; gap: 7px; font-family: var(--round); }
-.sw { width: 52px; height: 52px; border-radius: 50%; overflow: hidden; border: 2px solid transparent; }
-.sw svg { width: 100%; height: 100%; display: block; }
-.cell.fx b { font-size: 12px; font-weight: 800; color: var(--q-sec); line-height: 1; }
-.cell.fx.on .sw { box-shadow: 0 0 0 2.5px var(--q-bg), 0 0 0 5px var(--q-out); }
-.cell.fx.on b { color: var(--q-text); }
 .estrip { position: absolute; top: 76px; left: 0; right: 0; overflow: hidden; }
 .etrack { display: flex; gap: 20px; padding-left: 16px; width: max-content; }
 .eg { display: grid; gap: 6px; align-content: start; }
@@ -243,7 +237,7 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700
       <div><b>C18</b><span>Fades and ease-outs only; quiet haptics</span></div>
       <div><b>N1</b><span>Text tab shrinks to about 292 pt and sits on the keyboard while typing</span></div>
       <div><b>N2</b><span>Pad keeps five colours: Ink, Accent, Pink, Blue, Green</span></div>
-      <div><b>N3</b><span>Pill tabs for every effect, scrolling: Stickers, Emoji, Text, Draw, Hats, Glasses, Filters</span></div>
+      <div><b>N3</b><span>Pill tabs for every effect, scrolling: Stickers, Emoji, Text, Draw, Hats, Glasses</span></div>
       <div><b>N4</b><span>All of Apple's emoji in the tray grid, with inline category labels and jump chips; no search</span></div>
       <div><b>N5</b><span>Camera off fills Accent like mic muted</span></div>
       <div><b>N6</b><span>No text labels under control circles; VoiceOver labels only</span></div>
@@ -619,34 +613,6 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700
 
       <article class="state">
         <div class="dev"><div class="ph">
-          <svg class="vid" aria-hidden="true" style="filter: sepia(0.45) saturate(1.3) hue-rotate(-12deg)"><use href="#v-adam"/></svg>
-          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
-          <div class="who fr">Sam <span>7:10</span></div>
-          <div class="st tr"><svg class="vid"><use href="#v-sam"/></svg></div>
-          <div class="pn lt">
-            <div class="grab"></div>
-            <div class="phead">
-              <div class="ibtn" aria-label="Close stickers"><svg class="i"><use href="#i-x"/></svg></div>
-              <div class="tabsc"><div class="tabsr" role="tablist" data-tab="Filters"></div></div>
-            </div>
-            <div class="grid" data-fill="filters"></div>
-            <p class="hint">Tap a look to try it. None turns it off</p>
-            <div class="home"></div>
-          </div>
-        </div></div>
-        <div class="note">
-          <h3>6 · Tray, Filters (light panel)</h3>
-          <div class="chips"><span class="chip mode">Light panel</span><span class="chip">N3</span><span class="chip">C5</span></div>
-          <ul>
-            <li>Round 52 pt swatches show your own face in each colour look, with the name underneath. "Warm" is on: its swatch has the ring, and the video above already shows it.</li>
-            <li>A filter has no spot on the face, so tapping applies it straight away and the panel stays open to compare looks. None is always first.</li>
-            <li>One look at a time. Face-only looks (paint, blush) join this grid later.</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="state">
-        <div class="dev"><div class="ph">
           <svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>
           <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
           <div class="who fr">Sam <span>7:15</span></div>
@@ -785,10 +751,9 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700
           <li><b>Trash is frosted with a Danger icon</b>, not a red fill, so it can't be mistaken for End call.</li>
           <li><b>Panel cells have no outlines</b>, only the Background tone step. Outlines are kept for the ✕, selected tab, field, Add and canvas.</li>
           <li><b>Hint line</b> "Drag one onto your face" under the Stickers grid.</li>
-          <li><b>Tab order</b> follows Adam's list: Stickers, Emoji, Text, Draw, Hats, Glasses, Filters. The row scrolls and the selected pill is always scrolled fully into view.</li>
+          <li><b>Tab order</b> follows Adam's list: Stickers, Emoji, Text, Draw, Hats, Glasses. The row scrolls and the selected pill is always scrolled fully into view.</li>
           <li><b>Emoji strip</b>: 72 pt cells with no boxes, a 13 pt label above the first column of each category, and 20 pt between categories.</li>
           <li><b>Category chips</b> sit at the bottom of the panel, nine 44 pt slots edge to edge with 36 pt discs. The current one gets a Divider-tone disc, not Accent.</li>
-          <li><b>Filters apply on tap</b> and keep the tray open. Swatches preview your own face, and None comes first.</li>
           <li><b>Your camera off</b>: your small tile shows your initial on NotePaperBlue, like Sam's camera-off view.</li>
         </ul>
       </div>
@@ -822,10 +787,9 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700
             <tr><td>Medium tile buttons</td><td class="n">44, 12 from corners</td><td>Frosted</td></tr>
             <tr><td>Tray and pad panel</td><td class="n">414 × 448, top radius 28</td><td>Surface</td></tr>
             <tr><td>Tab pill</td><td class="n">36 visible, 44 hit</td><td>Selected: Accent, 2 pt Outline</td></tr>
-            <tr><td>Grid cell (Stickers, Hats, Glasses, Filters)</td><td class="n">84 × 84, radius 16, gap 8, 3 rows</td><td>Background</td></tr>
+            <tr><td>Grid cell (Stickers, Hats, Glasses)</td><td class="n">84 × 84, radius 16, gap 8, 3 rows</td><td>Background</td></tr>
             <tr><td>Emoji cell</td><td class="n">72 × 72, gap 4, 3 rows; 20 between categories; label 13 bold</td><td>None, emoji 40</td></tr>
             <tr><td>Category chip</td><td class="n">44 slot, 36 disc, nine edge to edge from x 9, top 346</td><td>Selected: Divider disc</td></tr>
-            <tr><td>Filter swatch</td><td class="n">52 circle + 12 bold label, 7 gap</td><td>Selected: 3 pt gap + 2.5 pt Outline ring</td></tr>
             <tr><td>Colour dot</td><td class="n">30 visible, 44 hit</td><td>Selected: 3 pt gap + 2.5 pt Outline ring</td></tr>
             <tr><td>Pad canvas</td><td class="n">382 × 262, radius 20, 2 pt Outline</td><td>Checkerboard 12 pt squares, Background and Divider</td></tr>
             <tr><td>Trash</td><td class="n">56, centred, top at 722</td><td>Frosted, Danger (dark) icon</td></tr>
@@ -871,7 +835,7 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700
     k.innerHTML = h;
   });
 
-  var TABS = ["Stickers", "Emoji", "Text", "Draw", "Hats", "Glasses", "Filters"];
+  var TABS = ["Stickers", "Emoji", "Text", "Draw", "Hats", "Glasses"];
   document.querySelectorAll('[data-tab]').forEach(function (r) {
     var cur = r.getAttribute('data-tab');
     r.innerHTML = TABS.map(function (t) {
@@ -930,14 +894,8 @@ td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700
     '<rect x="5" y="21" width="22" height="15" rx="4" fill="#FFFDF5" ' + O + '/><rect x="31" y="21" width="22" height="15" rx="4" fill="#FFFDF5" ' + O + '/><path d="M8 25h16M8 29h16M8 33h16M34 25h16M34 29h16M34 33h16" stroke="#1E2A1A" stroke-width="2"/>',
     '<path d="M6 24h46l-3 10c-2 5-12 5-14 0l-2-5h-8l-2 5c-2 5-12 5-14 0z" fill="#1E2A1A" ' + O + '/>'
   ];
-  var looks = [["None", "none"], ["Warm", "sepia(.45) saturate(1.3) hue-rotate(-12deg)"], ["Cool", "hue-rotate(25deg) saturate(.9) brightness(1.05)"], ["Mono", "grayscale(1)"], ["Sepia", "sepia(.9)"], ["Vivid", "saturate(1.8) contrast(1.1)"], ["Fade", "contrast(.75) brightness(1.15) saturate(.7)"], ["Dusk", "hue-rotate(-40deg) saturate(1.2) brightness(.9)"], ["Mint", "hue-rotate(70deg) saturate(.8)"], ["Rose", "hue-rotate(-25deg) saturate(1.4) brightness(1.05)"], ["Noir", "grayscale(1) contrast(1.5) brightness(.85)"], ["Gold", "sepia(.6) saturate(2) brightness(1.05)"], ["Pop", "saturate(2.4)"], ["Soft", "blur(.5px) brightness(1.1) saturate(.85)"], ["Night", "hue-rotate(180deg) saturate(.6) brightness(.8)"]];
   document.querySelectorAll('[data-fill="hats"]').forEach(function (g) { g.innerHTML = cells(hats.concat(hats.slice(0, 5))); });
   document.querySelectorAll('[data-fill="glasses"]').forEach(function (g) { g.innerHTML = cells(glasses.concat(glasses.slice(0, 6))); });
-  document.querySelectorAll('[data-fill="filters"]').forEach(function (g) {
-    g.innerHTML = looks.map(function (l) {
-      return '<div class="cell fx' + (l[0] === 'Warm' ? ' on' : '') + '"><span class="sw"><svg viewBox="80 230 254 254" style="filter:' + l[1] + '"><use href="#v-adam" width="414" height="896"/></svg></span><b>' + l[0] + '</b></div>';
-    }).join('');
-  });
 
   document.querySelectorAll('.tabsc').forEach(function (c) {
     var on = c.querySelector('.tb.on');

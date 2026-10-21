@@ -8,7 +8,6 @@ Drop face-effect assets here. The app bundles everything in this folder.
 | glasses/ | Flat glasses, front view | PNG, transparent, about 1024 px wide |
 | hats/ | Flat hats, front view (dunce cap, party hat, crown) | PNG, transparent, about 1024 px |
 | signs/ | Signs or banners that show text you type | PNG, transparent, about 1024 px |
-| filters/ | Whole-video colour looks | `.cube` LUT file, or just a note of the look you want |
 | face-paint/ | Paint, freckles, blush drawn onto the face | PNG drawn on the ARKit face texture template (added later) |
 
 For a hat or sign with editable text, add a file next to the image with the same name ending in `.txt` that says where the text goes, for example `dunce-cap.txt`:

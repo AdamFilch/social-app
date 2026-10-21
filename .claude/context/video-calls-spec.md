@@ -20,12 +20,12 @@ buttercup calls ring like a real phone call, and stickers, hats and masks follow
 - **Drawing on a pad:** you draw on a still pad, and the drawing becomes a sticker you drag onto your face. Drawing live on your moving face was dropped because it's hard to aim and hard to make sit right. Drawing itself is cheap for the phone.
 - **Flat glasses and hats:** flat images that follow your head's position and turn, not full 3D models. Real 3D items can come later.
 - **Editable text on items:** hats and signs have a text area you can change, like a dunce cap that says whatever you type. Every item, signs included, always follows your face; nothing tracks your hands.
-- **Filters:** colour looks over the whole video, and face-only changes such as face paint or blush drawn onto the face.
+- **Face paint:** paint, freckles or blush drawn onto the face.
 - **One face in v1:** effects go on one face. Supporting two people in front of one phone is more work, not less, because every item has to know whose face it belongs to.
 - **Cleared after every call:** nothing is saved between calls.
 - **Baked into the video:** effects are drawn onto your outgoing video, so your partner sees them without needing any effect code.
 - **In Picture-in-Picture:** effects drop to 2D stickers, or turn off, because the face tracker can't run in the background.
-- **When the phone gets hot:** filters and extra items step down first, and at critical heat effects switch off so the call stays smooth.
+- **When the phone gets hot:** extra items step down first, and at critical heat effects switch off so the call stays smooth.
 
 **Removing a sticker:** tap any sticker on your face, yours or your partner's, and a trash button appears at the bottom middle of the screen to remove it.
 
@@ -39,11 +39,11 @@ Voice effects on your outgoing audio come after v1, once calls and face effects 
 
 ## Assets
 
-Adam collects stickers, glasses, hats, signs and filters from free libraries in the **assets** folder inside the buttercup project folder on his Mac. Its README lists the formats: transparent PNGs for stickers and flat items, an optional note per hat or sign saying where the editable text goes, and a sources.md recording where each asset came from.
+Adam collects stickers, glasses, hats, signs and face paint from free libraries in the **assets** folder inside the buttercup project folder on his Mac. Its README lists the formats: transparent PNGs for stickers and flat items, an optional note per hat or sign saying where the editable text goes, and a sources.md recording where each asset came from.
 
 ## Phones
 
-You both have an iPhone 11 (A13 chip, TrueDepth camera, 2019). It runs ARKit face tracking, but it's the oldest phone that gets iOS 26 and the most likely to heat up. Flat items help here: they're far lighter than 3D models. Calls run at 30 fps and 720p, and a 30-minute test call on both phones comes before building hats and filters.
+You both have an iPhone 11 (A13 chip, TrueDepth camera, 2019). It runs ARKit face tracking, but it's the oldest phone that gets iOS 26 and the most likely to heat up. Flat items help here: they're far lighter than 3D models. Calls run at 30 fps and 720p, and a 30-minute test call on both phones comes before building hats and face paint.
 
 ## Mac, later
 
@@ -56,7 +56,7 @@ You both have an iPhone 11 (A13 chip, TrueDepth camera, 2019). It runs ARKit fac
 | --- | --- |
 | Face tracking (iPhone) | ARKit at 30 fps, 720p; Vision in Picture-in-Picture |
 | Face tracking (Mac) | Vision face landmarks |
-| Drawing effects | Core Image or Metal for stickers, text, flat hats and filters; RealityKit only if real 3D items come later |
+| Drawing effects | Core Image or Metal for stickers, text, flat hats and face paint; RealityKit only if real 3D items come later |
 | Call media | LiveKit Swift SDK on LiveKit Cloud's free plan, about 35 to 40 hours of 720p calls a month |
 | Ringing | CallKit + PushKit, pushes sent by a Supabase Edge Function |
 | Backend | Supabase: Sign in with Apple, call tokens, device tokens |
@@ -71,7 +71,7 @@ If calls go past the free plan, self-host LiveKit on a small server for about â‚
 4. A 30-minute test call on both iPhone 11s to check heat.
 5. Ringing with CallKit and VoIP push.
 6. Flat glasses and hats, with editable text on hats and signs.
-7. Filters: whole-video colour looks, then face paint.
+7. Face paint drawn onto the face.
 8. Stickers from your partner.
 9. Picture-in-Picture with the camera on.
 10. Mac app with 2D stickers.
