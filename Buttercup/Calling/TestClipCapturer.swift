@@ -12,7 +12,9 @@ enum TestClipCapturer {
             while true {
                 guard let reader = try? AVAssetReader(asset: asset) else { return }
                 let output = AVAssetReaderTrackOutput(track: track, outputSettings: [
-                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+                    kCVPixelBufferIOSurfacePropertiesKey as String: [String: Any](),
+                    kCVPixelBufferMetalCompatibilityKey as String: true
                 ])
                 reader.add(output)
                 reader.startReading()

@@ -16,6 +16,8 @@ struct InCallView: View {
             Group {
                 if tile == .swapped { me } else { partner }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped()
             .ignoresSafeArea()
             .contentShape(Rectangle())
             .onTapGesture { if tile == .mid { tile = .small } }

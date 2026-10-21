@@ -44,11 +44,14 @@ struct ContentView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             TabBar(selection: $selection)
         }
+        .accessibilityHidden(calls.showsCallScreen)
         .overlay {
-            if calls.phase == .outgoing && calls.call != nil {
-                OutgoingView().transition(.opacity)
-            } else if [.connecting, .active, .reconnecting].contains(calls.phase) {
-                InCallView().transition(.opacity)
+            if calls.showsCallScreen {
+                Group {
+                    if calls.phase == .outgoing { OutgoingView() } else { InCallView() }
+                }
+                .accessibilityAddTraits(.isModal)
+                .transition(.opacity)
             }
         }
         .animation(.easeOut(duration: 0.2), value: calls.phase)
