@@ -1,6 +1,6 @@
 # buttercup
 
-Private iOS 26 app (Swift/SwiftUI) with a Supabase backend. Start with [.claude/context/product.md](.claude/context/product.md); the build details are in [.claude/context/technical-spec.md](.claude/context/technical-spec.md).
+Private iOS 18+ app (Swift/SwiftUI) with a Supabase backend. Start with [.claude/context/product.md](.claude/context/product.md); the build details are in [.claude/context/technical-spec.md](.claude/context/technical-spec.md).
 
 ## Layout
 
@@ -39,7 +39,7 @@ Backend tickets are verified with `supabase db reset && supabase test db && supa
 
 ## Running the app
 
-Needs Xcode 26 and an iOS 26 Simulator. Start the backend first (`supabase status`, then `supabase start` if it's down).
+Needs Xcode 26 and an iOS 26 Simulator, plus an iOS 18 runtime to check the minimum version. Start the backend first (`supabase status`, then `supabase start` if it's down).
 
 The **Debug** configuration points at the local stack (`SUPABASE_URL = http://127.0.0.1:54321` and the local demo anon key, set as build settings in `Buttercup.xcodeproj` and read through `Buttercup/Info.plist`). **Release** points at the hosted project. Don't swap these values in a commit.
 

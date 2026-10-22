@@ -34,7 +34,7 @@ Settled with Adam on 2026-10-19 in a question round about the open points in the
 | # | Decision |
 |---|---|
 | T1 | Supabase is the only backend (CloudKit can't create call tokens or send VoIP pushes) |
-| T2 | iOS 26 and newer only |
+| T2 | iOS 18 and newer (changed from iOS 26 on 2026-10-22: Adam's phone can't go past iOS 18) |
 | T3 | Minimal haptics: `.selection` on tab change only, no haptic on ordinary buttons (visual spring press only); `.success` on call connected and note sent, `.error` on failure, a light tap when a sticker drops |
 | T4 | Custom brand look, not standard Liquid Glass |
 | T5 | Colours are named tokens in the asset catalog; Adam picks the values later |

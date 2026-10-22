@@ -2,7 +2,7 @@
 
 Oct 19, 2026 · @Adam
 
-How buttercup is built: a native Swift app on iOS 26+, using Apple frameworks wherever possible, with Supabase as the only backend. Decisions T1–T17 in [decisions.md](decisions.md) were settled with Adam on 2026-10-19. Product behaviour lives in the feature specs; this doc covers the how.
+How buttercup is built: a native Swift app on iOS 18+, using Apple frameworks wherever possible, with Supabase as the only backend. Decisions T1–T17 in [decisions.md](decisions.md) were settled with Adam on 2026-10-19. Product behaviour lives in the feature specs; this doc covers the how.
 
 ## 1. App
 

@@ -40,7 +40,7 @@ Written 2026-10-18. Scope: v1 is a private 1:1 app for Adam and his partner, ins
 - **Swift 6, SwiftUI**, one multiplatform Xcode project with an iOS target and (later) a macOS target.
 - A local Swift package, say `ButtercupKit`, holds the call logic, backend client and 2D effect code shared by both.
 - Platform-specific pieces live in the targets: ARKit, CallKit and PushKit in iOS; Vision camera pipeline in macOS.
-- **Minimum iOS 26** (decided 2026-10-19). Both phones run it, WidgetKit push needs it, and it covers everything iOS 18 brought (camera in Picture-in-Picture, the Swift Vision API). See technical-spec.md.
+- **Minimum iOS 18** (changed from iOS 26 on 2026-10-22, because Adam's phone can't go past iOS 18). iOS 18 still has camera in Picture-in-Picture and the Swift Vision API. Don't use iOS 26-only APIs without an `#available` fallback. Build with Xcode 26. See technical-spec.md.
 - Install: TestFlight internal testing (up to 100 people on your team, no App Review) or straight from Xcode. The paid account is required anyway for PushKit and CallKit.
 
 ## 3. Calls: LiveKit
@@ -111,7 +111,7 @@ Added 2026-10-18 after Adam asked about a Locket-style photo widget and sharing 
 
 - **Sending:** take or pick a photo in buttercup, downscale it (around 1000 px on the long side), upload to **Supabase Storage** (1 GB free is years of daily photos at that size), and write a row with the sender and timestamp.
 - **Receiving:** a **WidgetKit** widget on the home and lock screen shows the partner's latest photo. Its timeline provider fetches the newest photo from Supabase and caches it in an App Group container.
-- **Making it update right away:** the `send-photo` Edge Function sends a **WidgetKit push** (`apns-push-type: widgets`, iOS 26+), which tells iOS to reload the widget ([Apple docs](https://developer.apple.com/tutorials/data/documentation/widgetkit/updating-widgets-with-widgetkit-push-notifications.md)). iOS budgets these and delivers them "opportunistically", so a photo a day is fine but a burst of ten might lag. Also send a normal notification with the photo attached so it's never missed.
+- **Making it update right away:** the `send-photo` Edge Function sends a **WidgetKit push** (`apns-push-type: widgets`, iOS 26+), which tells iOS to reload the widget. On iOS 18, a Notification Service Extension calls `WidgetCenter.shared.reloadAllTimelines()` when the normal notification arrives ([Apple docs](https://developer.apple.com/tutorials/data/documentation/widgetkit/updating-widgets-with-widgetkit-push-notifications.md)). iOS budgets these and delivers them "opportunistically", so a photo a day is fine but a burst of ten might lag. Also send a normal notification with the photo attached so it's never missed.
 - **Watch out:** widgets have a small memory limit, so always store and show the downscaled image, never the original *(inferred)*.
 
 ### Reading progress: no API from Apple Books or Goodreads

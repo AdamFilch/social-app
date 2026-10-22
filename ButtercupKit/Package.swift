@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "ButtercupKit",
-    platforms: [.iOS(.v26)],
+    platforms: [.iOS(.v18)],
     products: [
         .library(name: "ButtercupKit", targets: ["ButtercupKit"])
     ],

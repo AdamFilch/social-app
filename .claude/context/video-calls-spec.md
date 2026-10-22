@@ -43,7 +43,7 @@ Adam collects stickers, glasses, hats, signs and face paint from free libraries 
 
 ## Phones
 
-You both have an iPhone 11 (A13 chip, TrueDepth camera, 2019). It runs ARKit face tracking, but it's the oldest phone that gets iOS 26 and the most likely to heat up. Flat items help here: they're far lighter than 3D models. Calls run at 30 fps and 720p, and a 30-minute test call on both phones comes before building hats and face paint.
+Adam's phone stops at iOS 18, so it's an iPhone XS or XR (A12 chip, TrueDepth camera, 2018). It runs ARKit face tracking, but it's the oldest phone here and the most likely to heat up. Flat items help here: they're far lighter than 3D models. Calls run at 30 fps and 720p, and a 30-minute test call on both phones comes before building hats and face paint.
 
 ## Mac, later
 

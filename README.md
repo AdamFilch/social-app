@@ -1,12 +1,12 @@
 # buttercup
 
-A private iPhone app for two people: audio and video calls with face effects, a notes widget, and shared hobby tracking. It's built in Swift and SwiftUI on iOS 26, with a Supabase backend and LiveKit for calls. See [.claude/context/product.md](.claude/context/product.md) for the full picture.
+A private iPhone app for two people: audio and video calls with face effects, a notes widget, and shared hobby tracking. It's built in Swift and SwiftUI for iOS 18 and newer, with a Supabase backend and LiveKit for calls. See [.claude/context/product.md](.claude/context/product.md) for the full picture.
 
 **Status:** the backend, sign-in and pairing work. The calls screen, notes and hobbies are still being built, so for now the app gets you through sign-in and pairing to an empty tab view.
 
 ## Requirements
 
-- A Mac with Xcode 26 (iOS 26 Simulator included)
+- A Mac with Xcode 26 (an iOS 18 Simulator runtime to test the oldest supported version)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/), running
 - Homebrew tools:
 
