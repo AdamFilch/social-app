@@ -19,7 +19,7 @@ You make a small square note (drawing, photo, face sticker, shapes, emoji, text)
 ## Receiving
 
 - Your partner gets a notification with **text only, no preview**, for example "New note from Adam".
-- Their widget refreshes straight away through a WidgetKit push (iOS 26). iOS limits how often these arrive, so a quick burst of notes can reach the widget a little late. The app always has them.
+- Their widget refreshes straight away through a WidgetKit push on iOS 26, or through the notification on iOS 18 (a Notification Service Extension reloads the widget when it arrives). iOS limits how often these arrive, so a quick burst of notes can reach the widget a little late. The app always has them.
 
 ## The widget
 
