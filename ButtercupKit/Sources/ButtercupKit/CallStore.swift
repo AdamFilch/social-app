@@ -31,6 +31,7 @@ public final class CallStore: NSObject {
     private var room: Room?
     private var timeout: Task<Void, Never>?
     private var listening = false
+    private var reconnecting = false
 
     public init(session: SessionStore) {
         self.session = session
@@ -204,7 +205,7 @@ public final class CallStore: NSObject {
         remoteVideo = partner?.videoTracks.first { $0.isSubscribed && !$0.isMuted }?.track as? VideoTrack
         localVideo = room.localParticipant.videoTracks.first { !$0.isMuted }?.track as? VideoTrack
         guard [.connecting, .active, .reconnecting].contains(phase) else { return }
-        if partner != nil, room.connectionState == .connected {
+        if partner != nil, room.connectionState == .connected, !reconnecting {
             guard phase != .active else { return }
             timeout?.cancel()
             phase = .active
@@ -232,6 +233,7 @@ public final class CallStore: NSObject {
         localVideo = nil
         micOn = true
         cameraOn = false
+        reconnecting = false
         if let room { Task { await room.disconnect() } }
     }
 
@@ -271,6 +273,15 @@ extension CallStore: RoomDelegate {
         Task { @MainActor in sync() }
     }
 
+    private nonisolated func reconnect(_ on: Bool) {
+        Task { @MainActor in
+            reconnecting = on
+            sync()
+        }
+    }
+
+    public nonisolated func room(_: Room, didStartReconnectWithMode _: ReconnectMode) { reconnect(true) }
+    public nonisolated func room(_: Room, didCompleteReconnectWithMode _: ReconnectMode) { reconnect(false) }
     public nonisolated func room(_: Room, didUpdateConnectionState _: ConnectionState, from _: ConnectionState) { changed() }
     public nonisolated func room(_: Room, participantDidConnect _: RemoteParticipant) { changed() }
     public nonisolated func room(_: Room, participantDidDisconnect _: RemoteParticipant) { changed() }
