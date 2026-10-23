@@ -191,16 +191,16 @@ active ─► LiveKit reconnecting ─► "Reconnecting…"
 ## Acceptance Criteria
 - [ ] AC1: Simulator ↔ browser: the simulator joins a room from `start-call` while meet.livekit.io (custom URL `ws://127.0.0.1:7880`, token from `lk token create --api-key devkey --api-secret secret --join --room <id> --identity web`) is in the same room. Each side sees and hears the other (the simulator shows the test clip).
 - [ ] AC2: Two simulators, Video: A rings B, B answers, and both reach the in-call screen with remote video. Hang up on either side returns both to idle, and history shows a Video row with a duration.
-- [ ] AC3: Decline on B → A returns to idle; both histories show "Declined".
-- [ ] AC4: Cancel on A → B's sheet closes; both show "Cancelled".
-- [ ] AC5: No answer for 45 s → both show "Missed" (red).
+- [x] AC3: Decline on B → A returns to idle; both histories show "Declined".
+- [x] AC4: Cancel on A → B's sheet closes; both show "Cancelled".
+- [x] AC5: No answer for 45 s → both show "Missed" (red).
 - [ ] AC6: Audio call: starts with the camera off; turning the camera on mid-call shows video on the other side, and off shows the initial again.
 - [ ] AC7: Mute stops the other side hearing you (checked against the browser); Flip on the mid tile switches the capturer (no-op on the simulator, no crash).
-- [ ] AC8: Self tile: tap → mid with Flip and ↗; tap elsewhere → small; ↗ → you big, partner small; tap partner tile → back to partner big.
-- [ ] AC9: Both tap Call within a second → one call rings; the second tapper sees the incoming sheet.
-- [ ] AC10: Stopping `livekit-server` mid-call shows "Reconnecting…", and the call ends about 30 s later.
-- [ ] AC11: Empty history shows "No calls yet. Give {name} a ring?".
-- [ ] AC12: `xcodebuild … build` succeeds; backend `supabase test db` still passes.
+- [x] AC8: Self tile: tap → mid with Flip and ↗; tap elsewhere → small; ↗ → you big, partner small; tap partner tile → back to partner big.
+- [x] AC9: Both tap Call within a second → one call rings; the second tapper sees the incoming sheet.
+- [x] AC10: Stopping `livekit-server` mid-call shows "Reconnecting…", and the call ends about 30 s later.
+- [x] AC11: Empty history shows "No calls yet. Give {name} a ring?".
+- [x] AC12: `xcodebuild … build` succeeds; backend `supabase test db` still passes.
 
 ## Required Changes
 - **Package**: add `livekit/client-sdk-swift` to `ButtercupKit`.
@@ -223,4 +223,25 @@ active ─► LiveKit reconnecting ─► "Reconnecting…"
 | Realtime misses an event while the app is backgrounded | Med | Stale phase | Re-read the active call on `scenePhase == .active` |
 
 ---
-*Status: READY — ticket [3] frontend*
+*Status: PARTIAL — PR #5*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ⚠️ unverified | Claude in Chrome tools (`mcp__claude-in-chrome__*`) were not available to the agent, so the meet.livekit.io side could not be driven. The `lk` CLI stand-in was not used again by decision. |
+| AC2 | ⚠️ unverified | Skipped by Adam's decision: needs two iPhones. Two simulators on one Mac can't both publish. |
+| AC3 | ✅ done | Sheet "Partner is calling" → Decline closes it, 0 active calls, row `declined`, history shows "Declined". |
+| AC4 | ✅ done | Caller cancel closes the sheet, history "Cancelled"; Adam's Cancel leaves 0 active calls, row `cancelled`. |
+| AC5 | ✅ done | Outgoing screen closed after 45.1 s, row `missed` 46 s after creation, history "Missed". |
+| AC6 | ⚠️ unverified | This side verified: audio call publishes only the mic; Camera on publishes a camera track the partner subscribes to; Camera off mutes it; self tile goes initial → video → initial. The partner's screen needs the browser (see AC1). |
+| AC7 | ⚠️ unverified | The mic track goes `muted` / `unmuted` on the server at the Mute / Unmute taps (seen by the `lk` client); Flip tapped with no crash. Not checked by ear against the browser. |
+| AC8 | ✅ done | Tap → mid tile with Flip and ↗; tap elsewhere → small; ↗ → self full size, partner tile; tap partner tile → back. Screenshots at each step. |
+| AC9 | ✅ done | Scripted race (partner `start-call` fired with the tap, staggered 0–1000 ms, 6 rounds): always exactly 1 active call; both winners occurred, and the loser always got the incoming state (Adam's sheet, or `incoming: true` for the partner). |
+| AC10 | ✅ done | `livekit-server` killed mid-call: "Reconnecting…" within ~1.3 s, call ended 30.1 s later, row `ended` (two runs). Needed the fix in `4a437d5`. |
+| AC11 | ✅ done | "No calls yet. Give Partner a ring?" with no call rows. |
+| AC12 | ✅ done | `xcodebuild … build` succeeds; `supabase test db` 58/58 pass after `supabase db reset`; `supabase db lint` no errors. |
+
+### Needs attention
+- AC1 and AC6 (partner side): connect the Claude in Chrome extension and re-run against meet.livekit.io, or check by hand: custom URL `ws://127.0.0.1:7880`, token from `lk token create --api-key devkey --api-secret secret --join --room <call id> --identity web`; confirm video both ways, partner audio on the simulator, and the browser showing the simulator's video only while its camera is on.
+- AC7: confirm by ear in the browser that Mute silences the simulator.
+- AC2: a Video call between two iPhones.
