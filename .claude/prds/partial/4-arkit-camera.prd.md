@@ -100,7 +100,7 @@ Flip ─► back capturer stop ─► ARSession.run ─► front again
 - [ ] AC3 (device): The debug log shows the AR video format at 1280×720 @ 30 fps and light estimation off.
 - [ ] AC4 (device): Flip → partner sees the back camera; flip back → front again, with no freeze longer than about 1 s.
 - [ ] AC5 (device): Camera off → AR session paused (log) and partner sees your initial; camera on → resumes.
-- [ ] AC6: `xcodebuild` builds for both simulator and a generic iOS device.
+- [x] AC6: `xcodebuild` builds for both simulator and a generic iOS device.
 
 ## Required Changes
 - **Tracker**: `FaceTracker` + `ARKitFaceTracker` (see [Overview](#overview)).
@@ -122,4 +122,18 @@ Flip ─► back capturer stop ─► ARSession.run ─► front again
 | AR session restart lag on flip | Med | Brief freeze | Accept up to 1 s (AC4) |
 
 ---
-*Status: READY — ticket [4]*
+*Status: PARTIAL — PR #TBD*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ⚠️ unverified | Simulator build succeeds and the clip path is unchanged (`TestClipCapturer` still feeds a `BufferCapturer` while `front` stays true on the simulator), but no call was run: the agent could not tap in the Simulator (macOS denied osascript assistive access, and no simulator-control tool was connected). |
+| AC2 | ⚠️ unverified | Device only (D36). |
+| AC3 | ⚠️ unverified | Device only (D36). `FaceTracker` logs `AR session running WxH @ N fps, light estimation off`. |
+| AC4 | ⚠️ unverified | Device only (D36). |
+| AC5 | ⚠️ unverified | Device only (D36). `FaceTracker` logs `AR session paused`. |
+| AC6 | ✅ done | `xcodebuild … -destination 'platform=iOS Simulator,name=iPhone 17' build` and `… -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build` both succeed. |
+
+### Needs attention
+- AC1: sign in as `adam@example.com` on a simulator, start a Video call, and check the self tile shows the clip and the partner side (an `lk` client or meet.livekit.io) receives it.
+- AC2–AC5: run the manual device checklist in the PR on two iPhones. Set a signing team first (a Personal Team works).
