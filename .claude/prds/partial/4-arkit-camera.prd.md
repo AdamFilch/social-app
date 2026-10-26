@@ -122,7 +122,7 @@ Flip ─► back capturer stop ─► ARSession.run ─► front again
 | AR session restart lag on flip | Med | Brief freeze | Accept up to 1 s (AC4) |
 
 ---
-*Status: PARTIAL — PR #TBD*
+*Status: PARTIAL — PR #6*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
