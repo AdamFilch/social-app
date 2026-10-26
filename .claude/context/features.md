@@ -44,7 +44,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 
 ## 2. Calls
 
-**Status:** Built (partial): backend and app screens are built; simulator-to-browser media (AC1), two-device calls (AC2) and the partner-side view of a camera toggle (AC6) are not yet verified.
+**Status:** Built (partial): backend and app screens are built; simulator-to-browser media (AC1), two-device calls (AC2) and the partner-side view of a camera toggle (AC6) are not yet verified; the ARKit camera ([4]) is built but not yet run on a device.
 
 **What it does:** Creates, answers and ends 1:1 audio and video calls between paired partners. A call is one `calls` row plus a LiveKit room named after its id; the functions return LiveKit tokens, and the apps follow status changes over Realtime.
 
@@ -66,13 +66,15 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 - App: `end()` sends `cancelled` from outgoing, `declined` from incoming, otherwise `ended`. An unanswered outgoing call sends `missed` after 45 s. "Reconnecting…" shows when the partner leaves the room or the app's LiveKit connection drops (including quick reconnects), and the call sends `ended` if it hasn't recovered after 30 s.
 - App: if both partners tap Call at once, the second `start-call` returns `incoming: true` and that phone shows the incoming sheet.
 - App: on the simulator the camera is a looping test clip (`TestClipCapturer` into a `BufferCapturer`); Flip does nothing there.
+- App: on a device the front camera is ARKit face tracking (`ARKitFaceTracker`: 1280×720 @ 30 fps, light estimation off, one face), with each `ARFrame.capturedImage` pushed into a `BufferCapturer` rotated 90°. The back camera is LiveKit's camera capturer. Camera off and Flip unpublish the video track and pause ARKit, and Camera on or Flip publishes a new track from the chosen source. The self preview is mirrored for the front camera. Thermal state is logged on each change.
 - Local LiveKit is `livekit-server --dev` (`devkey` / `secret`). Functions reach it at `LIVEKIT_API_URL` (`http://host.docker.internal:7880`); apps use `LIVEKIT_URL` (`ws://127.0.0.1:7880`).
 
-**Code:** `supabase/functions/start-call/index.ts`, `supabase/functions/answer-call/index.ts`, `supabase/functions/end-call/index.ts`, `supabase/functions/_shared/supabase.ts` (admin client, auth, `loadCall`, `transition`), `supabase/functions/_shared/livekit.ts` (tokens, room participant check), `supabase/functions/.env.example`, `supabase/migrations/20261020082738_calls_rules.sql` (index, sweep, cron), `supabase/functions/tests/calls.test.ts`, `supabase/tests/database/calls_rules.test.sql`, `ButtercupKit/Sources/ButtercupKit/CallStore.swift`, `ButtercupKit/Sources/ButtercupKit/Call.swift`, `Buttercup/Calling/` (Calling tab, outgoing, incoming sheet, in-call, test clip capturer), `Buttercup/ContentView.swift` (call overlay, sheet, alerts), `Buttercup/ButtercupApp.swift` (`CallStore`, `resync()` on becoming active). Spec: [prds/completed/3-backend-calls.prd.md](../prds/completed/3-backend-calls.prd.md), [prds/partial/3-frontend-calls.prd.md](../prds/partial/3-frontend-calls.prd.md).
+**Code:** `supabase/functions/start-call/index.ts`, `supabase/functions/answer-call/index.ts`, `supabase/functions/end-call/index.ts`, `supabase/functions/_shared/supabase.ts` (admin client, auth, `loadCall`, `transition`), `supabase/functions/_shared/livekit.ts` (tokens, room participant check), `supabase/functions/.env.example`, `supabase/migrations/20261020082738_calls_rules.sql` (index, sweep, cron), `supabase/functions/tests/calls.test.ts`, `supabase/tests/database/calls_rules.test.sql`, `ButtercupKit/Sources/ButtercupKit/CallStore.swift`, `ButtercupKit/Sources/ButtercupKit/Call.swift`, `Buttercup/Calling/` (Calling tab, outgoing, incoming sheet, in-call, test clip capturer, `FaceTracker.swift` ARKit face tracker), `Buttercup/ContentView.swift` (call overlay, sheet, alerts), `Buttercup/ButtercupApp.swift` (`CallStore`, `resync()` on becoming active, wires the clip or the ARKit tracker into `CallStore`). Spec: [prds/completed/3-backend-calls.prd.md](../prds/completed/3-backend-calls.prd.md), [prds/partial/3-frontend-calls.prd.md](../prds/partial/3-frontend-calls.prd.md), [prds/partial/4-arkit-camera.prd.md](../prds/partial/4-arkit-camera.prd.md).
 
 **Known gaps:**
 - AC1 unverified: simulator ↔ meet.livekit.io media, including partner audio reaching the app.
 - AC2 unverified: a Video call between two iPhones (two simulators on one Mac can't both publish).
 - AC6 partner side unverified: the other side showing video when the camera turns on and the initial again when it turns off.
+- [4] unverified: the simulator call with the clip after the camera-source change (AC1), plus on-device ARKit front video, format log, flip and camera off (AC2–AC5).
 - No VoIP, cancel or missed-call pushes ([8]).
 - Functions are not deployed to the hosted project; that needs a LiveKit Cloud project and `supabase secrets set`.

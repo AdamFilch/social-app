@@ -39,7 +39,7 @@ struct InCallView: View {
     }
 
     private var me: some View {
-        Feed(track: calls.localVideo, profile: session.me)
+        Feed(track: calls.localVideo, profile: session.me, mirror: calls.front)
     }
 
     private var partner: some View {
@@ -120,10 +120,11 @@ struct InCallView: View {
 struct Feed: View {
     let track: VideoTrack?
     let profile: Profile?
+    var mirror = false
 
     var body: some View {
         if let track {
-            SwiftUIVideoView(track, layoutMode: .fill)
+            SwiftUIVideoView(track, layoutMode: .fill, mirrorMode: mirror ? .mirror : .off)
         } else {
             Color(white: 0.15).overlay { Avatar(profile: profile, size: 88) }
         }
