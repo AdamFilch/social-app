@@ -2,7 +2,7 @@
 
 A private iPhone app for two people: audio and video calls with face effects, a notes widget, and shared hobby tracking. It's built in Swift and SwiftUI for iOS 18 and newer, with a Supabase backend and LiveKit for calls. See [.claude/context/product.md](.claude/context/product.md) for the full picture.
 
-**Status:** the backend, sign-in and pairing work. The calls screen, notes and hobbies are still being built, so for now the app gets you through sign-in and pairing to an empty tab view.
+**Status:** the backend, sign-in, pairing and calls work. Calls only ring while the other person has the app open; ringing a closed or locked phone comes later with CallKit. Notes and hobbies are still being built.
 
 ## Requirements
 
@@ -50,6 +50,52 @@ All the codes for every account show up in Mailpit.
 3. On one, copy the invite code from the pair screen. On the other, paste it under "Or paste their code" and tap **Pair**.
 
 Both move on to the tabs within a few seconds.
+
+### Try a call
+
+Calls need LiveKit and the functions server, each in its own terminal:
+
+```sh
+livekit-server --dev
+```
+
+```sh
+cp -n supabase/functions/.env.example supabase/functions/.env
+supabase functions serve --env-file supabase/functions/.env
+```
+
+Ringing is a row in the `calls` table that reaches the other phone over Realtime, so the person you call must have the app open. LiveKit only carries the audio and video; you answer in the app, not in LiveKit.
+
+1. Run the app on two simulators: in Xcode, pick a second simulator from the destination menu next to the scheme and press ⌘R. If Xcode asks whether to stop the first one, choose **Add**.
+2. Sign in on one as `partner@example.com` and on the other as `adam@example.com`.
+3. On partner's Calling tab, tap **Audio** or **Video**. Adam's simulator shows "Partner is calling"; tap **Answer**.
+
+Two simulators on one Mac can't both send audio and video reliably, so use them to check ringing, answering, hanging up and call history. To check the media itself, use a browser as the other side (below).
+
+### Test audio and video with a browser
+
+The browser joins the call's LiveKit room in Adam's place.
+
+1. In Chrome, open https://meet.livekit.io and choose the **Custom** tab. Safari may block the connection to `ws://127.0.0.1`.
+2. On the simulator, sign in as `partner@example.com` and tap **Video**. It shows "Calling Adam…" and is already in the room.
+3. Get a token for that room:
+
+   ```sh
+   ROOM=$(docker exec supabase_db_buttercup psql -U postgres -tAc \
+     "select room_name from calls where status='ringing' order by created_at desc limit 1")
+   lk token create --api-key devkey --api-secret secret --join --room "$ROOM" --identity web --valid-for 1h
+   ```
+
+4. Mark the call answered, so the simulator moves to the in-call screen instead of giving up after 45 s:
+
+   ```sh
+   docker exec supabase_db_buttercup psql -U postgres -c \
+     "update calls set status='answered', answered_at=now() where room_name='$ROOM'"
+   ```
+
+5. In the browser, enter the server URL `ws://127.0.0.1:7880`, paste the token and connect.
+
+The browser should show the simulator's video (a bundled test clip, since the simulator has no camera), and the simulator should show your webcam and play your mic. Mute and Camera off on the simulator should take effect in the browser.
 
 ## Running on a real iPhone
 
