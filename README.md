@@ -70,7 +70,7 @@ Ringing is a row in the `calls` table that reaches the other phone over Realtime
 2. Sign in on one as `partner@example.com` and on the other as `adam@example.com`.
 3. On partner's Calling tab, tap **Audio** or **Video**. Adam's simulator shows "Partner is calling"; tap **Answer**.
 
-Two simulators on one Mac can't both send audio and video reliably, so use them to check ringing, answering, hanging up and call history. To check the media itself, use a browser as the other side (below).
+Two simulators on one Mac can't both send audio and video reliably, so use them to check ringing, answering, hanging up and call history. To check the media itself, use a browser as the other side (below), or your iPhone (see [Testing with one iPhone and a simulator](#testing-with-one-iphone-and-a-simulator)).
 
 ### Test audio and video with a browser
 
@@ -97,10 +97,71 @@ The browser joins the call's LiveKit room in Adam's place.
 
 The browser should show the simulator's video (a bundled test clip, since the simulator has no camera), and the simulator should show your webcam and play your mic. Mute and Camera off on the simulator should take effect in the browser.
 
-## Running on a real iPhone
+## Testing with one iPhone and a simulator
 
-1. In Xcode, select the **Buttercup** target, then **Signing & Capabilities**, and choose your team. If the bundle ID `com.adamfilchoir.buttercup` is taken, change it to something of your own.
-2. Your phone can't reach `127.0.0.1` on your Mac. In **Build Settings**, change the Debug `SUPABASE_URL` to your Mac's local IP address, for example `http://192.168.1.20:54321`, with the phone on the same Wi-Fi.
+Your iPhone is one side and a simulator on your Mac is the other. Both talk to the backend running on the Mac. This is the best way to test calls, because the phone sends a real camera and mic.
+
+Your phone can't reach `127.0.0.1` (on the phone, that address means the phone itself), so everything has to use your Mac's local IP address. The simulator can reach that address as well, so one setting covers both devices.
+
+1. **Put the phone on the same Wi-Fi as the Mac** and find the Mac's IP:
+
+   ```sh
+   ipconfig getifaddr en0
+   ```
+
+   The rest of these steps use `192.168.1.20` as the example. Use your own IP.
+
+2. **Set up signing.** In Xcode, select the **Buttercup** target, open **Signing & Capabilities** and choose your team. If the bundle ID `com.adamfilchoir.buttercup` is taken, change it to one of your own. The first time, also turn on **Developer Mode** on the phone (Settings › Privacy & Security), and after the first install trust your developer profile (Settings › General › VPN & Device Management).
+
+3. **Point the app at the Mac.** Copy the example config and put your IP in it:
+
+   ```sh
+   cp Config/Local.xcconfig.example Config/Local.xcconfig
+   ```
+
+   `Config/Local.xcconfig` is gitignored and overrides the Debug `SUPABASE_URL` from `Config/Debug.xcconfig`. Delete it to go back to `127.0.0.1`. Keep the `/$()/` in the URL, because a plain `//` starts a comment in `.xcconfig` files.
+
+4. **Point calls at the Mac.** In `supabase/functions/.env`, set:
+
+   ```sh
+   LIVEKIT_URL=ws://192.168.1.20:7880
+   ```
+
+   This is the address the app gets for joining a call. Leave `LIVEKIT_API_URL` as it is, because the functions use it from inside Docker.
+
+5. **Start the backend**, each command in its own terminal. LiveKit needs `--bind 0.0.0.0`, because in dev mode it otherwise only accepts connections from the Mac itself.
+
+   ```sh
+   supabase start
+   ```
+
+   ```sh
+   livekit-server --dev --bind 0.0.0.0
+   ```
+
+   ```sh
+   supabase functions serve --env-file supabase/functions/.env
+   ```
+
+   If `supabase functions serve` was already running, restart it so it reads the new `LIVEKIT_URL`.
+
+6. **Run on both devices.** Plug in the phone (or pair it over Wi-Fi in Xcode under Window › Devices and Simulators), pick it as the run destination and press ⌘R. Then pick an iPhone simulator and press ⌘R again. When Xcode asks whether to stop the app on the phone, choose **Add** so both stay running.
+
+7. **Allow local network access.** The first time the app runs on the phone, iOS asks to let buttercup find devices on your local network. Tap **Allow**. Without it the phone can't reach the Mac.
+
+8. **Sign in.** Sign in on the phone as `adam@example.com` and on the simulator as `partner@example.com`. The codes for both arrive in Mailpit on the Mac at http://127.0.0.1:54324.
+
+9. **Make a call** from either device and answer it on the other. Keep the app open on both, because ringing only works while the app is open. The phone shows the simulator's test clip, and the simulator shows the phone's camera and plays its mic.
+
+To test pairing instead, sign in on one device as `stranger@example.com` and on the other with a new email, then follow [Try pairing](#try-pairing).
+
+**If the phone can't connect:**
+
+- Check that the phone and the Mac are on the same Wi-Fi. Guest networks often block devices from reaching each other.
+- On the phone, turn on buttercup under Settings › Privacy & Security › Local Network.
+- If macOS asks whether `livekit-server` or Docker can accept incoming connections, allow it. You can also check System Settings › Network › Firewall.
+- Your Mac's IP can change, for example on a different Wi-Fi network. If it does, update the IP in both `Config/Local.xcconfig` and `supabase/functions/.env`, and restart `supabase functions serve`.
+- If sign-in works but calls fail, `LIVEKIT_URL` or the `--bind` flag is the likely cause.
 
 ## Running the tests
 

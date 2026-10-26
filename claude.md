@@ -41,7 +41,7 @@ Backend tickets are verified with `supabase db reset && supabase test db && supa
 
 Needs Xcode 26 and an iOS 26 Simulator, plus an iOS 18 runtime to check the minimum version. Start the backend first (`supabase status`, then `supabase start` if it's down).
 
-The **Debug** configuration points at the local stack (`SUPABASE_URL = http://127.0.0.1:54321` and the local demo anon key, set as build settings in `Buttercup.xcodeproj` and read through `Buttercup/Info.plist`). **Release** points at the hosted project. Don't swap these values in a commit.
+The **Debug** configuration points at the local stack (`SUPABASE_URL = http://127.0.0.1:54321` from `Config/Debug.xcconfig`, and the local demo anon key as a build setting in `Buttercup.xcodeproj`; both are read through `Buttercup/Info.plist`). **Release** points at the hosted project. Don't swap these values in a commit.
 
 | Task | Command |
 | --- | --- |
@@ -61,7 +61,7 @@ Seed users (all with password `password`; the app uses email codes, the tests us
 
 To test pairing, run two simulators: one shows its invite code on the pair screen, the other pastes it into "Or paste their code". The pair screen polls every 5 seconds, so the first one moves on by itself.
 
-`127.0.0.1` only reaches the Mac from the Simulator. On a physical iPhone, set the Debug `SUPABASE_URL` to the Mac's LAN IP (for example `http://192.168.1.20:54321`) locally and don't commit it.
+`127.0.0.1` only reaches the Mac from the Simulator. On a physical iPhone, copy `Config/Local.xcconfig.example` to the gitignored `Config/Local.xcconfig` with the Mac's LAN IP, and set `LIVEKIT_URL` in `supabase/functions/.env` to the same IP (see the README).
 
 ## Testing well
 

@@ -12,6 +12,7 @@
 
 /* Begin PBXFileReference section */
 		B0000000000000000000000A /* Buttercup.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Buttercup.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B0000000000000000000001D /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -51,8 +52,17 @@
 			isa = PBXGroup;
 			children = (
 				B0000000000000000000000B /* Buttercup */,
+				B0000000000000000000001E /* Config */,
 				B0000000000000000000000E /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		B0000000000000000000001E /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				B0000000000000000000001D /* Debug.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 		B0000000000000000000000E /* Products */ = {
@@ -196,6 +206,7 @@
 		};
 		B00000000000000000000017 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B0000000000000000000001D /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -214,7 +225,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.adamfilchoir.buttercup;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0";
-				SUPABASE_URL = "http://192.168.0.8:54321";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
