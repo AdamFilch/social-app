@@ -1,3 +1,4 @@
+import ARKit
 import ButtercupKit
 import SwiftUI
 
@@ -12,6 +13,17 @@ struct ButtercupApp: App {
         let calls = CallStore(session: session)
         #if targetEnvironment(simulator)
         calls.videoSource = TestClipCapturer.start
+        #else
+        if ARFaceTrackingConfiguration.isSupported {
+            let tracker = ARKitFaceTracker()
+            calls.videoSource = { capturer in
+                tracker.onFrame = { [weak capturer] buffer, _, time in
+                    capturer?.capture(buffer, timeStampNs: Int64(time * 1_000_000_000), rotation: ._90)
+                }
+                tracker.start()
+            }
+            calls.videoStop = tracker.stop
+        }
         #endif
         _session = State(initialValue: session)
         _calls = State(initialValue: calls)

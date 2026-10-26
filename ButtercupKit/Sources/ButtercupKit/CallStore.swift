@@ -21,11 +21,13 @@ public final class CallStore: NSObject {
     public private(set) var localVideo: VideoTrack?
     public private(set) var micOn = true
     public private(set) var cameraOn = false
+    public private(set) var front = true
     public var failure: Failure?
     public var showsCallScreen: Bool {
         (phase == .outgoing && call != nil) || [.connecting, .active, .reconnecting].contains(phase)
     }
     public var videoSource: ((BufferCapturer) -> Void)?
+    public var videoStop: (() -> Void)?
 
     private let session: SessionStore
     private var room: Room?
@@ -144,19 +146,27 @@ public final class CallStore: NSObject {
     }
 
     public func flipCamera() async {
-        let track = room?.localParticipant.videoTracks.first?.track as? LocalVideoTrack
-        _ = try? await (track?.capturer as? CameraCapturer)?.switchCameraPosition()
+        #if !targetEnvironment(simulator)
+        front.toggle()
+        if cameraOn { await setCamera(true) }
+        #endif
     }
 
     private func setCamera(_ on: Bool) async {
         guard let room else { return }
+        videoStop?()
+        for publication in room.localParticipant.videoTracks {
+            if let publication = publication as? LocalTrackPublication {
+                try? await room.localParticipant.unpublish(publication: publication)
+            }
+        }
         do {
-            if on, let videoSource, room.localParticipant.videoTracks.isEmpty {
+            if on, front, let videoSource {
                 let track = await LocalVideoTrack.createBufferTrack(name: "camera", source: .camera)
                 if let capturer = track.capturer as? BufferCapturer { videoSource(capturer) }
                 try await room.localParticipant.publish(videoTrack: track)
-            } else {
-                try await room.localParticipant.setCamera(enabled: on)
+            } else if on {
+                try await room.localParticipant.setCamera(enabled: true, captureOptions: CameraCaptureOptions(position: front ? .front : .back))
             }
             cameraOn = on
         } catch {
@@ -233,7 +243,9 @@ public final class CallStore: NSObject {
         localVideo = nil
         micOn = true
         cameraOn = false
+        front = true
         reconnecting = false
+        videoStop?()
         if let room { Task { await room.disconnect() } }
     }
 
