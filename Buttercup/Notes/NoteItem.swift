@@ -4,16 +4,19 @@ struct NoteItem: Identifiable {
     enum Kind {
         case sticker(String)
         case emoji(String)
+        case text(String, NoteFont, Color)
 
         var label: String {
             switch self {
             case .sticker(let name): "\(Stickers.label(name)) sticker"
             case .emoji(let emoji): Emoji.names[emoji] ?? emoji
+            case .text(let text, _, _): text
             }
         }
     }
 
     static let baseSize: CGFloat = 0.3
+    static let textSize: CGFloat = 52.0 / 398
     static let scaleRange: ClosedRange<CGFloat> = 0.3...4
 
     let id = UUID()

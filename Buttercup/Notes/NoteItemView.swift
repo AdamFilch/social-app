@@ -10,12 +10,15 @@ struct NoteItemView: View {
     @GestureState private var drag: CGSize = .zero
     @GestureState private var magnification: CGFloat = 1
     @GestureState private var turn: Angle = .zero
+    @State private var contentSize: CGSize = .zero
 
     private var center: CGPoint {
         CGPoint(x: item.center.x * side + drag.width, y: item.center.y * side + drag.height)
     }
 
-    private var size: CGFloat { side * NoteItem.baseSize * NoteItem.clampScale(item.scale * magnification) }
+    private var scale: CGFloat { NoteItem.clampScale(item.scale * magnification) }
+
+    private var size: CGFloat { side * NoteItem.baseSize * scale }
 
     private var rotation: Angle { item.rotation + turn }
 
@@ -33,7 +36,7 @@ struct NoteItemView: View {
 
     private var placed: some View {
         content
-            .frame(width: size, height: size)
+            .onGeometryChange(for: CGSize.self) { $0.size } action: { contentSize = $0 }
             .overlay {
                 if isSelected {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -70,9 +73,11 @@ struct NoteItemView: View {
     private var content: some View {
         switch item.kind {
         case .sticker(let name):
-            Stickers.image(name).resizable().scaledToFit()
+            Stickers.image(name).resizable().scaledToFit().frame(width: size, height: size)
         case .emoji(let emoji):
-            Text(emoji).font(.system(size: size * 0.8))
+            Text(emoji).font(.system(size: size * 0.8)).frame(width: size, height: size)
+        case .text(let text, let font, let colour):
+            TextSticker(text: text, font: font, colour: colour, size: side * NoteItem.textSize * scale)
         }
     }
 
@@ -102,13 +107,16 @@ struct NoteItemView: View {
     }
 
     private var badgeCenter: CGPoint {
-        let half = size / 2 + 8
+        let halfWidth = contentSize.width / 2 + 8
+        let halfHeight = contentSize.height / 2 + 8
         let radius: CGFloat = 16
         let angle = rotation.radians
-        let cosine = CGFloat(cos(angle)) * half
-        let sine = CGFloat(sin(angle)) * half
+        let cosine = CGFloat(cos(angle))
+        let sine = CGFloat(sin(angle))
         let corners: [CGPoint] = [(1.0, -1.0), (-1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)].map { (x: CGFloat, y: CGFloat) in
-            CGPoint(x: center.x + x * cosine - y * sine, y: center.y + x * sine + y * cosine)
+            let dx = x * halfWidth
+            let dy = y * halfHeight
+            return CGPoint(x: center.x + dx * cosine - dy * sine, y: center.y + dx * sine + dy * cosine)
         }
         let inside = (radius...(side - radius))
         return corners.first { inside.contains($0.x) && inside.contains($0.y) }
