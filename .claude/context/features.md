@@ -8,7 +8,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 |---|---|---|
 | 1 | [Accounts and pairing](#1-accounts-and-pairing) | Built |
 | 2 | [Calls](#2-calls) | Built (partial) |
-| 3 | [Notes](#3-notes) | Built (partial) |
+| 3 | [Notes](#3-notes) | Built |
 
 ---
 
@@ -82,7 +82,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 
 ## 3. Notes
 
-**Status:** Built (partial): the new note screen's frame, the Draw tab and the Stickers tab with placing and editing; sticker pinch and rotate are not yet checked on a device. The other tools come in [12]–[16].
+**Status:** Built: the new note screen's frame, the Draw tab and the Stickers tab with placing and editing. The other tools come in [12]–[16].
 
 **What it does:** "Make a note" on the Notes tab opens the New Note Screen as a full-screen cover. You can draw on the white canvas with a pen in 10 ink colours, erase whole strokes and undo, and place stickers that you move, pinch, rotate and remove. Emoji, text, photo and sending come in later tickets.
 
@@ -110,10 +110,9 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 - Swipe down follows the finger and closes past 30% of the height or faster than 600 pt/s; otherwise it eases back over 0.2 s. With Reduce Motion it doesn't follow the finger. A drag that starts on the canvas never dismisses.
 - Send stays disabled until [16].
 
-**Code:** `Buttercup/ContentView.swift` (`NotesTab`), `Buttercup/Notes/NewNoteView.swift` (cover, layout, alert, swipe down, `NoteTab`), `Buttercup/Notes/NoteDraft.swift` (`NoteDraft`, `NoteMode`), `Buttercup/Notes/NoteItem.swift`, `Buttercup/Notes/NoteItemView.swift` (gestures, selection, `TrashBadge`), `Buttercup/DesignSystem/StickerGrid.swift` (`StickerGrid` with `rows` and `cellFill`, `Stickers` catalog), `assets/stickers/` (bundled as a folder reference), `Buttercup/Notes/ModeToggle.swift`, `Buttercup/Notes/NoteCanvas.swift` (white square, `PKCanvasView`, hint, items layer, drop), `Buttercup/Notes/DrawTools.swift` (`DrawTools`, `DrawTool`, `InkColour`), `Buttercup/DesignSystem/ColourDots.swift` (`.row` and `.grid(rows:)`), `Buttercup/Assets.xcassets` (`NoteInkRed`, `NoteInkOrange`), `Buttercup/DesignSystem/PillTabRow.swift`, `Buttercup/DesignSystem/Buttons.swift` (`PressableButtonStyle`, `PillButtonStyle`, `IconCircleButton`). Spec: [design/specs/new-note-screen.md](../design/specs/new-note-screen.md), [prds/completed/9-new-note-shell.prd.md](../prds/completed/9-new-note-shell.prd.md), [prds/completed/10-note-draw-tab.prd.md](../prds/completed/10-note-draw-tab.prd.md), [prds/partial/11-note-stickers.prd.md](../prds/partial/11-note-stickers.prd.md).
+**Code:** `Buttercup/ContentView.swift` (`NotesTab`), `Buttercup/Notes/NewNoteView.swift` (cover, layout, alert, swipe down, `NoteTab`), `Buttercup/Notes/NoteDraft.swift` (`NoteDraft`, `NoteMode`), `Buttercup/Notes/NoteItem.swift`, `Buttercup/Notes/NoteItemView.swift` (gestures, selection, `TrashBadge`), `Buttercup/DesignSystem/StickerGrid.swift` (`StickerGrid` with `rows` and `cellFill`, `Stickers` catalog), `assets/stickers/` (bundled as a folder reference), `Buttercup/Notes/ModeToggle.swift`, `Buttercup/Notes/NoteCanvas.swift` (white square, `PKCanvasView`, hint, items layer, drop), `Buttercup/Notes/DrawTools.swift` (`DrawTools`, `DrawTool`, `InkColour`), `Buttercup/DesignSystem/ColourDots.swift` (`.row` and `.grid(rows:)`), `Buttercup/Assets.xcassets` (`NoteInkRed`, `NoteInkOrange`), `Buttercup/DesignSystem/PillTabRow.swift`, `Buttercup/DesignSystem/Buttons.swift` (`PressableButtonStyle`, `PillButtonStyle`, `IconCircleButton`). Spec: [design/specs/new-note-screen.md](../design/specs/new-note-screen.md), [prds/completed/9-new-note-shell.prd.md](../prds/completed/9-new-note-shell.prd.md), [prds/completed/10-note-draw-tab.prd.md](../prds/completed/10-note-draw-tab.prd.md), [prds/completed/11-note-stickers.prd.md](../prds/completed/11-note-stickers.prd.md).
 
 **Known gaps:**
 - No tab content for Emoji [12], Text [13].
-- Sticker pinch (0.3–4×) and two-finger rotate are built but not yet checked on a device or with Simulator Option-drag (PRD 11 AC3).
 - No camera or Retake [14], no outbox [15], no sending [16].
 - No Notes tab home, widget, calendar, favourites or unsend.
