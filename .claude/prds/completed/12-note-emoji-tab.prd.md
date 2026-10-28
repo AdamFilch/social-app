@@ -52,4 +52,4 @@ Long-press 👋 ─► tone picker ─ pick ─► placed with that tone; rememb
 - **Extends**: #2 Notes widget
 
 ---
-*Status: COMPLETED — PR #TBD*
+*Status: COMPLETED — PR #10*
