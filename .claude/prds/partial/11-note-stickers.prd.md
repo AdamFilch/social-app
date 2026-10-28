@@ -80,7 +80,7 @@ Tap empty canvas ─► deselects, no stroke
 | Simultaneous drag, magnify and rotate feel jumpy | Med | Hard to place | Combine them with `.simultaneously`, and apply the changes from the gesture start values |
 
 ---
-*Status: PARTIAL — PR #<number>*
+*Status: PARTIAL — PR #9*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
