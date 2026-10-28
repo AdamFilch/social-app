@@ -8,6 +8,7 @@ struct ButtercupApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        assert(UIFont(name: "Noteworthy-Bold", size: 18) != nil)
         let session = SessionStore()
         let calls = CallStore(session: session)
         #if targetEnvironment(simulator)

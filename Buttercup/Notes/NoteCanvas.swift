@@ -6,6 +6,7 @@ struct NoteCanvas: View {
     let tool: DrawTool
     let colour: InkColour
     let partnerName: String
+    var preview: NoteItem?
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -17,8 +18,8 @@ struct NoteCanvas: View {
                     if draft.mode == .draw {
                         DrawingView(draft: draft, tool: tool, colour: colour, isLocked: draft.selection != nil)
                         hint
-                            .opacity(draft.hasProgress ? 0 : 1)
-                            .animation(.easeOut(duration: 0.15), value: draft.hasProgress)
+                            .opacity(draft.hasProgress || preview != nil ? 0 : 1)
+                            .animation(.easeOut(duration: 0.15), value: draft.hasProgress || preview != nil)
                     }
                 }
                 .accessibilityElement()
@@ -43,6 +44,11 @@ struct NoteCanvas: View {
                     .transition(.opacity)
                 }
                 .accessibilitySortPriority(1)
+                if let preview, case .text(let text, let font, let colour) = preview.kind {
+                    TextSticker(text: text, font: font, colour: colour, size: side * NoteItem.textSize)
+                        .position(x: preview.center.x * side, y: preview.center.y * side)
+                        .allowsHitTesting(false)
+                }
             }
             .dropDestination(for: String.self) { values, location in
                 guard let value = values.first else { return false }
