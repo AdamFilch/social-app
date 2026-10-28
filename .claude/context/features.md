@@ -8,7 +8,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 |---|---|---|
 | 1 | [Accounts and pairing](#1-accounts-and-pairing) | Built |
 | 2 | [Calls](#2-calls) | Built (partial) |
-| 3 | [Notes](#3-notes) | Built (partial) |
+| 3 | [Notes](#3-notes) | Built |
 
 ---
 
@@ -82,7 +82,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 
 ## 3. Notes
 
-**Status:** Built (partial): only the new note screen's frame exists, and it has not been checked on a simulator yet.
+**Status:** Built: the new note screen's frame only; its tools come in [10]–[16].
 
 **What it does:** "Make a note" on the Notes tab opens the New Note Screen as a full-screen cover. It has nothing to draw or add yet: it shows the frame that later tickets fill in.
 
@@ -100,10 +100,9 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 - Debug builds add a placeholder item with a triple tap on the canvas, to test the discard alert before the tab tickets land.
 - Send stays disabled until [16].
 
-**Code:** `Buttercup/ContentView.swift` (`NotesTab`), `Buttercup/Notes/NewNoteView.swift` (cover, layout, alert, swipe down, `NoteTab`), `Buttercup/Notes/NoteDraft.swift` (`NoteDraft`, `NoteMode`, `NoteItem`), `Buttercup/Notes/ModeToggle.swift`, `Buttercup/DesignSystem/PillTabRow.swift`, `Buttercup/DesignSystem/Buttons.swift` (`PressableButtonStyle`, `PillButtonStyle`, `IconCircleButton`). Spec: [design/specs/new-note-screen.md](../design/specs/new-note-screen.md), [prds/partial/9-new-note-shell.prd.md](../prds/partial/9-new-note-shell.prd.md).
+**Code:** `Buttercup/ContentView.swift` (`NotesTab`), `Buttercup/Notes/NewNoteView.swift` (cover, layout, alert, swipe down, `NoteTab`), `Buttercup/Notes/NoteDraft.swift` (`NoteDraft`, `NoteMode`, `NoteItem`), `Buttercup/Notes/ModeToggle.swift`, `Buttercup/DesignSystem/PillTabRow.swift`, `Buttercup/DesignSystem/Buttons.swift` (`PressableButtonStyle`, `PillButtonStyle`, `IconCircleButton`). Spec: [design/specs/new-note-screen.md](../design/specs/new-note-screen.md), [prds/completed/9-new-note-shell.prd.md](../prds/completed/9-new-note-shell.prd.md).
 
 **Known gaps:**
-- [9] AC1–AC6 unverified on a simulator, and AC7's light and dark simulator check not done.
 - No tab content: Draw [10], Stickers [11], Emoji [12], Text [13].
 - No camera or Retake [14], no outbox [15], no sending [16].
 - No Notes tab home, widget, calendar, favourites or unsend.

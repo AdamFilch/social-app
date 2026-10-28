@@ -77,13 +77,13 @@ Tap Stickers / Emoji / Text ─► pill selects, empty content
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: Signed in as `adam@example.com`, Notes → Make a note opens a full-screen cover: blank, Draw mode, Draw tab selected.
-- [ ] AC2: The top bar holds only ✕ (left) and Send (right). Send is at 40% with no shadow and does nothing.
-- [ ] AC3: The mode row has the toggle on the right. The canvas is screen width − 16, square, white in light and dark, radius 20, 2.5 pt Outline.
-- [ ] AC4: The tab row shows Draw · Stickers · Emoji · Text · Face and scrolls. Face is at 40% and can't be tapped, and VoiceOver reads "Face stickers, coming later".
-- [ ] AC5: With no progress, ✕, swipe down from above the canvas and the mode toggle act at once. A drag that starts on the canvas never dismisses.
-- [ ] AC6: With `hasProgress` true, the same three actions show the alert "Discard this note?" / "You will lose your progress if you proceed" / Keep editing / Discard, and Discard does the action.
-- [ ] AC7: The build check passes, and the screen is checked in light and dark on the simulator.
+- [x] AC1: Signed in as `adam@example.com`, Notes → Make a note opens a full-screen cover: blank, Draw mode, Draw tab selected.
+- [x] AC2: The top bar holds only ✕ (left) and Send (right). Send is at 40% with no shadow and does nothing.
+- [x] AC3: The mode row has the toggle on the right. The canvas is screen width − 16, square, white in light and dark, radius 20, 2.5 pt Outline.
+- [x] AC4: The tab row shows Draw · Stickers · Emoji · Text · Face and scrolls. Face is at 40% and can't be tapped, and VoiceOver reads "Face stickers, coming later".
+- [x] AC5: With no progress, ✕, swipe down from above the canvas and the mode toggle act at once. A drag that starts on the canvas never dismisses.
+- [x] AC6: With `hasProgress` true, the same three actions show the alert "Discard this note?" / "You will lose your progress if you proceed" / Keep editing / Discard, and Discard does the action.
+- [x] AC7: The build check passes, and the screen is checked in light and dark on the simulator.
 
 ## Required Changes
 - **Notes tab**: temporary entry button (N2).
@@ -100,18 +100,20 @@ Tap Stickers / Emoji / Text ─► pill selects, empty content
 | Custom swipe-down fights the cover's own dismiss | Low | Double dismiss | A full-screen cover has no system swipe, so only the custom one exists |
 
 ---
-*Status: PARTIAL — PR #7*
+*Status: COMPLETED — PR #7*
 
 ## Implementation Status
+Verified 2026-10-28 on the iPhone 17 Pro Simulator (iOS 26.0), Debug, signed in as the partner seed user, driving the UI with AXe (`axe tap --label`, `axe swipe`, `axe describe-ui`).
+
 | AC | Status | Evidence / notes |
 |---|---|---|
-| AC1 | ⚠️ unverified | Built in `ContentView.swift` (`NotesTab`, `.fullScreenCover`) and `NewNoteView.swift` (starts `.draw` mode, `.draw` tab); no simulator-driving tool was available to open it |
-| AC2 | ⚠️ unverified | Top bar holds only `IconCircleButton` ✕ and Send (`PillButtonStyle(height: 44, sticker: true)`, `.disabled(true)` gives 40% and drops the sticker shadow); not seen on a simulator |
-| AC3 | ⚠️ unverified | Toggle right-aligned in the mode row; canvas `.padding(.horizontal, 8)` + `.aspectRatio(1)`, white fill, radius 20 continuous, 2.5 Outline `.strokeBorder`; not seen in light or dark |
-| AC4 | ⚠️ unverified | `PillTabRow` in a horizontal `ScrollView`, Face in `disabled` (40%, `.disabled`), label "Face stickers, coming later"; VoiceOver not run |
-| AC5 | ⚠️ unverified | `confirm` runs the action at once without progress; the drag is attached only to the top band, never the canvas; not exercised |
-| AC6 | ⚠️ unverified | `.alert` with the spec's title, message, Keep editing (`.cancel`) and Discard (`.destructive`); Debug builds add a fake item with a triple tap on the canvas to test it; not exercised |
-| AC7 | ⚠️ unverified | Build check passes (`** BUILD SUCCEEDED **`, iPhone 17 Simulator, Debug); light and dark simulator check not done |
+| AC1 | ✅ | Notes → Make a note opens the cover blank (canvas value "Empty"), Draw mode, Draw pill selected |
+| AC2 | ✅ | Top bar holds only Close and "Send to Adam"; Send shows at 40% with no shadow, and tapping it leaves the cover open |
+| AC3 | ✅ | Toggle on the right of the mode row; canvas frame 386 × 386 at x 8 on a 402 pt screen; white with radius and Outline in light and dark screenshots |
+| AC4 | ✅ | Pills Draw · Stickers · Emoji · Text · Face; tapping Stickers selects it; tapping Face leaves Draw selected; Face's accessibility label is "Face stickers, coming later" (read from the accessibility tree, VoiceOver itself not run) |
+| AC5 | ✅ | No progress: Close dismisses at once; a swipe from the top band (y 95 → 700) dismisses; Photo toggle switches with no alert. A drag from the canvas (y 260 → 780) leaves the cover open |
+| AC6 | ✅ | After a Debug triple tap: Close, top-band swipe and Photo toggle each show the alert with the spec's title, message, Keep editing and Discard. Keep editing stays; Discard on the toggle opens Photo blank; Discard on Close dismisses |
+| AC7 | ✅ | Build check passes; the cover and the alert checked in light and dark |
 
-### Needs attention
-- Sign in as `adam@example.com` on the iPhone 17 Simulator, open Notes → Make a note, and check AC1–AC6 in light and dark (triple-tap the canvas in a Debug build to get `hasProgress` for AC6). Then tick the ACs and move this PRD to `completed/`.
+### Notes
+- The accessibility tree still lists the Notes tab's "Make a note" button and the tab bar behind the open cover. Worth a check with VoiceOver on; `.accessibilityAddTraits(.isModal)` on the cover's root would hide them.
