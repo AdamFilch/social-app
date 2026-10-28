@@ -8,11 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		B00000000000000000000019 /* ButtercupKit in Frameworks */ = {isa = PBXBuildFile; productRef = B0000000000000000000001A /* ButtercupKit */; };
+		B00000000000000000000021 /* stickers in Resources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000020 /* stickers */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B0000000000000000000000A /* Buttercup.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Buttercup.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0000000000000000000001D /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		B00000000000000000000020 /* stickers */ = {isa = PBXFileReference; lastKnownFileType = folder; name = stickers; path = assets/stickers; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -53,6 +55,7 @@
 			children = (
 				B0000000000000000000000B /* Buttercup */,
 				B0000000000000000000001E /* Config */,
+				B00000000000000000000020 /* stickers */,
 				B0000000000000000000000E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -141,6 +144,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B00000000000000000000021 /* stickers in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
