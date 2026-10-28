@@ -82,27 +82,32 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 
 ## 3. Notes
 
-**Status:** Built: the new note screen's frame only; its tools come in [10]–[16].
+**Status:** Built: the new note screen's frame and the Draw tab; the other tools come in [11]–[16].
 
-**What it does:** "Make a note" on the Notes tab opens the New Note Screen as a full-screen cover. It has nothing to draw or add yet: it shows the frame that later tickets fill in.
+**What it does:** "Make a note" on the Notes tab opens the New Note Screen as a full-screen cover. You can draw on the white canvas with a pen in 10 ink colours, erase whole strokes and undo. Stickers, emoji, text, photo and sending come in later tickets.
 
 **Flow:**
 1. Notes tab: a temporary "Make a note" button (primary pill with the sticker shadow) presents `NewNoteView` with `.fullScreenCover`.
 2. The cover opens blank, in Draw mode, on the Draw tab: ✕ on the left and a disabled Send (40%, no shadow) on the right of the top bar, the pen | camera toggle on the right of the mode row, a white square canvas (screen width − 16, radius 20, 2.5 pt Outline), and the tab row Draw · Stickers · Emoji · Text · Face.
-3. Tabs switch the selected pill; their content is empty. Face is at 40% and can't be tapped ("Face stickers, coming later").
-4. Photo mode shows a blank Surface square and hides the tab row; the camera comes in [14].
-5. ✕, a swipe down that starts above the canvas, the VoiceOver escape gesture and the mode toggle act at once when there is no progress.
+3. Draw tab: Pen, Eraser and Undo (44 pt circles, the selected tool Accent with a 2 pt Outline) above `ColourDots` in a 2 × 5 grid that scrolls sideways, in the order Ink, Buttercup, Yellow, Pink, Blue, Green, Lilac, Red, Orange, White. Pen and Ink are selected on open.
+4. Drawing with one finger makes 9 pt strokes in the selected colour. The eraser removes whole strokes. Undo steps back through strokes and erasures and is at 40% when there is nothing to undo. Picking a colour while the eraser is on switches back to the pen.
+5. The hint "Draw something for {partner}" sits on an empty canvas and fades out over 0.15 s on the first stroke; it comes back if the canvas is empty again.
+6. Other tabs switch the selected pill; their content is empty. Face is at 40% and can't be tapped ("Face stickers, coming later").
+7. Photo mode shows a blank Surface square and hides the tab row; the camera comes in [14].
+8. ✕, a swipe down that starts above the canvas, the VoiceOver escape gesture and the mode toggle act at once when there is no progress.
 
 **Rules:**
-- `NoteDraft` holds `mode`, `photo`, `drawing`, `items` and `selection`; `hasProgress` is a photo, any stroke or any item.
+- `NoteDraft` holds `mode`, `photo`, `drawing`, `history` (undo stack of earlier drawings), `items` and `selection`; `hasProgress` is a photo, any stroke or any item, so one stroke makes ✕ ask first.
+- The canvas is a `PKCanvasView` with `drawingPolicy = .anyInput`, `PKInkingTool(.monoline, width: 4.5)` (which renders 9 pt) and `PKEraserTool(.vector)`; `PKToolPicker` is never shown. It is forced to light appearance and inks use their light values, so strokes look the same in light and dark.
+- Ink colours are content colours, the same in both modes: Ink and Buttercup use the light TextPrimary and Accent values; Red and Orange are `NoteInkRed` #E5483B and `NoteInkOrange` #FF8A3D.
+- Each dot and tool has its VoiceOver name and `.isSelected` on the current one; haptics: none on tools or dots.
 - With progress, those actions show "Discard this note?" / "You will lose your progress if you proceed" / Keep editing / Discard, and Discard does the action (a mode switch clears the draft and opens the other mode blank).
 - Swipe down follows the finger and closes past 30% of the height or faster than 600 pt/s; otherwise it eases back over 0.2 s. With Reduce Motion it doesn't follow the finger. A drag that starts on the canvas never dismisses.
-- Debug builds add a placeholder item with a triple tap on the canvas, to test the discard alert before the tab tickets land.
 - Send stays disabled until [16].
 
-**Code:** `Buttercup/ContentView.swift` (`NotesTab`), `Buttercup/Notes/NewNoteView.swift` (cover, layout, alert, swipe down, `NoteTab`), `Buttercup/Notes/NoteDraft.swift` (`NoteDraft`, `NoteMode`, `NoteItem`), `Buttercup/Notes/ModeToggle.swift`, `Buttercup/DesignSystem/PillTabRow.swift`, `Buttercup/DesignSystem/Buttons.swift` (`PressableButtonStyle`, `PillButtonStyle`, `IconCircleButton`). Spec: [design/specs/new-note-screen.md](../design/specs/new-note-screen.md), [prds/completed/9-new-note-shell.prd.md](../prds/completed/9-new-note-shell.prd.md).
+**Code:** `Buttercup/ContentView.swift` (`NotesTab`), `Buttercup/Notes/NewNoteView.swift` (cover, layout, alert, swipe down, `NoteTab`), `Buttercup/Notes/NoteDraft.swift` (`NoteDraft`, `NoteMode`, `NoteItem`), `Buttercup/Notes/ModeToggle.swift`, `Buttercup/Notes/NoteCanvas.swift` (white square, `PKCanvasView`, hint), `Buttercup/Notes/DrawTools.swift` (`DrawTools`, `DrawTool`, `InkColour`), `Buttercup/DesignSystem/ColourDots.swift` (`.row` and `.grid(rows:)`), `Buttercup/Assets.xcassets` (`NoteInkRed`, `NoteInkOrange`), `Buttercup/DesignSystem/PillTabRow.swift`, `Buttercup/DesignSystem/Buttons.swift` (`PressableButtonStyle`, `PillButtonStyle`, `IconCircleButton`). Spec: [design/specs/new-note-screen.md](../design/specs/new-note-screen.md), [prds/completed/9-new-note-shell.prd.md](../prds/completed/9-new-note-shell.prd.md), [prds/completed/10-note-draw-tab.prd.md](../prds/completed/10-note-draw-tab.prd.md).
 
 **Known gaps:**
-- No tab content: Draw [10], Stickers [11], Emoji [12], Text [13].
+- No tab content for Stickers [11], Emoji [12], Text [13].
 - No camera or Retake [14], no outbox [15], no sending [16].
 - No Notes tab home, widget, calendar, favourites or unsend.

@@ -56,13 +56,13 @@ Pick Pink while eraser on ─► pen selected, ink Pink
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: Draw tab: pen, eraser and undo at top 634, and 10 dots in a 2 × 5 grid at top 690, in spec §6.3 order. Ink is selected.
-- [ ] AC2: Strokes are 9 pt wide in the chosen colour. No Apple tool picker ever appears.
-- [ ] AC3: The eraser removes whole strokes only. Undo steps back through strokes and erasures, and is at 40% when there is nothing left.
-- [ ] AC4: The hint shows on an empty canvas and fades over 0.15 s on the first stroke.
-- [ ] AC5: After one stroke, ✕ shows the discard alert.
-- [ ] AC6: Each dot has its VoiceOver name and `.isSelected` state. White's dot shows its outline on the white canvas.
-- [ ] AC7: The build check passes, and drawing is checked on the simulator in light and dark.
+- [x] AC1: Draw tab: pen, eraser and undo at top 634, and 10 dots in a 2 × 5 grid at top 690, in spec §6.3 order. Ink is selected.
+- [x] AC2: Strokes are 9 pt wide in the chosen colour. No Apple tool picker ever appears.
+- [x] AC3: The eraser removes whole strokes only. Undo steps back through strokes and erasures, and is at 40% when there is nothing left.
+- [x] AC4: The hint shows on an empty canvas and fades over 0.15 s on the first stroke.
+- [x] AC5: After one stroke, ✕ shows the discard alert.
+- [x] AC6: Each dot has its VoiceOver name and `.isSelected` state. White's dot shows its outline on the white canvas.
+- [x] AC7: The build check passes, and drawing is checked on the simulator in light and dark.
 
 ## Required Changes
 - **Canvas**: spec §3.3, §4.2.
@@ -77,4 +77,4 @@ Pick Pink while eraser on ─► pen selected, ink Pink
 | `PKCanvasView` steals the top-band swipe | Low | Can't close | The canvas starts at y 160, and the swipe zone is above it |
 
 ---
-*Status: READY — ticket [10]*
+*Status: COMPLETED — PR #TBD*
