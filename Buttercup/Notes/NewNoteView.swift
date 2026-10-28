@@ -48,10 +48,16 @@ struct NewNoteView: View {
                         .padding(.top, 16)
                         .transition(.opacity)
                 }
+                if tab == .stickers {
+                    stickersPanel
+                        .padding(.top, 14)
+                        .transition(.opacity)
+                }
             }
             Spacer(minLength: 0)
         }
         .animation(.easeOut(duration: 0.15), value: tab)
+        .sensoryFeedback(.impact(weight: .light), trigger: draft.items.count) { old, new in new > old }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color("Background"))
         .fontDesign(.rounded)
@@ -109,6 +115,27 @@ struct NewNoteView: View {
             )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder
+    private var stickersPanel: some View {
+        if Stickers.names.isEmpty {
+            Text("No stickers yet.")
+                .font(.body)
+                .foregroundStyle(Color("TextSecondary"))
+                .frame(maxWidth: .infinity, minHeight: 176)
+        } else {
+            VStack(spacing: 12) {
+                StickerGrid(names: Stickers.names, rows: 2, cellFill: Color("Surface")) { name in
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        draft.add(.sticker(name), at: CGPoint(x: 0.5, y: 0.5), select: true)
+                    }
+                }
+                Text("Tap one, or drag it onto the note")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color("TextSecondary"))
+            }
+        }
     }
 
     private var swipeDown: some Gesture {

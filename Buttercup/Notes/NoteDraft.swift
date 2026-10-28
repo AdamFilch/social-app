@@ -6,10 +6,6 @@ enum NoteMode {
     case draw, photo
 }
 
-struct NoteItem: Identifiable {
-    let id = UUID()
-}
-
 @Observable
 final class NoteDraft {
     var mode: NoteMode = .draw
@@ -26,6 +22,22 @@ final class NoteDraft {
     func undo() {
         guard let previous = history.popLast() else { return }
         drawing = previous
+    }
+
+    func add(_ kind: NoteItem.Kind, at center: CGPoint, select: Bool) {
+        let item = NoteItem(kind: kind, center: NoteItem.clampCenter(center))
+        items.append(item)
+        if select { selection = item.id }
+    }
+
+    func remove(_ id: NoteItem.ID) {
+        items.removeAll { $0.id == id }
+        if selection == id { selection = nil }
+    }
+
+    func bringToFront(_ id: NoteItem.ID) {
+        guard items.last?.id != id, let index = items.firstIndex(where: { $0.id == id }) else { return }
+        items.append(items.remove(at: index))
     }
 
     func reset(to mode: NoteMode) {
