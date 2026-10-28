@@ -31,9 +31,12 @@ struct ContentView: View {
             ForEach(AppTab.allCases, id: \.self) { tab in
                 Tab(value: tab) {
                     Group {
-                        if tab == .calling {
+                        switch tab {
+                        case .calling:
                             CallingView()
-                        } else {
+                        case .notes:
+                            NotesTab()
+                        case .hobbies:
                             Text(tab.title)
                         }
                     }
@@ -65,6 +68,19 @@ struct ContentView: View {
     private var failureMessage: String {
         let name = session.partner?.displayName ?? ""
         return calls.failure == .busy ? "\(name) is on another call" : "Couldn't reach \(name). Try again"
+    }
+}
+
+struct NotesTab: View {
+    @Environment(SessionStore.self) private var session
+    @State private var isComposing = false
+
+    var body: some View {
+        Button("Make a note") { isComposing = true }
+            .buttonStyle(PillButtonStyle(sticker: true))
+            .fullScreenCover(isPresented: $isComposing) {
+                NewNoteView(partnerName: session.partner?.displayName ?? "")
+            }
     }
 }
 
