@@ -77,13 +77,13 @@ Tap Stickers / Emoji / Text ─► pill selects, empty content
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: Signed in as `adam@example.com`, Notes → Make a note opens a full-screen cover: blank, Draw mode, Draw tab selected.
-- [ ] AC2: The top bar holds only ✕ (left) and Send (right). Send is at 40% with no shadow and does nothing.
-- [ ] AC3: The mode row has the toggle on the right. The canvas is screen width − 16, square, white in light and dark, radius 20, 2.5 pt Outline.
-- [ ] AC4: The tab row shows Draw · Stickers · Emoji · Text · Face and scrolls. Face is at 40% and can't be tapped, and VoiceOver reads "Face stickers, coming later".
-- [ ] AC5: With no progress, ✕, swipe down from above the canvas and the mode toggle act at once. A drag that starts on the canvas never dismisses.
-- [ ] AC6: With `hasProgress` true, the same three actions show the alert "Discard this note?" / "You will lose your progress if you proceed" / Keep editing / Discard, and Discard does the action.
-- [ ] AC7: The build check passes, and the screen is checked in light and dark on the simulator.
+- [x] AC1: Signed in as `adam@example.com`, Notes → Make a note opens a full-screen cover: blank, Draw mode, Draw tab selected.
+- [x] AC2: The top bar holds only ✕ (left) and Send (right). Send is at 40% with no shadow and does nothing.
+- [x] AC3: The mode row has the toggle on the right. The canvas is screen width − 16, square, white in light and dark, radius 20, 2.5 pt Outline.
+- [x] AC4: The tab row shows Draw · Stickers · Emoji · Text · Face and scrolls. Face is at 40% and can't be tapped, and VoiceOver reads "Face stickers, coming later".
+- [x] AC5: With no progress, ✕, swipe down from above the canvas and the mode toggle act at once. A drag that starts on the canvas never dismisses.
+- [x] AC6: With `hasProgress` true, the same three actions show the alert "Discard this note?" / "You will lose your progress if you proceed" / Keep editing / Discard, and Discard does the action.
+- [x] AC7: The build check passes, and the screen is checked in light and dark on the simulator.
 
 ## Required Changes
 - **Notes tab**: temporary entry button (N2).
@@ -100,4 +100,20 @@ Tap Stickers / Emoji / Text ─► pill selects, empty content
 | Custom swipe-down fights the cover's own dismiss | Low | Double dismiss | A full-screen cover has no system swipe, so only the custom one exists |
 
 ---
-*Status: READY — ticket [9]*
+*Status: COMPLETED — PR #7*
+
+## Implementation Status
+Verified 2026-10-28 on the iPhone 17 Pro Simulator (iOS 26.0), Debug, signed in as the partner seed user, driving the UI with AXe (`axe tap --label`, `axe swipe`, `axe describe-ui`).
+
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ | Notes → Make a note opens the cover blank (canvas value "Empty"), Draw mode, Draw pill selected |
+| AC2 | ✅ | Top bar holds only Close and "Send to Adam"; Send shows at 40% with no shadow, and tapping it leaves the cover open |
+| AC3 | ✅ | Toggle on the right of the mode row; canvas frame 386 × 386 at x 8 on a 402 pt screen; white with radius and Outline in light and dark screenshots |
+| AC4 | ✅ | Pills Draw · Stickers · Emoji · Text · Face; tapping Stickers selects it; tapping Face leaves Draw selected; Face's accessibility label is "Face stickers, coming later" (read from the accessibility tree, VoiceOver itself not run) |
+| AC5 | ✅ | No progress: Close dismisses at once; a swipe from the top band (y 95 → 700) dismisses; Photo toggle switches with no alert. A drag from the canvas (y 260 → 780) leaves the cover open |
+| AC6 | ✅ | After a Debug triple tap: Close, top-band swipe and Photo toggle each show the alert with the spec's title, message, Keep editing and Discard. Keep editing stays; Discard on the toggle opens Photo blank; Discard on Close dismisses |
+| AC7 | ✅ | Build check passes; the cover and the alert checked in light and dark |
+
+### Notes
+- The accessibility tree still lists the Notes tab's "Make a note" button and the tab bar behind the open cover. Worth a check with VoiceOver on; `.accessibilityAddTraits(.isModal)` on the cover's root would hide them.
