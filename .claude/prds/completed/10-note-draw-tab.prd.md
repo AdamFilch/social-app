@@ -77,4 +77,4 @@ Pick Pink while eraser on ─► pen selected, ink Pink
 | `PKCanvasView` steals the top-band swipe | Low | Can't close | The canvas starts at y 160, and the swipe zone is above it |
 
 ---
-*Status: COMPLETED — PR #TBD*
+*Status: COMPLETED — PR #8*
