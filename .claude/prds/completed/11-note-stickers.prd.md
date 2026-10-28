@@ -58,15 +58,15 @@ Tap empty canvas ─► deselects, no stroke
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: The Stickers tab shows a 2-row grid of 84 pt cells, scrolling sideways, with the hint "Tap one, or drag it onto the note".
-- [ ] AC2: Tapping a cell adds the sticker at the canvas centre, selected, with a light haptic. Dragging a cell onto the canvas adds it under the finger, unselected.
-- [ ] AC3: Any sticker moves with one finger, pinches between 0.3× and 4×, and rotates with two fingers, whether or not it is selected.
-- [ ] AC4: Selected: a 2.5 pt light Accent outline 8 pt out, and a trash badge that stays inside the canvas and stays upright. The trash removes the sticker.
-- [ ] AC5: While something is selected, a tap on empty canvas only deselects and doesn't draw.
-- [ ] AC6: Strokes always sit under stickers.
-- [ ] AC7: With `assets/stickers/` emptied, the tab shows "No stickers yet."
-- [ ] AC8: Each placed item has the VoiceOver remove, size, rotate and move actions.
-- [ ] AC9: The build check passes, and placing and editing are checked on the simulator.
+- [x] AC1: The Stickers tab shows a 2-row grid of 84 pt cells, scrolling sideways, with the hint "Tap one, or drag it onto the note".
+- [x] AC2: Tapping a cell adds the sticker at the canvas centre, selected, with a light haptic. Dragging a cell onto the canvas adds it under the finger, unselected.
+- [x] AC3: Any sticker moves with one finger, pinches between 0.3× and 4×, and rotates with two fingers, whether or not it is selected.
+- [x] AC4: Selected: a 2.5 pt light Accent outline 8 pt out, and a trash badge that stays inside the canvas and stays upright. The trash removes the sticker.
+- [x] AC5: While something is selected, a tap on empty canvas only deselects and doesn't draw.
+- [x] AC6: Strokes always sit under stickers.
+- [x] AC7: With `assets/stickers/` emptied, the tab shows "No stickers yet."
+- [x] AC8: Each placed item has the VoiceOver remove, size, rotate and move actions.
+- [x] AC9: The build check passes, and placing and editing are checked on the simulator.
 
 ## Required Changes
 - **Items**: spec §3.4, §3.6, §4.3, §4.12.
@@ -80,4 +80,18 @@ Tap empty canvas ─► deselects, no stroke
 | Simultaneous drag, magnify and rotate feel jumpy | Med | Hard to place | Combine them with `.simultaneously`, and apply the changes from the gesture start values |
 
 ---
-*Status: READY — ticket [11]*
+*Status: COMPLETED — PR #9*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | Simulator, light and dark: 2 rows of 84 × 84 cells (AX frames), Surface fill, hint "Tap one, or drag it onto the note" under the grid. Grid is a horizontal `ScrollView`; with 4 stickers nothing overflows, so the scroll itself wasn't exercised |
+| AC2 | ✅ done | Tap on heart: lands at the canvas centre (AX frame centre 201,367 = canvas centre), selected with outline and trash; lldb breakpoint hit `-[UIImpactFeedbackGenerator impactOccurredWithIntensity:atLocation:]` from SwiftUI `sensoryFeedback`. Long-press drag of star released at (119,288) landed centred there, unselected; release over the tab row added nothing |
+| AC3 | ✅ done | One-finger move checked on the simulator (selected and unselected, exact 89,103 pt offset, no stroke drawn). Pinch (0.3–4×) and two-finger rotate checked by the user on a physical iPhone |
+| AC4 | ✅ done | Light Accent 2.5 pt outline 8 pt out; trash upright on the top-right corner; with a temporary patch placing the star rotated 30° at 1.6× in the top-right, the outline rotated, the badge stayed upright and moved to the corner inside the canvas. Trash removes the sticker (AX value back to "Empty"/count drops) |
+| AC5 | ✅ done | With the heart selected, a drag across empty canvas drew nothing and the next tap only deselected (no dot) |
+| AC6 | ✅ done | Strokes drawn before and after placing, including one crossing the star, render under the stickers |
+| AC7 | ✅ done | PNGs moved out and rebuilt: bundle `stickers/` empty, tab shows "No stickers yet." (light and dark) |
+| AC8 | ✅ done | `axe describe-ui` lists custom actions Remove, Make bigger, Make smaller, Rotate left, Rotate right, Move up/down/left/right on "Heart sticker"; actions not performed through VoiceOver |
+| AC9 | ✅ done | `xcodebuild ... build` succeeds; placing, moving, selecting, deselecting and removing checked on the iPhone 17 simulator |
+
