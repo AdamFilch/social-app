@@ -100,7 +100,7 @@ Tap Stickers / Emoji / Text ─► pill selects, empty content
 | Custom swipe-down fights the cover's own dismiss | Low | Double dismiss | A full-screen cover has no system swipe, so only the custom one exists |
 
 ---
-*Status: PARTIAL — PR #PRNUM*
+*Status: PARTIAL — PR #7*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
