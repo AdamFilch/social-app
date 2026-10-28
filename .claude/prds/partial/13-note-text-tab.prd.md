@@ -61,7 +61,7 @@ Dismiss keyboard without Add ─► tools drop under tabs, typed text kept until
 | `Noteworthy-Bold` name differs | Low | Falls back to system | Check `UIFont(name:)` at launch in DEBUG |
 
 ---
-*Status: PARTIAL — PR #PRNUM*
+*Status: PARTIAL — PR #11*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
