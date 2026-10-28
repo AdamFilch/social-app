@@ -53,6 +53,15 @@ struct NewNoteView: View {
                         .padding(.top, 14)
                         .transition(.opacity)
                 }
+                if tab == .emoji {
+                    EmojiStrip(categories: Emoji.categories, rows: 2) { emoji in
+                        withAnimation(.easeOut(duration: 0.15)) {
+                            draft.add(.emoji(emoji), at: CGPoint(x: 0.5, y: 0.5), select: true)
+                        }
+                    }
+                    .padding(.top, 4)
+                    .transition(.opacity)
+                }
             }
             Spacer(minLength: 0)
         }

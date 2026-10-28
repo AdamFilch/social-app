@@ -3,10 +3,12 @@ import SwiftUI
 struct NoteItem: Identifiable {
     enum Kind {
         case sticker(String)
+        case emoji(String)
 
         var label: String {
             switch self {
             case .sticker(let name): "\(Stickers.label(name)) sticker"
+            case .emoji(let emoji): Emoji.names[emoji] ?? emoji
             }
         }
     }
