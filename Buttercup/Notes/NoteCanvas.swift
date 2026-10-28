@@ -44,10 +44,18 @@ struct NoteCanvas: View {
                 }
                 .accessibilitySortPriority(1)
             }
-            .dropDestination(for: String.self) { names, location in
-                guard let name = names.first, Stickers.names.contains(name) else { return false }
+            .dropDestination(for: String.self) { values, location in
+                guard let value = values.first else { return false }
+                let kind: NoteItem.Kind
+                if Stickers.names.contains(value) {
+                    kind = .sticker(value)
+                } else if Emoji.names[value] != nil {
+                    kind = .emoji(value)
+                } else {
+                    return false
+                }
                 withAnimation(.easeOut(duration: 0.15)) {
-                    draft.add(.sticker(name), at: CGPoint(x: location.x / side, y: location.y / side), select: false)
+                    draft.add(kind, at: CGPoint(x: location.x / side, y: location.y / side), select: false)
                 }
                 return true
             }

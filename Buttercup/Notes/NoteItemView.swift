@@ -71,6 +71,8 @@ struct NoteItemView: View {
         switch item.kind {
         case .sticker(let name):
             Stickers.image(name).resizable().scaledToFit()
+        case .emoji(let emoji):
+            Text(emoji).font(.system(size: size * 0.8))
         }
     }
 
