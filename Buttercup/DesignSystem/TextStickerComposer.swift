@@ -43,7 +43,7 @@ struct TextStickerComposer: View {
     private var canAdd: Bool { !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
                 TextField("", text: $text, prompt: Text("Type something").foregroundStyle(Color("TextSecondary")))
                     .font(.body.weight(.semibold))
@@ -55,12 +55,12 @@ struct TextStickerComposer: View {
                         if new.count > Self.maxLength { text = String(new.prefix(Self.maxLength)) }
                     }
                     .padding(.horizontal, 18)
-                    .frame(height: 48)
+                    .frame(height: 44)
                     .background(Capsule().fill(Color("Background")))
                     .overlay(Capsule().strokeBorder(Color("Outline"), lineWidth: 2))
                     .accessibilityLabel("Sticker text")
                 Button("Add", action: onAdd)
-                    .buttonStyle(PillButtonStyle(height: 48, sticker: addHasShadow))
+                    .buttonStyle(PillButtonStyle(height: 44, sticker: addHasShadow))
                     .disabled(!canAdd)
             }
             .padding(.horizontal, 16)
@@ -70,7 +70,6 @@ struct TextStickerComposer: View {
                     ForEach(fonts, id: \.self) { chip($0) }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.top, 4)
             }
             if preview == .inline {
                 TextSticker(text: text.isEmpty ? "Type something" : text, font: font, colour: colour.color, size: 40)

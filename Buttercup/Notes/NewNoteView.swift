@@ -33,7 +33,7 @@ struct NewNoteView: View {
     @State private var toolsRest: CGFloat = .infinity
     @State private var raisedTop: CGFloat?
 
-    private static let toolsHeight: CGFloat = 164
+    private static let toolsHeight: CGFloat = 136
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -82,6 +82,14 @@ struct NewNoteView: View {
                 .padding(.top, 8)
             NoteCanvas(draft: draft, tool: tool, colour: colour, partnerName: partnerName, preview: textPreview)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("note")) } action: { canvasFrame = $0 }
+                .overlay {
+                    if textFocused {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture { textFocused = false }
+                            .accessibilityHidden(true)
+                    }
+                }
                 .padding(.horizontal, 8)
                 .padding(.top, 8)
             if draft.mode == .draw {
@@ -149,7 +157,7 @@ struct NewNoteView: View {
             preview: .external,
             onAdd: addText
         )
-        .padding(.top, 12)
+        .padding(.top, 4)
         .frame(height: Self.toolsHeight, alignment: .top)
         .background {
             UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28, style: .continuous)
