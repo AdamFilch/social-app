@@ -20,6 +20,8 @@ struct NewNoteView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var draft = NoteDraft()
     @State private var tab: NoteTab = .draw
+    @State private var tool: DrawTool = .pen
+    @State private var colour: InkColour = .ink
     @State private var pendingDiscard: (() -> Void)?
     @State private var dragOffset: CGFloat = 0
     @State private var height: CGFloat = 896
@@ -28,7 +30,7 @@ struct NewNoteView: View {
         VStack(spacing: 0) {
             topBand
                 .padding(.top, 8)
-            canvas
+            NoteCanvas(draft: draft, tool: tool, colour: colour, partnerName: partnerName)
                 .padding(.horizontal, 8)
                 .padding(.top, 8)
             if draft.mode == .draw {
@@ -41,9 +43,15 @@ struct NewNoteView: View {
                 )
                 .padding(.top, 16)
                 .transition(.opacity)
+                if tab == .draw {
+                    drawPanel
+                        .padding(.top, 16)
+                        .transition(.opacity)
+                }
             }
             Spacer(minLength: 0)
         }
+        .animation(.easeOut(duration: 0.15), value: tab)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color("Background"))
         .fontDesign(.rounded)
@@ -88,17 +96,19 @@ struct NewNoteView: View {
         .gesture(swipeDown)
     }
 
-    private var canvas: some View {
-        RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(draft.mode == .draw ? Color.white : Color("Surface"))
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Color("Outline"), lineWidth: 2.5))
-            .aspectRatio(1, contentMode: .fit)
-            .accessibilityElement()
-            .accessibilityLabel("Note")
-            .accessibilityValue(draft.hasProgress ? "" : "Empty")
-        #if DEBUG
-            .onTapGesture(count: 3) { draft.items.append(NoteItem()) }
-        #endif
+    private var drawPanel: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            DrawTools(tool: $tool, canUndo: !draft.history.isEmpty) { draft.undo() }
+                .padding(.horizontal, 16)
+            ColourDots(
+                colours: InkColour.allCases,
+                selection: Binding(get: { colour }, set: { colour = $0; tool = .pen }),
+                layout: .grid(rows: 2),
+                colour: \.color,
+                name: \.name
+            )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var swipeDown: some Gesture {
