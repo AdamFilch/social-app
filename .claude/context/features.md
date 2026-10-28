@@ -8,6 +8,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 |---|---|---|
 | 1 | [Accounts and pairing](#1-accounts-and-pairing) | Built |
 | 2 | [Calls](#2-calls) | Built (partial) |
+| 3 | [Notes](#3-notes) | Built (partial) |
 
 ---
 
@@ -76,3 +77,33 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 - AC6 partner side unverified: the other side showing video when the camera turns on and the initial again when it turns off.
 - No VoIP, cancel or missed-call pushes ([8]).
 - Functions are not deployed to the hosted project; that needs a LiveKit Cloud project and `supabase secrets set`.
+
+---
+
+## 3. Notes
+
+**Status:** Built (partial): only the new note screen's frame exists, and it has not been checked on a simulator yet.
+
+**What it does:** "Make a note" on the Notes tab opens the New Note Screen as a full-screen cover. It has nothing to draw or add yet: it shows the frame that later tickets fill in.
+
+**Flow:**
+1. Notes tab: a temporary "Make a note" button (primary pill with the sticker shadow) presents `NewNoteView` with `.fullScreenCover`.
+2. The cover opens blank, in Draw mode, on the Draw tab: ✕ on the left and a disabled Send (40%, no shadow) on the right of the top bar, the pen | camera toggle on the right of the mode row, a white square canvas (screen width − 16, radius 20, 2.5 pt Outline), and the tab row Draw · Stickers · Emoji · Text · Face.
+3. Tabs switch the selected pill; their content is empty. Face is at 40% and can't be tapped ("Face stickers, coming later").
+4. Photo mode shows a blank Surface square and hides the tab row; the camera comes in [14].
+5. ✕, a swipe down that starts above the canvas, the VoiceOver escape gesture and the mode toggle act at once when there is no progress.
+
+**Rules:**
+- `NoteDraft` holds `mode`, `photo`, `drawing`, `items` and `selection`; `hasProgress` is a photo, any stroke or any item.
+- With progress, those actions show "Discard this note?" / "You will lose your progress if you proceed" / Keep editing / Discard, and Discard does the action (a mode switch clears the draft and opens the other mode blank).
+- Swipe down follows the finger and closes past 30% of the height or faster than 600 pt/s; otherwise it eases back over 0.2 s. With Reduce Motion it doesn't follow the finger. A drag that starts on the canvas never dismisses.
+- Debug builds add a placeholder item with a triple tap on the canvas, to test the discard alert before the tab tickets land.
+- Send stays disabled until [16].
+
+**Code:** `Buttercup/ContentView.swift` (`NotesTab`), `Buttercup/Notes/NewNoteView.swift` (cover, layout, alert, swipe down, `NoteTab`), `Buttercup/Notes/NoteDraft.swift` (`NoteDraft`, `NoteMode`, `NoteItem`), `Buttercup/Notes/ModeToggle.swift`, `Buttercup/DesignSystem/PillTabRow.swift`, `Buttercup/DesignSystem/Buttons.swift` (`PressableButtonStyle`, `PillButtonStyle`, `IconCircleButton`). Spec: [design/specs/new-note-screen.md](../design/specs/new-note-screen.md), [prds/partial/9-new-note-shell.prd.md](../prds/partial/9-new-note-shell.prd.md).
+
+**Known gaps:**
+- [9] AC1–AC6 unverified on a simulator, and AC7's light and dark simulator check not done.
+- No tab content: Draw [10], Stickers [11], Emoji [12], Text [13].
+- No camera or Retake [14], no outbox [15], no sending [16].
+- No Notes tab home, widget, calendar, favourites or unsend.

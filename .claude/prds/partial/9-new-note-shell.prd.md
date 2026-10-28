@@ -100,4 +100,18 @@ Tap Stickers / Emoji / Text ─► pill selects, empty content
 | Custom swipe-down fights the cover's own dismiss | Low | Double dismiss | A full-screen cover has no system swipe, so only the custom one exists |
 
 ---
-*Status: READY — ticket [9]*
+*Status: PARTIAL — PR #PRNUM*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ⚠️ unverified | Built in `ContentView.swift` (`NotesTab`, `.fullScreenCover`) and `NewNoteView.swift` (starts `.draw` mode, `.draw` tab); no simulator-driving tool was available to open it |
+| AC2 | ⚠️ unverified | Top bar holds only `IconCircleButton` ✕ and Send (`PillButtonStyle(height: 44, sticker: true)`, `.disabled(true)` gives 40% and drops the sticker shadow); not seen on a simulator |
+| AC3 | ⚠️ unverified | Toggle right-aligned in the mode row; canvas `.padding(.horizontal, 8)` + `.aspectRatio(1)`, white fill, radius 20 continuous, 2.5 Outline `.strokeBorder`; not seen in light or dark |
+| AC4 | ⚠️ unverified | `PillTabRow` in a horizontal `ScrollView`, Face in `disabled` (40%, `.disabled`), label "Face stickers, coming later"; VoiceOver not run |
+| AC5 | ⚠️ unverified | `confirm` runs the action at once without progress; the drag is attached only to the top band, never the canvas; not exercised |
+| AC6 | ⚠️ unverified | `.alert` with the spec's title, message, Keep editing (`.cancel`) and Discard (`.destructive`); Debug builds add a fake item with a triple tap on the canvas to test it; not exercised |
+| AC7 | ⚠️ unverified | Build check passes (`** BUILD SUCCEEDED **`, iPhone 17 Simulator, Debug); light and dark simulator check not done |
+
+### Needs attention
+- Sign in as `adam@example.com` on the iPhone 17 Simulator, open Notes → Make a note, and check AC1–AC6 in light and dark (triple-tap the canvas in a Debug build to get `hasProgress` for AC6). Then tick the ACs and move this PRD to `completed/`.
