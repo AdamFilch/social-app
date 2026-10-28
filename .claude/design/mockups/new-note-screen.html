@@ -1,0 +1,829 @@
+<title>Buttercup New Note Screen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Caveat:wght@600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=JetBrains+Mono:wght@600;700&display=swap">
+<style>
+/* Layout: a working sheet. Decision legend, then the Draw states, then the Photo states, then send and confirm states, each phone at iPhone 11 size with its decisions and notes beside it. Each phone follows the light or dark tokens as labelled; the switch in the header flips them all. The note canvas stays white in both. */
+:root {
+  --bg: #FFF8E2;
+  --card: #FFFDF5;
+  --fg: #1E2A1A;
+  --muted: #56634F;
+  --line: #1E2A1A;
+  --soft: #EDE6CC;
+  --mark: #FFC61A;
+  --bezel: #12100E;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --hand: "Noteworthy", "Caveat", "Bradley Hand", cursive;
+  --serif: "New York", "Fraunces", Georgia, serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; --bezel: #000; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; --bezel: #000; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--round); font-size: 16px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 96px; display: grid; gap: 72px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(36px, 7vw, 60px); font-weight: 900; letter-spacing: -0.02em; }
+h2 { font-size: 30px; font-weight: 900; letter-spacing: -0.01em; }
+h3 { font-size: 20px; font-weight: 900; }
+p { margin: 0; max-width: 68ch; }
+code { font-family: var(--mono); font-size: 0.9em; }
+.lede { font-size: 18px; }
+.muted { color: var(--muted); }
+.stack { display: grid; gap: 14px; }
+.sec { display: grid; gap: 32px; }
+.states { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 48px 32px; }
+.state { display: grid; gap: 16px; align-content: start; justify-items: center; min-width: 0; }
+.note { display: grid; gap: 8px; width: 100%; max-width: 434px; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 15px; }
+.note ul li::marker { color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; font-weight: 800; padding: 1px 9px; border-radius: 999px; border: 2px solid var(--line); background: var(--card); }
+.chip.mode { background: var(--soft); border-color: transparent; }
+.legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px 28px; font-size: 15px; }
+.legend div { display: grid; grid-template-columns: 64px 1fr; gap: 8px; }
+.legend b { font-weight: 900; }
+.panel { background: var(--card); border: 2.5px solid var(--line); border-radius: 22px; padding: 24px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; }
+.panel ul, .panel ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1.5px solid var(--soft); vertical-align: top; }
+th { font-size: 14px; color: var(--muted); font-weight: 800; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700; }
+.switch { display: inline-flex; gap: 4px; padding: 4px; border: 2px solid var(--line); border-radius: 999px; background: var(--card); flex-wrap: wrap; }
+.switch button { font: 800 14px var(--round); color: var(--muted); background: none; border: 2px solid transparent; border-radius: 999px; padding: 6px 14px; min-height: 36px; cursor: pointer; }
+.switch button[aria-pressed="true"] { background: var(--mark); color: #1E2A1A; border-color: var(--line); }
+.switch button:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+
+/* device */
+.dev { padding: 10px; border-radius: 60px; background: var(--bezel); flex: none; }
+@media (max-width: 480px) { .dev { zoom: 0.8; } }
+@media (max-width: 380px) { .dev { zoom: 0.72; } }
+.lt { --q-bg: #FFF8E2; --q-surf: #FFFDF5; --q-text: #1E2A1A; --q-sec: #56634F; --q-acc: #FFC61A; --q-onacc: #1E2A1A; --q-out: #1E2A1A; --q-div: #EDE6CC; --q-dan: #C2362B; --q-ondan: #FFFDF5; --k-bg: #D3D5DB; --k-key: #FFFFFF; --k-mod: #ACB0BA; --k-txt: #000; --al-bg: #F2F2F4; --al-btn: #E3E3E8; --al-txt: #000; --al-red: #FF3B30; }
+.dk { --q-bg: #1B1814; --q-surf: #28241F; --q-text: #FFF8E2; --q-sec: #B7AC9E; --q-acc: #FFCB2E; --q-onacc: #1B1814; --q-out: #EDE3CC; --q-div: #3A342D; --q-dan: #FF7A6E; --q-ondan: #1B1814; --k-bg: #2C2C2E; --k-key: #6B6B6E; --k-mod: #46464A; --k-txt: #fff; --al-bg: #2C2C2E; --al-btn: #3A3A3C; --al-txt: #fff; --al-red: #FF453A; }
+.ph { position: relative; width: 414px; height: 896px; border-radius: 50px; overflow: hidden; background: var(--q-bg); color: var(--q-text); font-family: var(--round); isolation: isolate; }
+.ph svg.i { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.sb { position: absolute; top: 0; left: 0; right: 0; height: 48px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 8px 34px; font-size: 15px; font-weight: 800; z-index: 5; }
+.bat { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; display: inline-block; margin-left: 6px; vertical-align: -1px; }
+.bat::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+.home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--q-text); z-index: 9; }
+
+/* top bar */
+.ibtn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--q-out); background: var(--q-bg); color: var(--q-text); display: grid; place-items: center; flex: none; }
+.ibtn svg.i { width: 20px; height: 20px; stroke-width: 2.6; }
+.x { position: absolute; top: 56px; left: 16px; }
+.topr { position: absolute; top: 56px; right: 19px; display: flex; gap: 12px; align-items: center; }
+.seg { display: flex; height: 44px; padding: 2px; border: 2px solid var(--q-out); border-radius: 999px; background: var(--q-surf); }
+.seg span { width: 46px; height: 36px; border-radius: 999px; display: grid; place-items: center; color: var(--q-sec); }
+.seg span.on { background: var(--q-div); color: var(--q-text); }
+.seg svg.i { width: 21px; height: 21px; stroke-width: 2.4; }
+.send { height: 44px; min-width: 84px; padding: 0 20px; border-radius: 999px; background: var(--q-acc); color: var(--q-onacc); border: 2.5px solid var(--q-out); box-shadow: 3px 3px 0 var(--q-out); font-size: 17px; font-weight: 800; display: grid; place-items: center; }
+.send.dis { opacity: 0.4; box-shadow: none; }
+.send svg.spin { width: 22px; height: 22px; }
+.modes { position: absolute; top: 108px; right: 16px; }
+.retake { position: absolute; top: 110px; left: 16px; height: 40px; padding: 0 16px 0 12px; border-radius: 999px; display: flex; gap: 6px; align-items: center; font-size: 15px; font-weight: 800; border: 2px solid transparent; }
+.retake svg.i { width: 18px; height: 18px; stroke-width: 2.6; }
+.retake.grey { background: var(--q-div); color: var(--q-sec); }
+.retake.red { background: var(--q-dan); color: var(--q-ondan); border-color: var(--q-out); }
+.err { position: absolute; top: 56px; left: 72px; right: 118px; height: 44px; display: flex; align-items: center; justify-content: flex-end; gap: 6px; color: var(--q-dan); font-size: 15px; font-weight: 800; line-height: 1.15; }
+.err svg.i { width: 20px; height: 20px; flex: none; }
+.faded { opacity: 0.4; }
+
+/* canvas */
+.cv { position: absolute; top: 160px; left: 8px; width: 398px; height: 398px; border-radius: 20px; background: #FFFFFF; overflow: hidden; }
+.cv::after { content: ""; position: absolute; inset: 0; border: 2.5px solid var(--q-out); border-radius: 20px; pointer-events: none; z-index: 4; }
+.cv > svg.fill { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.cv .hintc { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 15px; font-weight: 700; color: #56634F; background: #FFF8E2; padding: 4px 14px; border-radius: 999px; white-space: nowrap; }
+.stk { position: absolute; z-index: 2; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.sel { position: absolute; z-index: 3; border: 2.5px solid var(--q-acc); border-radius: 16px; }
+.cv .sel { border-color: #FFC61A; }
+.tbadge { position: absolute; width: 32px; height: 32px; border-radius: 50%; background: var(--q-surf); border: 2px solid var(--q-out); color: var(--q-dan); display: grid; place-items: center; z-index: 3; }
+.tbadge svg.i { width: 16px; height: 16px; stroke-width: 2.6; }
+.tsticker { font-size: 40px; font-weight: 900; letter-spacing: -0.01em; -webkit-text-stroke: 7px #1E2A1A; paint-order: stroke fill; line-height: 1; white-space: nowrap; }
+.denied { position: absolute; inset: 0; background: var(--q-surf); display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; color: var(--q-text); }
+.denied svg.i { width: 44px; height: 44px; color: var(--q-sec); }
+.denied b { font-size: 17px; font-weight: 800; }
+.denied span { font-size: 15px; font-weight: 600; color: var(--q-sec); max-width: 280px; }
+.denied .sec2 { height: 44px; padding: 0 20px; border-radius: 999px; background: var(--q-bg); border: 2.5px solid var(--q-out); display: grid; place-items: center; font-size: 17px; font-weight: 800; margin-top: 4px; }
+
+/* tabs and tools */
+.tabsc { position: absolute; top: 574px; left: 12px; right: 0; height: 44px; overflow: hidden; display: flex; align-items: center; }
+.tabsr { display: flex; gap: 4px; padding-right: 16px; }
+.tb { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; display: flex; align-items: center; font-size: 15px; font-weight: 800; color: var(--q-sec); border: 2px solid transparent; }
+.tb.on { background: var(--q-acc); color: var(--q-onacc); border-color: var(--q-out); }
+.tb.soon { opacity: 0.4; }
+.tools { position: absolute; top: 634px; left: 16px; display: flex; gap: 6px; }
+.tool { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: var(--q-text); border: 2px solid transparent; }
+.tool svg.i { width: 22px; height: 22px; }
+.tool.on { background: var(--q-acc); color: var(--q-onacc); border-color: var(--q-out); }
+.tool.dis { opacity: 0.4; }
+.dotsc { position: absolute; top: 690px; left: 16px; right: 0; overflow: hidden; }
+.dots { display: grid; grid-template-rows: repeat(2, 44px); grid-auto-flow: column; grid-auto-columns: 44px; gap: 4px; width: max-content; }
+.dot { width: 44px; height: 44px; display: grid; place-items: center; flex: none; }
+.dot i { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--q-out); display: block; }
+.dot.on i { box-shadow: 0 0 0 3px var(--q-bg), 0 0 0 5.5px var(--q-out); }
+.pn .dot.on i { box-shadow: 0 0 0 3px var(--q-surf), 0 0 0 5.5px var(--q-out); }
+.grid { position: absolute; top: 632px; left: 16px; right: 0; display: grid; grid-template-rows: repeat(2, 84px); grid-auto-flow: column; grid-auto-columns: 84px; gap: 8px; overflow: hidden; }
+.cell { border-radius: 16px; background: var(--q-surf); display: grid; place-items: center; font-size: 44px; line-height: 1; }
+.cell svg { width: 58px; height: 58px; }
+.hint { position: absolute; top: 820px; left: 16px; right: 16px; font-size: 15px; font-weight: 600; color: var(--q-sec); text-align: center; }
+.estrip { position: absolute; top: 628px; left: 0; right: 0; overflow: hidden; }
+.etrack { display: flex; gap: 20px; padding-left: 16px; width: max-content; }
+.eg { display: grid; gap: 6px; align-content: start; }
+.eg > b { font-size: 13px; font-weight: 800; color: var(--q-sec); height: 18px; line-height: 18px; }
+.eg-g { display: grid; grid-template-rows: repeat(2, 72px); grid-auto-flow: column; grid-auto-columns: 72px; gap: 4px; }
+.eg-g span { display: grid; place-items: center; font-size: 40px; line-height: 1; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.cats { position: absolute; top: 808px; left: 9px; right: 9px; display: flex; justify-content: space-between; }
+.cat { width: 44px; height: 44px; display: grid; place-items: center; color: var(--q-sec); flex: none; }
+.cat span { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; }
+.cat svg.i { width: 20px; height: 20px; }
+.cat.on { color: var(--q-text); }
+.cat.on span { background: var(--q-div); }
+
+/* text composer */
+.dots.line { grid-template-rows: 44px; }
+.pn { position: absolute; left: 0; right: 0; top: 432px; height: 164px; border-radius: 28px 28px 0 0; background: var(--q-surf); color: var(--q-text); z-index: 6; box-shadow: 0 -1px 0 var(--q-div); }
+.row { position: absolute; left: 16px; right: 16px; display: flex; gap: 10px; align-items: center; }
+.field { flex: 1; height: 48px; border: 2px solid var(--q-out); border-radius: 999px; background: var(--q-bg); padding: 0 18px; font-size: 17px; font-weight: 600; display: flex; align-items: center; min-width: 0; }
+.caret { width: 2px; height: 22px; background: #2F7BF6; margin-left: 1px; }
+.add { height: 48px; padding: 0 20px; border-radius: 999px; background: var(--q-acc); color: var(--q-onacc); border: 2.5px solid var(--q-out); font-size: 17px; font-weight: 800; display: flex; align-items: center; }
+.fchip { height: 36px; padding: 0 12px; border-radius: 999px; border: 2px solid var(--q-out); background: var(--q-surf); display: inline-flex; align-items: center; gap: 4px; font-size: 16px; font-weight: 700; flex: none; }
+.fchip.on { background: var(--q-acc); color: var(--q-onacc); }
+.fchip svg.i { width: 15px; height: 15px; stroke-width: 3; }
+.kbd { position: absolute; left: 0; right: 0; bottom: 0; height: 300px; background: var(--k-bg); z-index: 7; padding: 10px 3px 0; display: grid; gap: 12px; align-content: start; font-family: -apple-system, system-ui, sans-serif; }
+.kr { display: flex; justify-content: center; gap: 6px; }
+.k { height: 43px; flex: 0 0 34px; border-radius: 5px; background: var(--k-key); color: var(--k-txt); display: grid; place-items: center; font-size: 22px; box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.k.m { background: var(--k-mod); flex-basis: 44px; font-size: 15px; }
+.k.sp { flex: 1 1 auto; max-width: 190px; font-size: 15px; }
+.k.rt { flex-basis: 92px; font-size: 15px; }
+
+/* camera */
+.cam { position: absolute; top: 654px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 56px; }
+.shutter { width: 76px; height: 76px; border-radius: 50%; border: 3px solid var(--q-out); display: grid; place-items: center; }
+.shutter i { width: 62px; height: 62px; border-radius: 50%; background: var(--q-acc); border: 2.5px solid var(--q-out); display: block; }
+.cam .ibtn { background: var(--q-surf); }
+
+/* alert */
+.dim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: 8; }
+.alert { position: absolute; z-index: 9; left: 57px; width: 300px; top: 370px; border-radius: 30px; background: var(--al-bg); color: var(--al-txt); padding: 22px 16px 16px; display: grid; gap: 18px; text-align: center; font-family: -apple-system, system-ui, sans-serif; }
+.alert b { font-size: 17px; font-weight: 700; line-height: 1.3; padding: 0 8px; }
+.alert p { font-size: 15px; line-height: 1.35; margin: -12px 0 0; padding: 0 8px; }
+.alert .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.alert .btns span { height: 48px; border-radius: 999px; background: var(--al-btn); display: grid; place-items: center; font-size: 17px; font-weight: 600; }
+.alert .btns .red { color: var(--al-red); }
+.alert .btns .bold { font-weight: 700; }
+.mini { position: absolute; top: 0; left: 0; transform: scale(0.4548); transform-origin: 0 0; border-radius: 0; }
+.mini::after { display: none; }
+.nt-title { position: absolute; top: 56px; left: 20px; display: grid; gap: 2px; }
+.nt-title h4 { margin: 0; font-size: 34px; font-weight: 900; line-height: 1.1; }
+.nt-title span { font-size: 15px; font-weight: 600; color: var(--q-sec); }
+.nt-make { position: absolute; top: 140px; left: 20px; right: 23px; height: 56px; border-radius: 999px; background: var(--q-acc); color: var(--q-onacc); border: 2.5px solid var(--q-out); box-shadow: 3px 3px 0 var(--q-out); display: grid; place-items: center; font-size: 17px; font-weight: 800; }
+.nt-week { position: absolute; top: 220px; left: 20px; right: 20px; display: flex; justify-content: space-between; }
+.nt-week div { width: 48px; height: 74px; border-radius: 14px; border: 2px solid var(--q-out); background: var(--q-surf); display: grid; justify-items: center; align-content: center; gap: 2px; font-size: 12px; font-weight: 800; color: var(--q-sec); }
+.nt-week div b { font-size: 17px; color: var(--q-text); font-variant-numeric: tabular-nums; }
+.nt-week div.on { background: var(--q-acc); color: var(--q-onacc); }
+.nt-week div.on b { color: var(--q-onacc); }
+.nt-today { position: absolute; top: 318px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: baseline; }
+.nt-today b { font-size: 20px; font-weight: 900; }
+.nt-today span { font-size: 15px; font-weight: 600; color: var(--q-sec); }
+.nt-grid { position: absolute; top: 358px; left: 20px; right: 20px; display: grid; grid-template-columns: 181px 181px; gap: 12px; }
+.nt-tile { position: relative; width: 181px; height: 181px; border-radius: 20px; overflow: hidden; background: #FFFFFF; border: 2.5px solid var(--q-out); }
+.nt-emo { position: absolute; inset: 0; display: grid; place-items: center; font-size: 72px; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.nt-ava { position: absolute; left: 8px; bottom: 8px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #1E2A1A; color: #1E2A1A; font-size: 12px; font-weight: 900; display: grid; place-items: center; z-index: 5; }
+.toast { position: absolute; left: 50%; transform: translateX(-50%); top: 753px; height: 48px; padding: 0 18px; border-radius: 999px; background: var(--q-surf); border: 2px solid var(--q-out); display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 800; white-space: nowrap; z-index: 6; }
+.toast svg.i { width: 18px; height: 18px; stroke-width: 2.6; }
+.nt-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 83px; background: var(--q-surf); border-top: 2.5px solid var(--q-out); display: flex; justify-content: space-around; padding-top: 6px; }
+.nt-tab { display: grid; justify-items: center; gap: 2px; font-size: 12px; font-weight: 800; color: var(--q-sec); }
+.nt-tab .pill { width: 60px; height: 34px; border-radius: 999px; display: grid; place-items: center; border: 2px solid transparent; }
+.nt-tab svg.i { width: 21px; height: 21px; }
+.nt-tab.on { color: var(--q-text); }
+.nt-tab.on .pill { background: var(--q-acc); color: var(--q-onacc); border-color: var(--q-out); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M15.5 3.5l5 5L9 20H4v-5z M13.5 5.5l5 5"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 7.5h3L8.5 5h7L17 7.5h3a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18V9A1.5 1.5 0 0 1 4 7.5z"/><circle cx="12" cy="13" r="3.6"/></symbol>
+    <symbol id="i-camoff" viewBox="0 0 24 24"><path d="M4 7.5h3L8.5 5h7L17 7.5h3a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18V9A1.5 1.5 0 0 1 4 7.5z"/><circle cx="12" cy="13" r="3.6"/><path d="M3 3l18 18"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path d="M4 7.5h3L8.5 5h7L17 7.5h3a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H4A1.5 1.5 0 0 1 2.5 18V9A1.5 1.5 0 0 1 4 7.5z"/><path d="M8.8 13.6a3.3 3.3 0 0 1 5.9-1.9M15.2 13.4a3.3 3.3 0 0 1-5.9 1.9M14.9 10.2v1.7h-1.7M9.1 16.8v-1.7h1.7"/></symbol>
+    <symbol id="i-flashoff" viewBox="0 0 24 24"><path d="M13 3L5.5 13.5H11L10 21l7.5-10.5H12z"/><path d="M3.5 3.5l17 17"/></symbol>
+    <symbol id="i-retake" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 6.5h16M9 6.5V4h6v2.5M6 6.5l1 13.5h10l1-13.5M10 10.5v6M14 10.5v6"/></symbol>
+    <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M9 20h11M4.5 14.5l9-9a2 2 0 0 1 2.8 0l3.2 3.2a2 2 0 0 1 0 2.8L11 20H8z M8.8 10.2l5 5"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.3"/></symbol>
+    <symbol id="i-wifioff" viewBox="0 0 24 24"><path d="M2.5 8.5a14 14 0 0 1 19 0M5.5 12a9.5 9.5 0 0 1 13 0M8.6 15.4a5 5 0 0 1 6.8 0M12 19v.2M3 3l18 18"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 3.5h3.5l1.5 4.5-2.2 1.5a11 11 0 0 0 6.7 6.7l1.5-2.2 4.5 1.5V19a1.5 1.5 0 0 1-1.5 1.5A16.5 16.5 0 0 1 3.5 5 1.5 1.5 0 0 1 5 3.5z"/></symbol>
+    <symbol id="i-notes" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></symbol>
+    <symbol id="i-spin" viewBox="0 0 24 24"><g stroke-width="2.6"><path d="M12 3v4" opacity="1"/><path d="M18.4 5.6l-2.8 2.8" opacity=".85"/><path d="M21 12h-4" opacity=".7"/><path d="M18.4 18.4l-2.8-2.8" opacity=".55"/><path d="M12 21v-4" opacity=".45"/><path d="M5.6 18.4l2.8-2.8" opacity=".35"/><path d="M3 12h4" opacity=".25"/><path d="M5.6 5.6l2.8 2.8" opacity=".15"/></g></symbol>
+
+    <symbol id="photo" viewBox="0 0 398 398" preserveAspectRatio="xMidYMid slice">
+      <rect width="398" height="398" fill="#E8D8C3"/>
+      <rect x="196" y="28" width="170" height="190" rx="6" fill="#F6EEE2"/>
+      <rect x="206" y="38" width="72" height="80" fill="#BFDDFF"/><rect x="284" y="38" width="72" height="80" fill="#BFDDFF"/>
+      <rect x="206" y="124" width="72" height="84" fill="#A9CDF3"/><rect x="284" y="124" width="72" height="84" fill="#A9CDF3"/>
+      <circle cx="320" cy="78" r="18" fill="#FFE88A"/>
+      <rect x="0" y="270" width="398" height="128" fill="#A9774F"/>
+      <rect x="0" y="270" width="398" height="10" fill="#94643F"/>
+      <path d="M44 270c-6-50 10-96 40-110 6 30-4 70-14 110z" fill="#5E9A55"/>
+      <path d="M78 270c4-60 34-92 64-98-2 40-24 74-46 98z" fill="#77B26A"/>
+      <path d="M56 230h52l-8 50H64z" fill="#D97B5E"/>
+      <path d="M160 190h86v84a20 20 0 0 1-20 20h-46a20 20 0 0 1-20-20z" fill="#FFFDF5"/>
+      <path d="M246 210c26 0 26 44 0 44" fill="none" stroke="#FFFDF5" stroke-width="12"/>
+      <ellipse cx="203" cy="194" rx="40" ry="8" fill="#6B4630"/>
+      <path d="M186 168c-8-10 8-18 0-30M210 164c-8-10 8-18 0-30" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+      <ellipse cx="203" cy="300" rx="70" ry="8" fill="#000" opacity=".12"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <header class="stack">
+    <h1>New note</h1>
+    <p class="lede">Where "Make a note" and "Send one back" lead: a square, widget-shaped note you draw or photograph, decorate and send to Sam. Approved v4, revised for Adam, 28 October 2026, built from decisions D1–D27, Adam's answers A1–A6 and layout changes L1–L3. In v4 Adam rewrote D7–D8 to send through the outbox, which supersedes L3.</p>
+    <p class="muted">Every phone is an iPhone 11 at 414 × 896 pt. The photo is an illustrated placeholder. Each phone is labelled light or dark; use the switch to see every state in one mode.</p>
+    <div class="switch" role="group" aria-label="Phone appearance">
+      <button type="button" id="m-as" data-m="as" aria-pressed="true">As labelled</button>
+      <button type="button" id="m-lt" data-m="lt" aria-pressed="false">All light</button>
+      <button type="button" id="m-dk" data-m="dk" aria-pressed="false">All dark</button>
+    </div>
+  </header>
+
+  <section class="stack" aria-labelledby="legend-h">
+    <h2 id="legend-h">Decisions on show</h2>
+    <div class="legend">
+      <div><b>D1</b><span>"Make a note" and "Send one back" open the same blank screen as a full-screen cover</span></div>
+      <div><b>D2</b><span>Opens in Draw mode</span></div>
+      <div><b>D3</b><span>A two-segment pill toggle, pen | camera (moved to the row above the canvas by L2)</span></div>
+      <div><b>D4</b><span>Top-left stack: ✕ on top, Retake below it, just above the canvas</span></div>
+      <div><b>D5</b><span>Retake is a grey pill until a photo is taken, then red (Danger)</span></div>
+      <div><b>D6</b><span>"Send" Accent pill top right, disabled until the note has content</span></div>
+      <div><b>D7</b><span>Rewritten in v4. Send saves the note (1000 × 1000 HEIC) with its outbox entry and closes at once, with a quiet toast after: "Sent to Sam" or "Sends when you're back online"</span></div>
+      <div><b>D8</b><span>Rewritten in v4. No spinner and no failed state on this screen; the outbox retries in the background when a connection returns</span></div>
+      <div><b>D9–D11</b><span>Lose-progress dialog (wording in A6) on Draw↔Photo, ✕ or swipe down, and Retake after drawing on the photo. Progress = any stroke, sticker, text or taken photo. Retake with only a photo: no prompt</span></div>
+      <div><b>D12–D13</b><span>Canvas square, full width minus 16 pt, radius 20, saved at 1000 × 1000; blank background always white</span></div>
+      <div><b>D14–D15</b><span>Draw: pen, eraser, undo, and the colour dots (10 after A4, in 2 rows after L1)</span></div>
+      <div><b>D16–D17</b><span>Pill tabs under the canvas: Draw · Stickers · Emoji · Text · Face. Face greyed out, not tappable</span></div>
+      <div><b>D18</b><span>Text = the in-call text tool plus four font chips. In-call text unchanged</span></div>
+      <div><b>D19–D21</b><span>Tap a cell: sticker at canvas centre, selected; dragging works too. Move, pinch and rotate always; tap to select, then trash. No cap</span></div>
+      <div><b>D22–D23</b><span>Photo before capture: live viewfinder fills the square, pinch to zoom; under it only flash, shutter, flip. No tabs</span></div>
+      <div><b>D24</b><span>Camera only, no camera roll</span></div>
+      <div><b>D25</b><span>After capture: shutter goes, the photo is the background, the full tab row appears</span></div>
+      <div><b>D26</b><span>Camera denied: "Camera is off for buttercup" and "Open Settings" in the viewfinder</span></div>
+      <div><b>D27</b><span>Chrome follows light and dark; canvas stays white; quiet haptics, cross-fades, no bounce</span></div>
+      <div><b>A1</b><span>Retake is hidden in Draw mode and shows in Photo mode only</span></div>
+      <div><b>A2</b><span>The handwritten font is Noteworthy (built into iOS)</span></div>
+      <div><b>A3</b><span>The Text tab uses the same colour dots as Draw</span></div>
+      <div><b>A4</b><span>No Black. 10 colours: Ink, Accent, 5 NotePaper pastels, Red, Orange, White</span></div>
+      <div><b>A5</b><span>The camera opens on the one used last time; the very first time, the back camera</span></div>
+      <div><b>A6</b><span>Dialog: "Discard this note?", message "You will lose your progress if you proceed", Discard (red) and Keep editing</span></div>
+      <div><b>L1</b><span>Draw: colour dots in a 2-row grid that scrolls sideways, like the sticker and emoji grids. Text: the same dots in one sideways-scrolling row, with the font chips on their own row</span></div>
+      <div><b>L2</b><span>The top bar holds only ✕ and Send. The row above the canvas has Retake on the left and the pen | camera toggle on the right</span></div>
+      <div><b>L3</b><span>Superseded in v4 by the new D7–D8. There is no failed state, so no Retry</span></div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="draw-h">
+    <div class="stack">
+      <h2 id="draw-h">Draw</h2>
+      <p class="muted">The note is the screen. Chrome sits at the top in one row, the tools sit under the note where the thumb is.</p>
+    </div>
+    <div class="states">
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="lt">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="draw"></div>
+          <div class="cv"><p class="hintc">Draw something for Sam</p></div>
+          <div class="tabsc"><div class="tabsr" data-tab="Draw"></div></div>
+          <div class="tools" data-tools="pen,undo-dis"></div>
+          <div class="dotsc"><div class="dots" data-dots="draw" data-sel="0"></div></div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>1 · Draw, empty (how it opens)</h3>
+          <div class="chips"><span class="chip mode" data-ml>Light</span><span class="chip">D1</span><span class="chip">D2</span><span class="chip">D3</span><span class="chip">D6</span><span class="chip">D12–D13</span><span class="chip">D14–D15</span><span class="chip">D16–D17</span><span class="chip">A1</span><span class="chip">A4</span><span class="chip">L1</span><span class="chip">L2</span></div>
+          <ul>
+            <li>Same blank screen from "Make a note" and "Send one back". It rises as a full-screen cover over the tabs (0.3 s ease-out, no spring).</li>
+            <li>Top bar: only ✕ on the left and Send on the right. Send is the screen's one sticker-shadowed action, at 40% with no shadow until there is content.</li>
+            <li>The row above the canvas: the pen | camera toggle on the right. Its left side is empty in Draw mode because Retake shows only in Photo mode. The toggle's current segment gets a Divider disc, not yellow, so Send stays the only yellow control.</li>
+            <li>White canvas, 398 pt, radius 20, with the 2.5 pt Outline that note tiles have. The Outline is chrome and is not saved into the 1000 × 1000 image.</li>
+            <li>The hint fades on the first stroke and is never saved. Pen is on, in Ink. Undo is 40% until there is something to undo.</li>
+            <li>The 10 dots sit in a 2-row grid, 5 columns wide. It scrolls sideways like the Stickers grid, but on an iPhone 11 all 10 fit without scrolling.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="dk">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="draw-on"></div>
+          <div class="cv" data-art="full"></div>
+          <div class="tabsc"><div class="tabsr" data-tab="Draw"></div></div>
+          <div class="tools" data-tools="pen,undo"></div>
+          <div class="dotsc"><div class="dots" data-dots="draw" data-sel="2"></div></div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>2 · Draw, with strokes, stickers and one selected</h3>
+          <div class="chips"><span class="chip mode" data-ml>Dark</span><span class="chip">D6</span><span class="chip">D13</span><span class="chip">D19–D21</span><span class="chip">D27</span></div>
+          <ul>
+            <li>The chrome turns dark, the note stays white, because the note is what Sam will see.</li>
+            <li>The star is selected: a 2.5 pt Accent outline, 8 pt out, that rotates with it. A 32 pt trash badge (44 pt hit) sits on its top-right corner and is kept inside the canvas near the edges.</li>
+            <li>Move, pinch and rotate work on any sticker, selected or not. Tap empty canvas to deselect; with the pen on, that tap is not a stroke.</li>
+            <li>Strokes and stickers share one canvas. Strokes always sit under stickers.</li>
+            <li>Send is live with its sticker shadow now that the note has content.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="lt">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="draw-on"></div>
+          <div class="cv" data-art="newsticker"></div>
+          <div class="tabsc"><div class="tabsr" data-tab="Stickers"></div></div>
+          <div class="grid" data-fill="images"></div>
+          <p class="hint">Tap one, or drag it onto the note</p>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>3 · Stickers tab</h3>
+          <div class="chips"><span class="chip mode" data-ml>Light</span><span class="chip">D16</span><span class="chip">D19–D21</span></div>
+          <ul>
+            <li>The in-call sticker grid, cut to 2 rows of 84 so it fits under a full-width canvas on an iPhone 11. It scrolls sideways; a fifth column peeks in.</li>
+            <li>Cells use Surface on the Background screen (the in-call panel was the reverse), so they read as tiles in both modes.</li>
+            <li>Just tapped: the heart lands at the canvas centre, already selected with its trash badge, with a light impact haptic.</li>
+            <li>No sticker cap on notes.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="dk">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="draw-on"></div>
+          <div class="cv" data-art="lines"></div>
+          <div class="tabsc"><div class="tabsr" data-tab="Emoji"></div></div>
+          <div class="estrip" data-emoji></div>
+          <div class="cats" data-cat="Smileys"></div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>4 · Emoji tab</h3>
+          <div class="chips"><span class="chip mode" data-ml>Dark</span><span class="chip">D16</span><span class="chip">D19</span></div>
+          <ul>
+            <li>The in-call emoji strip with 2 rows of 72 instead of 3: labels inline at each category start, nine jump chips at the bottom, long-press for skin tones.</li>
+            <li>Tap an emoji: it lands at the canvas centre, selected. Drag works as well.</li>
+            <li>No hint line; the chips take its place, as in calls.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="lt">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="draw-on"></div>
+          <div class="cv" data-art="typing"></div>
+          <div class="pn">
+            <div class="row" style="top:12px">
+              <div class="field">hi sam<span class="caret"></span></div>
+              <div class="add">Add</div>
+            </div>
+            <div class="row" style="top:64px; right:0; overflow:hidden"><div class="dots line" data-dots="text" data-sel="3"></div></div>
+            <div class="row" style="top:116px; justify-content:center; gap:8px">
+              <span class="fchip">Rounded</span>
+              <span class="fchip" style="font-family:var(--serif)">Serif</span>
+              <span class="fchip on" style="font-family:var(--hand); font-size:20px"><svg class="i"><use href="#i-check"/></svg>Handwritten</span>
+              <span class="fchip" style="font-family:var(--mono); font-size:14px">Mono</span>
+            </div>
+          </div>
+          <div class="kbd" data-fill="kbd"></div>
+          <div class="home" style="background:var(--k-txt)"></div>
+        </div></div>
+        <div class="note">
+          <h3>5 · Text tab, keyboard up</h3>
+          <div class="chips"><span class="chip mode" data-ml>Light</span><span class="chip">D18</span><span class="chip">D19–D20</span><span class="chip">A2</span><span class="chip">A3</span><span class="chip">L1</span></div>
+          <ul>
+            <li>The in-call text tool: field and Add on one row, 30 characters. Changed: the same 10 colour dots as Draw in a single row that scrolls sideways (the last dots are cut by the edge), and four font chips on their own row under it, each label set in its own font (Handwritten is Noteworthy).</li>
+            <li>While typing, the tools ride on the keyboard (like N1 in calls). They are 164 pt tall and leave the top 272 pt of the canvas visible (68%). The canvas itself is the preview: the text shows live in that visible part, in the chosen font and colour, with the Ink outline from calls.</li>
+            <li>Add (or Return) drops it exactly where the preview was, selected, and the keyboard goes. Nothing jumps.</li>
+            <li>Add has no sticker shadow here; Send is this screen's one. Typed text doesn't count as content until it is added.</li>
+          </ul>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="photo-h">
+    <div class="stack">
+      <h2 id="photo-h">Photo</h2>
+      <p class="muted">The viewfinder is the note. Before the shot there is nothing to decorate, so only the camera controls show.</p>
+    </div>
+    <div class="states">
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="dk">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="photo"></div>
+          <div class="retake grey" aria-disabled="true"><svg class="i"><use href="#i-retake"/></svg>Retake</div>
+          <div class="cv"><svg class="fill" aria-hidden="true"><use href="#photo"/></svg></div>
+          <div class="cam">
+            <div class="ibtn" aria-label="Flash off"><svg class="i"><use href="#i-flashoff"/></svg></div>
+            <div class="shutter" aria-label="Take photo"><i></i></div>
+            <div class="ibtn" aria-label="Switch camera"><svg class="i"><use href="#i-flip"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>6 · Photo, viewfinder</h3>
+          <div class="chips"><span class="chip mode" data-ml>Dark</span><span class="chip">D3</span><span class="chip">D4–D5</span><span class="chip">D22–D24</span><span class="chip">A1</span><span class="chip">A5</span><span class="chip">L2</span></div>
+          <ul>
+            <li>The live camera fills the same 398 pt square, cropped square, so what you see is what is saved. Pinch to zoom.</li>
+            <li>Under it only flash, shutter and flip. The shutter is a buttercup disc in an Outline ring, centred under the thumb. No tabs, no camera roll.</li>
+            <li>The row above the canvas now mirrors itself: Retake on the left, grey and not tappable until a shot exists, and the toggle on the right with the camera side current. Send is 40%.</li>
+            <li>Opens on the camera used last time. The very first time, the back camera.</li>
+            <li>The shutter has no haptic; iOS plays its own shutter sound.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="lt">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="photo-on"></div>
+          <div class="retake red"><svg class="i"><use href="#i-retake"/></svg>Retake</div>
+          <div class="cv" data-art="photo"></div>
+          <div class="tabsc"><div class="tabsr" data-tab="Draw"></div></div>
+          <div class="tools" data-tools="pen,undo"></div>
+          <div class="dotsc"><div class="dots" data-dots="draw" data-sel="2"></div></div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>7 · Photo taken, drawn on</h3>
+          <div class="chips"><span class="chip mode" data-ml>Light</span><span class="chip">D5</span><span class="chip">D25</span><span class="chip">D14–D16</span></div>
+          <ul>
+            <li>The shutter fades out and the photo becomes the background. The full tab row and Draw tools fade in where the camera controls were (0.15 s).</li>
+            <li>Retake turns red (Danger fill, Outline). It goes back to the viewfinder; with drawing on the photo it asks first (state 8).</li>
+            <li>Same tools as Draw mode: every stroke and sticker sits on top of the photo.</li>
+            <li>Send is live: a taken photo alone is content.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="lt">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x" aria-label="Close"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="photo"></div>
+          <div class="retake grey" aria-disabled="true"><svg class="i"><use href="#i-retake"/></svg>Retake</div>
+          <div class="cv"><div class="denied">
+            <svg class="i"><use href="#i-camoff"/></svg>
+            <b>Camera is off for buttercup</b>
+            <span>Turn it on in Settings to take a photo for Sam.</span>
+            <div class="sec2">Open Settings</div>
+          </div></div>
+          <div class="cam faded">
+            <div class="ibtn"><svg class="i"><use href="#i-flashoff"/></svg></div>
+            <div class="shutter"><i></i></div>
+            <div class="ibtn"><svg class="i"><use href="#i-flip"/></svg></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>8 · Camera denied</h3>
+          <div class="chips"><span class="chip mode" data-ml>Light</span><span class="chip">D26</span></div>
+          <ul>
+            <li>The viewfinder square becomes a Surface panel with a crossed camera, "Camera is off for buttercup", one line on how to fix it, and "Open Settings" (a secondary pill).</li>
+            <li>Flash, shutter and flip stay in place at 40% so the layout doesn't jump when access comes back.</li>
+            <li>The pen side of the toggle still works, so you can draw instead.</li>
+            <li>First time in Photo mode, iOS asks for access before this screen can show.</li>
+          </ul>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="send-h">
+    <div class="stack">
+      <h2 id="send-h">Leaving and sending</h2>
+      <p class="muted">One question before anything is lost. Send closes at once; the outbox does the rest.</p>
+    </div>
+    <div class="states">
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="dk">
+          <div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div>
+          <div class="ibtn x"><svg class="i"><use href="#i-x"/></svg></div>
+          <div class="topr" data-top="photo-on"></div>
+          <div class="retake red"><svg class="i"><use href="#i-retake"/></svg>Retake</div>
+          <div class="cv" data-art="photo"></div>
+          <div class="tabsc"><div class="tabsr" data-tab="Draw"></div></div>
+          <div class="tools" data-tools="pen,undo"></div>
+          <div class="dotsc"><div class="dots" data-dots="draw" data-sel="2"></div></div>
+          <div class="dim"></div>
+          <div class="alert" role="alertdialog" aria-label="Discard this note?">
+            <b>Discard this note?</b>
+            <p>You will lose your progress if you proceed</p>
+            <div class="btns"><span class="bold">Keep editing</span><span class="red">Discard</span></div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>9 · Lose-progress dialog (Retake after drawing)</h3>
+          <div class="chips"><span class="chip mode" data-ml>Dark</span><span class="chip">D9–D11</span><span class="chip">A6</span></div>
+          <ul>
+            <li>Title "Discard this note?", message "You will lose your progress if you proceed". This replaces design.md's "Keep drawing" wording, which the spec will update.</li>
+            <li>A system alert, so it looks native in both modes. "Discard" uses the destructive role; "Keep editing" is the cancel role and the bold default.</li>
+            <li>The same alert guards: switching Draw↔Photo, ✕, swipe down, and Retake when anything is on the photo.</li>
+            <li>Progress is any stroke, sticker, text or taken photo. With nothing on screen, or Retake with only the photo, there is no alert.</li>
+            <li>Discard on Retake goes back to the viewfinder; on ✕ or swipe it closes; on the toggle it switches to a blank mode.</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="state">
+        <div class="dev"><div class="ph" data-mode="dk">
+          <div class="sb"><span>9:43</span><span>No service<span class="bat"></span></span></div>
+          <div class="nt-title"><h4>Notes</h4><span>October</span></div>
+          <div class="nt-make">Make a note</div>
+          <div class="nt-week" data-week></div>
+          <div class="nt-today"><b>Today</b><span>2 notes</span></div>
+          <div class="nt-grid">
+            <div class="nt-tile"><div class="cv mini" data-art="full-nosel"></div><span class="nt-ava" style="background:#BFDDFF">A</span></div>
+            <div class="nt-tile" style="background:#FFC6D9"><span class="nt-emo">🌸</span><span class="nt-ava" style="background:#FFC6D9">S</span></div>
+          </div>
+          <div class="toast" role="status"><svg class="i"><use href="#i-wifioff"/></svg>Sends when you're back online</div>
+          <div class="nt-bar">
+            <div class="nt-tab"><span class="pill"><svg class="i"><use href="#i-phone"/></svg></span>Calling</div>
+            <div class="nt-tab on"><span class="pill"><svg class="i"><use href="#i-notes"/></svg></span>Notes</div>
+            <div class="nt-tab"><span class="pill"><svg class="i"><use href="#i-star"/></svg></span>Hobbies</div>
+          </div>
+          <div class="home"></div>
+        </div></div>
+        <div class="note">
+          <h3>10 · After Send, offline: toast over the Notes tab</h3>
+          <div class="chips"><span class="chip mode" data-ml>Dark</span><span class="chip">D7</span><span class="chip">D8</span></div>
+          <ul>
+            <li>Send saves the note with its outbox entry and closes the cover at once, with the normal transition. No spinner, no waiting, no failed state.</li>
+            <li>The toast shows on the screen you came from: "Sends when you're back online" offline, "Sent to Sam" online. The .success haptic.</li>
+            <li>A Surface capsule with a 2 pt Outline, 12 pt above the tab bar. It fades in over 0.15 s, stays 2.5 s and fades out over 0.2 s. It never moves; a tap dismisses it early.</li>
+            <li>The note is in the grid straight away. The outbox uploads it when the connection comes back.</li>
+            <li>Not here: a pending badge on your own tile while it waits. That belongs to the Notes-tab ticket.</li>
+          </ul>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="calls-h">
+    <h2 id="calls-h">Notes for review</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Design calls the decisions didn't cover</h3>
+        <ul>
+          <li><b>Rows stay put between modes.</b> The row above the canvas is always there (toggle on the right), so the canvas never moves when Retake appears or goes.</li>
+          <li><b>Toggle selection is a Divider disc</b>, not yellow, so Send is the only yellow control near the top.</li>
+          <li><b>Send is the one sticker shadow</b> on this screen. The Text tab's Add loses the shadow it has in calls.</li>
+          <li><b>Canvas Outline</b> 2.5 pt, as on note tiles, so the white square reads on cream. It is not saved.</li>
+          <li><b>Two-row grids.</b> Stickers and Emoji use 2 rows instead of 3 to fit under a 398 pt canvas.</li>
+          <li><b>Text rides on the keyboard</b> and the canvas is its preview; Add drops the text where it was previewed.</li>
+          <li><b>Trash is a badge</b> on the selected sticker's corner. There is no control bar here to hang it above, and the badge shows which sticker it removes.</li>
+          <li><b>One pen width</b> (9 pt at screen size, as in calls). No size slider.</li>
+          <li><b>Toast</b> after Send: a Surface capsule 12 pt above the tab bar, fade only, shown by the app so it outlives the closed screen.</li>
+          <li><b>Face pill</b> at 40%, not tappable, VoiceOver "Face stickers, coming later, dimmed".</li>
+          <li><b>New ink colours</b> Red #E5483B and Orange #FF8A3D (content colours like the NotePaper pastels, the same in both modes). White is plain #FFFFFF; its 2 pt Outline keeps it visible on the white canvas.</li>
+          <li><b>Haptics:</b> light impact when a sticker lands, .success with the toast after Send. Nothing on tabs, tools, dots, toggle or shutter.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Answered</h3>
+        <ol>
+          <li>Retake: Photo mode only (A1).</li>
+          <li>Handwritten font: Noteworthy (A2). Serif is New York and Mono is SF Mono. The web page falls back to Caveat where Noteworthy isn't installed.</li>
+          <li>Text uses Draw's dots (A3).</li>
+          <li>Black removed; 10 colours (A4).</li>
+          <li>Camera: last used, back the first time (A5).</li>
+          <li>Dialog: "Discard this note?" plus your line as the message (A6).</li>
+        </ol>
+        <h3>Still open</h3>
+        <ul>
+          <li>Nothing open for this mockup. Placed text can't be edited again in v1 (Adam confirmed).</li>
+        </ul>
+        <h3>Where the skills were overruled</h3>
+        <ul>
+          <li>ui-ux-pro-max prefers springs and scale on press. Motion here is cross-fades and ease-outs only (D27); a press darkens the fill over 0.1 s.</li>
+          <li>Its "no emoji as icons" rule doesn't apply to emoji stickers, which are content. All controls use SF Symbols (drawn as stand-ins here).</li>
+          <li>Type is SF Pro Rounded (Nunito stands in on the web), not the skill's font picks.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>Measurements</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Element</th><th>Size and position (pt, iPhone 11)</th><th>Fill</th></tr></thead>
+          <tbody>
+            <tr><td>✕</td><td class="n">44 circle, top 56, left 16</td><td>Background, 2 pt Outline</td></tr>
+            <tr><td>Send</td><td class="n">44 tall, min 84 wide, top 56, right 19</td><td>Accent, 2.5 Outline, sticker shadow 3,3</td></tr>
+            <tr><td>Toast</td><td class="n">48 tall, padding 18, 12 above the tab bar</td><td>Surface, 2 pt Outline</td></tr>
+            <tr><td>Mode toggle</td><td class="n">2 × 46 × 36 segments in a 44 pill, top 108, right 16</td><td>Surface; current: Divider disc</td></tr>
+            <tr><td>Retake (Photo only)</td><td class="n">40 visible, 44 hit, top 110, left 16</td><td>Grey: Divider. Red: Danger, OnDanger text (Surface in light)</td></tr>
+            <tr><td>Canvas</td><td class="n">398 × 398, left 8, top 160, radius 20</td><td>White, 2.5 Outline (not saved); saved 1000 × 1000</td></tr>
+            <tr><td>Pill tabs</td><td class="n">36 visible, 44 hit, top 574</td><td>Selected: Accent, 2 pt Outline. Face 40%</td></tr>
+            <tr><td>Draw tools</td><td class="n">44 circles, gap 6, top 634</td><td>Selected: Accent, 2 pt Outline</td></tr>
+            <tr><td>Colour dots, Draw</td><td class="n">30 visible, 44 hit; 2 rows × 5, gap 4 (236 × 92); top 690, ends 782</td><td>Selected: 3 pt gap + 2.5 Outline ring</td></tr>
+            <tr><td>Colour dots, Text</td><td class="n">one row of 10, gap 4 (476 wide, scrolls in 398 from x 16)</td><td>Same as Draw</td></tr>
+            <tr><td>Sticker grid</td><td class="n">2 rows × 84, gap 8, top 632</td><td>Surface cells, radius 16</td></tr>
+            <tr><td>Emoji strip</td><td class="n">2 rows × 72, gap 4; chips top 808</td><td>Current chip: Divider disc</td></tr>
+            <tr><td>Text tools on keyboard</td><td class="n">164 tall, top 432 (keyboard at 596); field 12, dots 64, chips 116; canvas visible 160–432 (272)</td><td>Surface, top radius 28</td></tr>
+            <tr><td>Text tools, keyboard down</td><td class="n">field 630, dots 682–726, chips 734–778 (home bar 883)</td><td>Background screen</td></tr>
+            <tr><td>Shutter</td><td class="n">76 ring, 62 disc, centred at 692</td><td>Accent disc, 3 pt Outline ring</td></tr>
+            <tr><td>Trash badge</td><td class="n">32 visible, 44 hit, on selection corner</td><td>Surface, 2 pt Outline, Danger symbol</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var I = function (id, cls) { return '<svg class="i' + (cls ? ' ' + cls : '') + '"><use href="#' + id + '"/></svg>'; };
+
+  var TOP = {
+    "draw": ['pen', 'dis'],
+    "draw-on": ['pen', ''],
+    "photo": ['cam', 'dis'],
+    "photo-on": ['cam', ''],
+    "sending": ['pen', 'sending'],
+    "failed": ['pen', 'failed']
+  };
+  document.querySelectorAll('[data-top]').forEach(function (t) {
+    var c = TOP[t.getAttribute('data-top')];
+    var modes = document.createElement('div');
+    modes.className = 'modes' + (c[1] === 'sending' ? ' faded' : '');
+    modes.innerHTML = '<div class="seg" role="group" aria-label="Mode">' +
+      '<span class="' + (c[0] === 'pen' ? 'on' : '') + '" aria-label="Draw">' + I('i-pen') + '</span>' +
+      '<span class="' + (c[0] === 'cam' ? 'on' : '') + '" aria-label="Photo">' + I('i-camera') + '</span></div>';
+    t.parentNode.insertBefore(modes, t);
+    t.innerHTML = c[1] === 'sending'
+      ? '<div class="send" aria-label="Sending">' + I('i-spin', 'spin') + '</div>'
+      : '<div class="send' + (c[1] === 'dis' ? ' dis' : '') + '">' + (c[1] === 'failed' ? 'Retry' : 'Send') + '</div>';
+  });
+
+  var TABS = ["Draw", "Stickers", "Emoji", "Text", "Face"];
+  document.querySelectorAll('[data-tab]').forEach(function (r) {
+    var cur = r.getAttribute('data-tab');
+    r.innerHTML = TABS.map(function (t) {
+      var cls = 'tb' + (t === cur ? ' on' : '') + (t === 'Face' ? ' soon' : '');
+      return '<span class="' + cls + '" role="tab" aria-selected="' + (t === cur) + '"' + (t === 'Face' ? ' aria-disabled="true"' : '') + '>' + t + '</span>';
+    }).join('');
+  });
+
+  document.querySelectorAll('[data-tools]').forEach(function (r) {
+    var s = r.getAttribute('data-tools');
+    r.innerHTML =
+      '<div class="tool' + (s.indexOf('pen') > -1 ? ' on' : '') + '" aria-label="Pen">' + I('i-pen') + '</div>' +
+      '<div class="tool" aria-label="Eraser">' + I('i-eraser') + '</div>' +
+      '<div class="tool' + (s.indexOf('undo-dis') > -1 ? ' dis' : '') + '" aria-label="Undo">' + I('i-undo') + '</div>';
+  });
+
+  var DOTS = {
+    draw: [["#1E2A1A","Ink"],["#FFC61A","Buttercup"],["#FFE88A","Yellow"],["#FFC6D9","Pink"],["#BFDDFF","Blue"],["#C9EDB6","Green"],["#DCCDFF","Lilac"],["#E5483B","Red"],["#FF8A3D","Orange"],["#FFFFFF","White"]]
+  };
+  DOTS.text = DOTS.draw;
+  document.querySelectorAll('[data-dots]').forEach(function (r) {
+    var sel = +r.getAttribute('data-sel');
+    r.innerHTML = DOTS[r.getAttribute('data-dots')].map(function (d, i) {
+      return '<div class="dot' + (i === sel ? ' on' : '') + '" aria-label="' + d[1] + '"><i style="background:' + d[0] + '"></i></div>';
+    }).join('');
+  });
+
+  var O = 'stroke="#1E2A1A" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"';
+  var heart = '<path d="M29 18c-4-9-17-7-16 4 1 9 12 15 16 21 4-6 15-12 16-21 1-11-12-13-16-4z" fill="#FFC6D9" ' + O + '/>';
+  var star = '<path d="M29 8l6 13 14 2-10 10 2 14-12-7-12 7 2-14-10-10 14-2z" fill="#FFC61A" ' + O + '/>';
+  var imgs = [heart, star,
+    '<path d="M10 40l-3-22 12 9 10-15 10 15 12-9-3 22z" fill="#FFE88A" ' + O + '/>',
+    '<path d="M17 40a9 9 0 0 1 1-18 12 12 0 0 1 23 2 8 8 0 0 1 0 16z" fill="#BFDDFF" ' + O + '/>',
+    '<circle cx="29" cy="29" r="11" fill="#FFC61A" ' + O + '/><path d="M29 8v5M29 45v5M8 29h5M45 29h5M14 14l4 4M40 40l4 4M44 14l-4 4M18 40l-4 4" fill="none" ' + O + '/>',
+    '<rect x="8" y="22" width="18" height="14" rx="7" fill="#DCCDFF" ' + O + '/><rect x="32" y="22" width="18" height="14" rx="7" fill="#DCCDFF" ' + O + '/><path d="M26 28h6" fill="none" ' + O + '/>',
+    '<path d="M10 38a19 19 0 0 1 38 0" fill="none" stroke="#FFC6D9" stroke-width="6"/><path d="M16 38a13 13 0 0 1 26 0" fill="none" stroke="#FFE88A" stroke-width="6"/><path d="M22 38a7 7 0 0 1 14 0" fill="none" stroke="#BFDDFF" stroke-width="6"/>',
+    '<path d="M29 10c8 8 14 15 14 22a14 14 0 0 1-28 0c0-7 6-14 14-22z" fill="#C9EDB6" ' + O + '/>',
+    '<path d="M14 30c6-6 24-6 30 0-4 8-26 8-30 0z" fill="#FF7A6E" ' + O + '/><path d="M14 30c8 4 22 4 30 0" fill="none" ' + O + '/>'
+  ];
+  document.querySelectorAll('[data-fill="images"]').forEach(function (g) {
+    g.innerHTML = imgs.concat(imgs.slice(0, 3)).map(function (s) { return '<div class="cell"><svg viewBox="0 0 58 58" aria-hidden="true">' + s + '</svg></div>'; }).join('');
+  });
+
+  var svgSticker = function (s, x, y, size, rot) {
+    return '<svg class="stk" viewBox="0 0 58 58" style="left:' + x + 'px;top:' + y + 'px;width:' + size + 'px;height:' + size + 'px;transform:rotate(' + (rot || 0) + 'deg)" aria-hidden="true">' + s + '</svg>';
+  };
+  var selected = function (x, y, w, h, rot) {
+    return '<div class="sel" style="left:' + (x - 8) + 'px;top:' + (y - 8) + 'px;width:' + (w + 16) + 'px;height:' + (h + 16) + 'px;transform:rotate(' + (rot || 0) + 'deg)"></div>' +
+      '<div class="tbadge" aria-label="Remove sticker" style="left:' + (x + w - 8) + 'px;top:' + (y - 24) + 'px">' + I('i-trash') + '</div>';
+  };
+  var strokes = '<svg class="fill" viewBox="0 0 398 398" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%">' +
+    '<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="9">' +
+    '<path d="M40 330c30-26 58 22 88-4s58 22 88-4 58 22 88-4 40 16 56 4" stroke="#BFDDFF"/>' +
+    '<path d="M120 196c-30-40-84-6-56 40 14 22 42 40 56 58 14-18 42-36 56-58 28-46-26-80-56-40z" stroke="#FFC6D9"/>' +
+    '<circle cx="318" cy="76" r="28" stroke="#FFC61A"/><path d="M318 26v10M318 116v10M268 76h10M358 76h10M283 41l7 7M346 104l7 7M353 41l-7 7M290 104l-7 7" stroke="#FFC61A"/>' +
+    '</g></svg>';
+  var sun = '<svg class="fill" viewBox="0 0 398 398" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%"><g fill="none" stroke-linecap="round" stroke-width="9" stroke="#FFC61A"><circle cx="318" cy="76" r="28"/><path d="M318 26v10M318 116v10M268 76h10M358 76h10M283 41l7 7M346 104l7 7M353 41l-7 7M290 104l-7 7"/></g></svg>';
+  var lines = '<svg class="fill" viewBox="0 0 398 398" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%"><path d="M40 330c30-26 58 22 88-4s58 22 88-4 58 22 88-4 40 16 56 4" fill="none" stroke="#C9EDB6" stroke-width="9" stroke-linecap="round"/></svg>';
+  var text = function (t, x, y, col, font, size) {
+    return '<span class="stk tsticker" style="left:' + x + 'px;top:' + y + 'px;color:' + col + ';font-family:' + font + ';font-size:' + size + 'px">' + t + '</span>';
+  };
+  var ART = {
+    "full": strokes + '<span class="stk" style="left:30px;top:30px;font-size:64px;transform:rotate(-12deg)">🌼</span>' +
+      svgSticker(star, 236, 176, 96, 14) + selected(236, 176, 96, 96, 14) +
+      text('miss you', 150, 262, '#FFC6D9', 'var(--hand)', 50),
+    "full-nosel": strokes + '<span class="stk" style="left:30px;top:30px;font-size:64px;transform:rotate(-12deg)">🌼</span>' +
+      svgSticker(star, 236, 176, 96, 14) + text('miss you', 150, 262, '#FFC6D9', 'var(--hand)', 50),
+    "newsticker": sun + '<span class="stk" style="left:40px;top:250px;font-size:64px">🐝</span>' + svgSticker(heart, 151, 151, 96) + selected(151, 151, 96, 96),
+    "lines": lines + sun + '<span class="stk" style="left:150px;top:150px;font-size:96px">😘</span>' + selected(150, 150, 96, 96),
+    "typing": sun + text('hi sam', 128, 110, '#FFC6D9', 'var(--hand)', 56),
+    "photo": '<svg class="fill" aria-hidden="true"><use href="#photo"/></svg>' +
+      '<svg class="fill" viewBox="0 0 398 398" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%"><g fill="none" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" stroke="#FFC6D9"><path d="M203 142c-20-34-74-18-62 26 8 30 44 52 62 70 18-18 54-40 62-70 12-44-42-60-62-26z" transform="translate(0 -30)"/></g></svg>' +
+      text('good morning', 64, 318, '#FFFFFF', 'var(--hand)', 50)
+  };
+  document.querySelectorAll('[data-week]').forEach(function (w) {
+    w.innerHTML = [["M",26],["T",27],["W",28],["T",29],["F",30],["S",31],["S",1]].map(function (d, i) {
+      return '<div' + (i === 2 ? ' class="on"' : '') + '>' + d[0] + '<b>' + d[1] + '</b></div>';
+    }).join('');
+  });
+  document.querySelectorAll('[data-art]').forEach(function (c) { c.innerHTML = ART[c.getAttribute('data-art')]; });
+
+  var rows = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
+  document.querySelectorAll('[data-fill="kbd"]').forEach(function (k) {
+    var h = rows.map(function (r, i) {
+      var keys = r.split('').map(function (c) { return '<span class="k">' + c + '</span>'; }).join('');
+      if (i === 2) keys = '<span class="k m">⇧</span>' + keys + '<span class="k m">⌫</span>';
+      return '<div class="kr">' + keys + '</div>';
+    }).join('');
+    h += '<div class="kr"><span class="k m">123</span><span class="k m">☺</span><span class="k sp">space</span><span class="k m rt">done</span></div>';
+    k.innerHTML = h;
+  });
+
+  var CATS = [
+    ["Smileys", '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14c2 2.2 5 2.2 7 0M9.5 9.5v.5M14.5 9.5v.5"/>', "😀 😃 😄 😁 😆 🥹 😅 😂 🤣 🥲 ☺️ 😊 😇 🙂 🙃 😉 😌 😍 🥰 😘"],
+    ["People", '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-4 3-6.5 7-6.5s7 2.5 7 6.5"/>', "👋 🤚 ✌️ 🤞 🫶 👏"],
+    ["Animals", '<ellipse cx="12" cy="15.5" rx="4.5" ry="3.5"/><circle cx="6" cy="10.5" r="1.7"/><circle cx="9.5" cy="6.5" r="1.7"/><circle cx="14.5" cy="6.5" r="1.7"/><circle cx="18" cy="10.5" r="1.7"/>', ""],
+    ["Food", '<path d="M12 7.5c-4-2.2-8 .8-7 5.8.9 4.6 4 7.7 7 6.7 3 1 6.1-2.1 7-6.7 1-5-3-8-7-5.8zM12 7.5c0-2 1-3.5 3-4"/>', ""],
+    ["Activity", '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c-3 3-3 14 0 17M12 3.5c3 3 3 14 0 17"/>', ""],
+    ["Travel", '<path d="M4 16.5v-4l2-5h12l2 5v4zM4 12.5h16"/><circle cx="8" cy="16.5" r="1.6"/><circle cx="16" cy="16.5" r="1.6"/>', ""],
+    ["Objects", '<path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3z"/>', ""],
+    ["Symbols", '<path d="M12 20s-7.5-4.6-7.5-10.2A4.2 4.2 0 0 1 12 7.2a4.2 4.2 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/>', ""],
+    ["Flags", '<path d="M5.5 21V4M5.5 4h11.5l-2.2 4 2.2 4H5.5"/>', ""]
+  ];
+  document.querySelectorAll('[data-emoji]').forEach(function (s) {
+    s.innerHTML = '<div class="etrack">' + CATS.filter(function (c) { return c[2]; }).map(function (c) {
+      return '<div class="eg"><b>' + c[0] + '</b><div class="eg-g">' +
+        c[2].split(' ').map(function (e) { return '<span>' + e + '</span>'; }).join('') + '</div></div>';
+    }).join('') + '</div>';
+  });
+  document.querySelectorAll('[data-cat]').forEach(function (r) {
+    var cur = r.getAttribute('data-cat');
+    r.innerHTML = CATS.map(function (c) {
+      return '<div class="cat' + (c[0] === cur ? ' on' : '') + '" aria-label="' + c[0] + '"><span><svg class="i" viewBox="0 0 24 24">' + c[1] + '</svg></span></div>';
+    }).join('');
+  });
+
+  var phones = document.querySelectorAll('.ph[data-mode]');
+  function apply(m) {
+    phones.forEach(function (p) {
+      var mode = m === 'as' ? p.getAttribute('data-mode') : m;
+      p.classList.remove('lt', 'dk');
+      p.classList.add(mode);
+      var lab = p.closest('.state').querySelector('[data-ml]');
+      if (lab) lab.textContent = mode === 'lt' ? 'Light' : 'Dark';
+    });
+    document.querySelectorAll('.switch button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-m') === m)); });
+    try { localStorage.setItem('nn-mode', m); } catch (e) {}
+  }
+  document.querySelectorAll('.switch button').forEach(function (b) { b.addEventListener('click', function () { apply(b.getAttribute('data-m')); }); });
+  var saved = 'as';
+  try { saved = localStorage.getItem('nn-mode') || 'as'; } catch (e) {}
+  apply(saved);
+})();
+</script>
