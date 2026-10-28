@@ -25,12 +25,71 @@ struct NewNoteView: View {
     @State private var pendingDiscard: (() -> Void)?
     @State private var dragOffset: CGFloat = 0
     @State private var height: CGFloat = 896
+    @State private var noteText = ""
+    @State private var textColour: InkColour = .ink
+    @State private var noteFont: NoteFont = .rounded
+    @FocusState private var textFocused: Bool
+    @State private var canvasFrame: CGRect = .zero
+    @State private var toolsRest: CGFloat = .infinity
+    @State private var raisedTop: CGFloat?
+
+    private static let toolsHeight: CGFloat = 136
 
     var body: some View {
+        ZStack(alignment: .top) {
+            content
+                .ignoresSafeArea(.keyboard)
+            if draft.mode == .draw && tab == .text {
+                GeometryReader { geo in
+                    let top = min(toolsRest, geo.size.height - Self.toolsHeight)
+                    textTools(raised: top < toolsRest)
+                        .offset(y: top)
+                }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    let top = height - Self.toolsHeight
+                    if top < toolsRest { raisedTop = top } else if !textFocused { raisedTop = nil }
+                }
+                .transition(.opacity)
+            }
+        }
+        .coordinateSpace(.named("note"))
+        .onChange(of: tab) { _, new in
+            if new != .text { noteText = "" }
+        }
+        .onChange(of: textFocused) { _, focused in
+            if !focused { raisedTop = nil }
+        }
+        .animation(.easeOut(duration: 0.15), value: tab)
+        .sensoryFeedback(.impact(weight: .light), trigger: draft.items.count) { old, new in new > old }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color("Background"))
+        .fontDesign(.rounded)
+        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
+        .offset(y: dragOffset)
+        .presentationBackground(.clear)
+        .accessibilityAction(.escape) { confirm { dismiss() } }
+        .alert("Discard this note?", isPresented: Binding(get: { pendingDiscard != nil }, set: { if !$0 { pendingDiscard = nil } })) {
+            Button("Keep editing", role: .cancel) {}
+            Button("Discard", role: .destructive) { pendingDiscard?() }
+        } message: {
+            Text("You will lose your progress if you proceed")
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
             topBand
                 .padding(.top, 8)
-            NoteCanvas(draft: draft, tool: tool, colour: colour, partnerName: partnerName)
+            NoteCanvas(draft: draft, tool: tool, colour: colour, partnerName: partnerName, preview: textPreview)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("note")) } action: { canvasFrame = $0 }
+                .overlay {
+                    if textFocused {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture { textFocused = false }
+                            .accessibilityHidden(true)
+                    }
+                }
                 .padding(.horizontal, 8)
                 .padding(.top, 8)
             if draft.mode == .draw {
@@ -62,25 +121,59 @@ struct NewNoteView: View {
                     .padding(.top, 4)
                     .transition(.opacity)
                 }
+                if tab == .text {
+                    Color.clear
+                        .frame(height: Self.toolsHeight)
+                        .onGeometryChange(for: CGFloat.self) { $0.frame(in: .named("note")).minY } action: { toolsRest = $0 }
+                }
             }
             Spacer(minLength: 0)
         }
-        .animation(.easeOut(duration: 0.15), value: tab)
-        .sensoryFeedback(.impact(weight: .light), trigger: draft.items.count) { old, new in new > old }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color("Background"))
-        .fontDesign(.rounded)
-        .dynamicTypeSize(...DynamicTypeSize.accessibility1)
-        .offset(y: dragOffset)
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
-        .presentationBackground(.clear)
-        .accessibilityAction(.escape) { confirm { dismiss() } }
-        .alert("Discard this note?", isPresented: Binding(get: { pendingDiscard != nil }, set: { if !$0 { pendingDiscard = nil } })) {
-            Button("Keep editing", role: .cancel) {}
-            Button("Discard", role: .destructive) { pendingDiscard?() }
-        } message: {
-            Text("You will lose your progress if you proceed")
+    }
+
+    private var trimmedText: String { noteText.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    private var previewY: CGFloat {
+        guard canvasFrame.height > 0 else { return 0.5 }
+        let visibleBottom = min(canvasFrame.maxY, raisedTop ?? toolsRest)
+        return (visibleBottom - canvasFrame.minY) / 2 / canvasFrame.height
+    }
+
+    private var textPreview: NoteItem? {
+        guard tab == .text, !trimmedText.isEmpty else { return nil }
+        return NoteItem(kind: .text(trimmedText, noteFont, textColour.color), center: CGPoint(x: 0.5, y: previewY))
+    }
+
+    private func textTools(raised: Bool) -> some View {
+        TextStickerComposer(
+            text: $noteText,
+            colour: $textColour,
+            font: $noteFont,
+            focus: $textFocused,
+            colours: InkColour.allCases,
+            fonts: NoteFont.allCases,
+            addHasShadow: false,
+            preview: .external,
+            onAdd: addText
+        )
+        .padding(.top, 4)
+        .frame(height: Self.toolsHeight, alignment: .top)
+        .background {
+            UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28, style: .continuous)
+                .fill(Color("Surface"))
+                .opacity(raised ? 1 : 0)
         }
+        .onAppear { textFocused = true }
+    }
+
+    private func addText() {
+        guard let preview = textPreview else { return }
+        withAnimation(.easeOut(duration: 0.15)) {
+            draft.add(preview.kind, at: preview.center, select: true)
+        }
+        noteText = ""
+        textFocused = false
     }
 
     private var topBand: some View {
