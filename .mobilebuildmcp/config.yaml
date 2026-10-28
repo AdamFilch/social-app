@@ -1,0 +1,14 @@
+schemaVersion: 1
+enabledWorkflows:
+  - simulator
+  - ui-automation
+  - simulator-management
+  - debugging
+  - project-discovery
+  - utilities
+sessionDefaults:
+  projectPath: ./Buttercup.xcodeproj
+  scheme: Buttercup
+  configuration: Debug
+  simulatorId: 59457C26-DDF0-4A6D-98BC-C57D0F7B7211
+  bundleId: com.adamfilchoir.buttercup
