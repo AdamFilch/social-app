@@ -41,15 +41,15 @@ Long-press 👋 ─► tone picker ─ pick ─► placed with that tone; rememb
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: The Emoji tab shows a 2-row strip of 72 pt cells with category labels, and nine chips at the bottom. The current chip has a Divider disc.
-- [ ] AC2: Tapping a chip scrolls to that category. Scrolling by hand updates the current chip.
-- [ ] AC3: Tap and drag place emoji exactly as stickers do in [11].
-- [ ] AC4: Long-pressing a toneable emoji opens the tone picker. The chosen tone is used and remembered.
-- [ ] AC5: Emoji cells have their system names for VoiceOver, with the hint "Double-tap to add to the note".
-- [ ] AC6: The build check passes and the tab is checked on the simulator.
+- [x] AC1: The Emoji tab shows a 2-row strip of 72 pt cells with category labels, and nine chips at the bottom. The current chip has a Divider disc.
+- [x] AC2: Tapping a chip scrolls to that category. Scrolling by hand updates the current chip.
+- [x] AC3: Tap and drag place emoji exactly as stickers do in [11].
+- [x] AC4: Long-pressing a toneable emoji opens the tone picker. The chosen tone is used and remembered.
+- [x] AC5: Emoji cells have their system names for VoiceOver, with the hint "Double-tap to add to the note".
+- [x] AC6: The build check passes and the tab is checked on the simulator.
 
 ## Features Catalog
 - **Extends**: #2 Notes widget
 
 ---
-*Status: READY — ticket [12]*
+*Status: COMPLETED — PR #TBD*
