@@ -6,7 +6,10 @@ struct NoteCanvas: View {
     let tool: DrawTool
     let colour: InkColour
     let partnerName: String
+    let camera: Camera
     var preview: NoteItem?
+
+    private var editing: Bool { draft.mode == .draw || draft.photo != nil }
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -15,17 +18,28 @@ struct NoteCanvas: View {
             ZStack {
                 ZStack {
                     shape.fill(draft.mode == .draw ? Color.white : Color("Surface"))
+                    if let photo = draft.photo {
+                        Image(uiImage: photo)
+                            .resizable()
+                            .scaledToFill()
+                    }
                     if draft.mode == .draw {
-                        DrawingView(draft: draft, tool: tool, colour: colour, isLocked: draft.selection != nil)
                         hint
                             .opacity(draft.hasProgress || preview != nil ? 0 : 1)
                             .animation(.easeOut(duration: 0.15), value: draft.hasProgress || preview != nil)
+                    }
+                    if editing {
+                        DrawingView(draft: draft, tool: tool, colour: colour, isLocked: draft.selection != nil)
                     }
                 }
                 .accessibilityElement()
                 .accessibilityLabel("Note")
                 .accessibilityValue(contentSummary)
-                .accessibilityHint(draft.mode == .draw && tool == .pen ? "Draw with one finger" : "")
+                .accessibilityHint(editing && tool == .pen ? "Draw with one finger" : "")
+                if !editing {
+                    viewfinder
+                        .transition(.opacity)
+                }
                 if draft.selection != nil {
                     Color.clear
                         .contentShape(Rectangle())
@@ -75,9 +89,21 @@ struct NoteCanvas: View {
         var parts: [String] = []
         if !draft.items.isEmpty { parts.append(draft.items.count == 1 ? "1 sticker" : "\(draft.items.count) stickers") }
         if !draft.drawing.strokes.isEmpty { parts.append("drawing") }
+        let joined = parts.joined(separator: " and ")
+        if draft.photo != nil { return joined.isEmpty ? "Photo" : "Photo with \(joined)" }
         guard !parts.isEmpty else { return "Empty" }
-        let summary = parts.joined(separator: " and ")
+        let summary = joined
         return summary.prefix(1).uppercased() + summary.dropFirst()
+    }
+
+    @ViewBuilder
+    private var viewfinder: some View {
+        switch camera.status {
+        case .ready: CameraView(camera: camera)
+        case .denied: CameraBlockedView(reason: .denied, partnerName: partnerName)
+        case .unavailable: CameraBlockedView(reason: .unavailable, partnerName: partnerName)
+        case .unknown: Color.clear
+        }
     }
 
     private var hint: some View {

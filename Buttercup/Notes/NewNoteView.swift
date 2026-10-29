@@ -18,6 +18,10 @@ struct NewNoteView: View {
     let partnerName: String
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("noteCameraFront") private var front = false
+    @State private var camera = Camera()
+    @State private var flash = false
     @State private var draft = NoteDraft()
     @State private var tab: NoteTab = .draw
     @State private var tool: DrawTool = .pen
@@ -39,7 +43,7 @@ struct NewNoteView: View {
         ZStack(alignment: .top) {
             content
                 .ignoresSafeArea(.keyboard)
-            if draft.mode == .draw && tab == .text {
+            if editing && tab == .text {
                 GeometryReader { geo in
                     let top = min(toolsRest, geo.size.height - Self.toolsHeight)
                     textTools(raised: top < toolsRest)
@@ -60,6 +64,14 @@ struct NewNoteView: View {
             if !focused { raisedTop = nil }
         }
         .animation(.easeOut(duration: 0.15), value: tab)
+        .task(id: [draft.mode == .photo && draft.photo == nil, front, scenePhase == .active]) {
+            if draft.mode == .photo && draft.photo == nil && scenePhase == .active {
+                await camera.start(front: front)
+            } else {
+                camera.stop()
+            }
+        }
+        .onDisappear { camera.stop() }
         .sensoryFeedback(.impact(weight: .light), trigger: draft.items.count) { old, new in new > old }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color("Background"))
@@ -80,7 +92,7 @@ struct NewNoteView: View {
         VStack(spacing: 0) {
             topBand
                 .padding(.top, 8)
-            NoteCanvas(draft: draft, tool: tool, colour: colour, partnerName: partnerName, preview: textPreview)
+            NoteCanvas(draft: draft, tool: tool, colour: colour, partnerName: partnerName, camera: camera, preview: textPreview)
                 .onGeometryChange(for: CGRect.self) { $0.frame(in: .named("note")) } action: { canvasFrame = $0 }
                 .overlay {
                     if textFocused {
@@ -92,7 +104,13 @@ struct NewNoteView: View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.top, 8)
-            if draft.mode == .draw {
+            if !editing {
+                CameraRow(flash: $flash, front: $front, onShutter: capture)
+                    .disabled(camera.status != .ready)
+                    .padding(.top, 96)
+                    .transition(.opacity)
+            }
+            if editing {
                 PillTabRow(
                     tabs: NoteTab.allCases,
                     selection: $tab,
@@ -130,6 +148,26 @@ struct NewNoteView: View {
             Spacer(minLength: 0)
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
+    }
+
+    private var editing: Bool { draft.mode == .draw || draft.photo != nil }
+
+    private func capture() {
+        camera.capture(flash: flash && !front) { image in
+            withAnimation(.easeOut(duration: 0.15)) {
+                tab = .draw
+                draft.photo = image
+            }
+        }
+    }
+
+    private func retake() {
+        let clear = { withAnimation(.easeOut(duration: 0.15)) { draft.reset(to: .photo) } }
+        if draft.drawing.strokes.isEmpty && draft.items.isEmpty {
+            clear()
+        } else {
+            pendingDiscard = clear
+        }
     }
 
     private var trimmedText: String { noteText.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -190,6 +228,10 @@ struct NewNoteView: View {
             }
             .frame(height: 44)
             HStack {
+                if draft.mode == .photo {
+                    RetakeButton(hasPhoto: draft.photo != nil, action: retake)
+                        .transition(.opacity)
+                }
                 Spacer()
                 ModeToggle(mode: draft.mode) { mode in
                     confirm {

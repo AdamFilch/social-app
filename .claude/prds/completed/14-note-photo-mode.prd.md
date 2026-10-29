@@ -51,14 +51,14 @@ Deny access ─► "Camera is off for buttercup" ─ Open Settings ─► Settin
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: Simulator: Photo mode shows "No camera available" in the square, with flash, shutter and flip at 40%. The toggle still switches back to Draw.
-- [ ] AC2: Simulator: switching modes with progress shows the discard alert. Without progress it doesn't.
-- [ ] AC3 (device): The first time, the back camera opens. Afterwards, the last-used camera opens.
-- [ ] AC4 (device): Pinch zooms between 1× and 5×. Flash toggles on the back camera and is disabled on the front.
-- [ ] AC5 (device): After capture, the photo (square, mirrored on the front camera) fills the canvas, the tab row replaces the camera row, Retake is red, and drawing works on top.
-- [ ] AC6 (device): Retake with only a photo has no alert. With a stroke on it, the alert shows first.
-- [ ] AC7 (device): With access denied, the panel and Open Settings show. Turning access on in Settings and returning starts the viewfinder.
-- [ ] AC8: The build check passes.
+- [x] AC1: Simulator: Photo mode shows "No camera available" in the square, with flash, shutter and flip at 40%. The toggle still switches back to Draw.
+- [x] AC2: Simulator: switching modes with progress shows the discard alert. Without progress it doesn't.
+- [x] AC3 (device): The first time, the back camera opens. Afterwards, the last-used camera opens.
+- [x] AC4 (device): Pinch zooms between 1× and 5×. Flash toggles on the back camera and is disabled on the front.
+- [x] AC5 (device): After capture, the photo (square, mirrored on the front camera) fills the canvas, the tab row replaces the camera row, Retake is red, and drawing works on top.
+- [x] AC6 (device): Retake with only a photo has no alert. With a stroke on it, the alert shows first.
+- [x] AC7 (device): With access denied, the panel and Open Settings show. Turning access on in Settings and returning starts the viewfinder.
+- [x] AC8: The build check passes.
 
 ## Features Catalog
 - **Extends**: #2 Notes widget
@@ -70,4 +70,17 @@ Deny access ─► "Camera is off for buttercup" ─ Open Settings ─► Settin
 | Session start blocks the main thread | Med | Toggle stutters | Start and stop the session on a background queue |
 
 ---
-*Status: READY — ticket [14]*
+*Status: COMPLETED — PR #12*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | iPhone 17 simulator, light and dark: the square shows "No camera available"; flash, shutter and flip are at 40% and disabled; the toggle switches back to Draw at once |
+| AC2 | ✅ done | A stroke in Draw, then the camera side: the discard alert shows; Keep editing keeps it; Discard opens Photo blank. With no progress the switch happens at once both ways |
+| AC3 | ✅ done | Device checklist passed on the user's iPhone. The front/back choice is kept in `@AppStorage("noteCameraFront")` and survives a relaunch (checked on the simulator with the Debug stand-in). That the right lens opens needs a device |
+| AC4 | ✅ done | Device checklist passed on the user's iPhone. Flash toggles Off/On on the back camera and is disabled (40%, "Off") on the front, checked on the simulator. Pinch zoom 1–5× needs a device |
+| AC5 | ✅ done | Device checklist passed on the user's iPhone. With the Debug stand-in (`-notePhotoStub YES`, the test clip's first frame) the captured photo fills the canvas, the tab row replaces the camera row, Retake turns red and strokes draw on top, in light and dark. The real square crop and front-camera mirroring need a device |
+| AC6 | ✅ done | Also checked on the user's iPhone. With the stand-in: Retake with only a photo goes straight back to the viewfinder; with strokes on it the discard alert shows first and Discard returns to the viewfinder |
+| AC7 | ✅ done | Device checklist passed on the user's iPhone. With access revoked (`simctl privacy revoke camera`), "Camera is off for buttercup", the line and Open Settings show in light and dark, and Open Settings opens Settings. Turning access on and returning can't be checked on the simulator: changing the permission ends the app |
+| AC8 | ✅ done | `xcodebuild … -destination 'platform=iOS Simulator,name=iPhone 17' build` succeeds with no new warnings |
+
