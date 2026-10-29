@@ -1,0 +1,480 @@
+<title>Buttercup Notes Tab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap">
+<style>
+/* Layout: a working sheet. Decisions, then the weekly view, month view and note dialog as iPhone 11 phones with notes beside each, then the toggle button, motion and the two proposed dot tokens. The switch flips every phone between its labelled mode, all light or all dark. */
+:root {
+  --bg: #FFF8E2;
+  --card: #FFFDF5;
+  --fg: #1E2A1A;
+  --muted: #56634F;
+  --line: #1E2A1A;
+  --soft: #EDE6CC;
+  --mark: #FFC61A;
+  --bezel: #12100E;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; --bezel: #000; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; --bezel: #000; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--round); font-size: 16px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 96px; display: grid; gap: 72px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(36px, 7vw, 60px); font-weight: 900; letter-spacing: -0.02em; }
+h2 { font-size: 30px; font-weight: 900; letter-spacing: -0.01em; }
+h3 { font-size: 20px; font-weight: 900; }
+p { margin: 0; max-width: 68ch; }
+code { font-family: var(--mono); font-size: 0.9em; }
+.lede { font-size: 18px; }
+.muted { color: var(--muted); }
+.stack { display: grid; gap: 14px; }
+.sec { display: grid; gap: 32px; }
+.states { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 48px 32px; }
+.state { display: grid; gap: 16px; align-content: start; justify-items: center; min-width: 0; }
+.note { display: grid; gap: 8px; width: 100%; max-width: 434px; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 15px; }
+.note ul li::marker { color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; font-weight: 800; padding: 1px 9px; border-radius: 999px; border: 2px solid var(--line); background: var(--card); }
+.chip.mode { background: var(--soft); border-color: transparent; }
+.legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px 28px; font-size: 15px; }
+.legend div { display: grid; grid-template-columns: 44px 1fr; gap: 8px; }
+.legend b { font-weight: 900; }
+.panel { background: var(--card); border: 2.5px solid var(--line); border-radius: 22px; padding: 24px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; }
+.panel ul, .panel ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1.5px solid var(--soft); vertical-align: top; }
+th { font-size: 14px; color: var(--muted); font-weight: 800; }
+td.n { font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 700; }
+.sw { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--line); vertical-align: -2px; margin-right: 6px; }
+.switch { display: inline-flex; gap: 4px; padding: 4px; border: 2px solid var(--line); border-radius: 999px; background: var(--card); flex-wrap: wrap; justify-self: start; }
+.switch button { font: 800 14px var(--round); color: var(--muted); background: none; border: 2px solid transparent; border-radius: 999px; padding: 6px 14px; min-height: 36px; cursor: pointer; }
+.switch button[aria-pressed="true"] { background: var(--mark); color: #1E2A1A; border-color: var(--line); }
+.switch button:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+
+/* device */
+.dev { padding: 10px; border-radius: 60px; background: var(--bezel); flex: none; }
+@media (max-width: 480px) { .dev { zoom: 0.8; } }
+@media (max-width: 380px) { .dev { zoom: 0.72; } }
+.lt { --q-bg: #FFF8E2; --q-surf: #FFFDF5; --q-text: #1E2A1A; --q-sec: #56634F; --q-acc: #FFC61A; --q-onacc: #1E2A1A; --q-out: #1E2A1A; --q-div: #EDE6CC; --q-me: #2F6FDB; --q-sam: #E5483B; --q-press: #E6B21C; }
+.dk { --q-bg: #1B1814; --q-surf: #28241F; --q-text: #FFF8E2; --q-sec: #B7AC9E; --q-acc: #FFCB2E; --q-onacc: #1B1814; --q-out: #EDE3CC; --q-div: #3A342D; --q-me: #79AEFF; --q-sam: #FF7A6E; --q-press: #E3B52B; }
+.ph { position: relative; width: 414px; height: 896px; border-radius: 50px; overflow: hidden; background: var(--q-bg); color: var(--q-text); font-family: var(--round); isolation: isolate; }
+.ph svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.sb { position: absolute; top: 0; left: 0; right: 0; height: 48px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 8px 34px; font-size: 15px; font-weight: 800; z-index: 5; }
+.bat { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; display: inline-block; margin-left: 6px; vertical-align: -1px; }
+.bat::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+.home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--q-text); z-index: 9; }
+
+.scr { position: absolute; top: 52px; left: 0; right: 0; bottom: 87px; padding: 4px 20px 0; display: grid; align-content: start; gap: 20px; overflow: hidden; }
+.top { display: flex; align-items: center; justify-content: space-between; height: 48px; }
+.title { font-size: 34px; font-weight: 900; letter-spacing: -0.01em; }
+.tog { height: 40px; padding: 0 14px 0 12px; border-radius: 999px; border: 2px solid var(--q-out); background: var(--q-surf); color: var(--q-text); display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 800; position: relative; }
+.tog::before { content: ""; position: absolute; inset: -4px -2px; }
+.tog svg.i { width: 18px; height: 18px; }
+.tog.pressed { background: color-mix(in srgb, var(--q-surf) 94%, var(--q-text)); }
+.pri { height: 56px; border-radius: 999px; background: var(--q-acc); color: var(--q-onacc); border: 2.5px solid var(--q-out); box-shadow: 3px 3px 0 var(--q-out); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 17px; font-weight: 800; margin-right: 3px; }
+.pri svg.i { width: 20px; height: 20px; }
+
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.day { border: 2px solid var(--q-out); border-radius: 14px; height: 74px; display: grid; justify-items: center; align-content: start; padding-top: 6px; gap: 2px; background: var(--q-surf); font-variant-numeric: tabular-nums; }
+.day i { font-style: normal; font-size: 12px; font-weight: 700; color: var(--q-sec); }
+.day b { font-size: 17px; font-weight: 800; line-height: 1.2; }
+.day.today { background: var(--q-acc); color: var(--q-onacc); }
+.day.today i { color: var(--q-onacc); }
+.day.sel { box-shadow: 0 0 0 2px var(--q-bg), 0 0 0 4.5px var(--q-out); }
+.stackmini { position: relative; width: 20px; height: 18px; }
+.stackmini span { position: absolute; width: 15px; height: 15px; border: 1.5px solid var(--q-out); border-radius: 4px; }
+.day.today .stackmini span { border-color: var(--q-onacc); }
+
+.dh { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: -6px; }
+.dh b { font-size: 20px; font-weight: 900; }
+.dh span { font-size: 15px; font-weight: 600; color: var(--q-sec); font-variant-numeric: tabular-nums; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.tile { aspect-ratio: 1; border-radius: 20px; border: 2.5px solid var(--q-out); position: relative; }
+.tile > svg { width: 100%; height: 100%; display: block; border-radius: 17.5px; }
+.from { position: absolute; left: 8px; bottom: 8px; }
+.ava { border-radius: 50%; border: 2px solid var(--q-out); color: #1E2A1A; display: grid; place-items: center; font-weight: 900; flex: none; }
+.ava.s24 { width: 24px; height: 24px; font-size: 12px; }
+.ava.s40 { width: 40px; height: 40px; font-size: 17px; border-width: 2.5px; }
+.empty { padding: 56px 0 0; text-align: center; color: var(--q-sec); font-size: 17px; font-weight: 700; }
+
+.mcard { background: var(--q-surf); border: 2.5px solid var(--q-out); border-radius: 22px; padding: 14px 10px 10px; display: grid; gap: 6px; }
+.mh { font-size: 20px; font-weight: 900; padding: 0 6px 4px; font-variant-numeric: tabular-nums; }
+.mg { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px 2px; }
+.wl { text-align: center; font-size: 12px; font-weight: 700; color: var(--q-sec); height: 18px; }
+.md { height: 52px; border-radius: 14px; display: grid; justify-items: center; align-content: start; padding-top: 6px; gap: 5px; font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; border: 2px solid transparent; }
+.md.today { background: var(--q-acc); color: var(--q-onacc); border-color: var(--q-out); }
+.md.spill { color: var(--q-sec); opacity: 0.5; font-weight: 600; }
+.dots { display: flex; gap: 4px; height: 8px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--q-out); display: block; }
+.md.today .dots i { border-color: var(--q-onacc); }
+.dots i.me { background: var(--q-me); }
+.dots i.sam { background: var(--q-sam); }
+.dots i.gap { visibility: hidden; }
+.sum { display: grid; gap: 4px; padding: 0 4px; font-size: 15px; font-weight: 600; color: var(--q-sec); font-variant-numeric: tabular-nums; }
+.sum b { color: var(--q-text); font-weight: 800; }
+.sum .lg { display: flex; gap: 16px; align-items: center; }
+.sum .lg span { display: flex; align-items: center; gap: 6px; }
+.sum .lg i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--q-out); display: block; }
+
+.tabs { position: absolute; left: 0; right: 0; bottom: 0; background: var(--q-surf); border-top: 2.5px solid var(--q-out); padding: 8px 12px 0; height: 87px; display: grid; grid-template-columns: repeat(3, 1fr); }
+.tab { display: grid; justify-items: center; align-content: start; gap: 3px; font-size: 12px; font-weight: 800; color: var(--q-sec); }
+.tab .pill { width: 60px; height: 34px; border-radius: 999px; display: grid; place-items: center; border: 2px solid transparent; }
+.tab.on { color: var(--q-text); }
+.tab.on .pill { background: var(--q-acc); border-color: var(--q-out); color: var(--q-onacc); }
+
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.42); z-index: 6; }
+.dk .scrim { background: rgba(0,0,0,.6); }
+.dlg { position: absolute; left: 20px; right: 20px; top: 50%; transform: translateY(-50%); background: var(--q-surf); border: 2.5px solid var(--q-out); border-radius: 28px; padding: 16px; z-index: 7; display: grid; gap: 14px; }
+.dlg .hd { display: flex; align-items: center; gap: 12px; }
+.dlg .hd .ibtn { margin-left: auto; }
+.dlg .tile { width: 100%; }
+.ibtn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--q-out); background: var(--q-bg); color: var(--q-text); display: grid; place-items: center; flex: none; }
+.who { display: grid; line-height: 1.25; }
+.who b { font-size: 17px; font-weight: 800; }
+.who span { font-size: 15px; font-weight: 600; color: var(--q-sec); font-variant-numeric: tabular-nums; }
+.pager { display: flex; justify-content: center; gap: 8px; }
+.pager i { width: 8px; height: 8px; border-radius: 50%; background: var(--q-div); border: 1.5px solid var(--q-out); display: block; }
+.pager i.on { background: var(--q-out); }
+
+.btnrow { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.mini { padding: 20px; border-radius: 22px; display: grid; gap: 14px; justify-items: start; background: var(--q-bg); color: var(--q-text); border: 2px solid var(--line); }
+.mini small { font-size: 13px; font-weight: 700; color: var(--q-sec); }
+.mini svg.i { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.frames { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 14px; font-weight: 700; }
+.frames span.f { padding: 6px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="stack">
+    <p class="muted" style="font-weight:800">buttercup · mockup v3 · draft · 29 Oct 2026</p>
+    <h1>Notes tab</h1>
+    <p class="lede">The Notes tab is where Adam and Sam look back at what they've sent each other. It opens on this week with today picked, so the first thing you see is today's notes, big. The month view is one tap away for "what did we send last week?" and "how much have we been writing?".</p>
+    <p class="muted">Every phone is an iPhone 11 at 414 × 896 pt, viewed as Adam on Thursday 29 October 2026, 9:41. The notes are illustrated placeholders. Each phone is labelled light or dark; the switch shows them all in one mode.</p>
+    <div class="switch" role="group" aria-label="Phone appearance">
+      <button type="button" data-m="as" aria-pressed="true">As labelled</button>
+      <button type="button" data-m="lt" aria-pressed="false">All light</button>
+      <button type="button" data-m="dk" aria-pressed="false">All dark</button>
+    </div>
+  </header>
+
+  <section class="sec">
+    <div class="stack"><h2>Decisions</h2><p class="muted">D1–D18 were settled by Adam before v1. N1–N10 are mine, made to fill gaps. N2 and N9 follow Adam's answers to v1, and N7 and N10 follow his v2 feedback.</p></div>
+    <div class="legend">
+      <div><b>D1</b><span>Week strip on top, then the selected day's notes as a 2-column tile grid with sender tags and a "Thursday 29 · 3 notes" header.</span></div>
+      <div><b>D2</b><span>Swipe the strip left or right for the next or previous week.</span></div>
+      <div><b>D3</b><span>After a week swipe the same weekday stays selected.</span></div>
+      <div><b>D4</b><span>Tapping a tile opens a full-size view with sender and time only.</span></div>
+      <div><b>D5</b><span>The full-size view swipes through that day's notes in grid order (newest first), opening on the tapped one.</span></div>
+      <div><b>D6</b><span>Month view: 7-column calendar, swipe changes month, summary line below.</span></div>
+      <div><b>D7</b><span>Up to 2 dots per day: blue for your notes, red for your partner's.</span></div>
+      <div><b>D8</b><span>Weeks start Monday.</span></div>
+      <div><b>D9</b><span>Spill days from other months are greyed; tapping one opens its week.</span></div>
+      <div><b>D10</b><span>Top-right pill: "October" in the week view, "Current week" in the month view.</span></div>
+      <div><b>D11</b><span>Opens on the week view, current week, today selected.</span></div>
+      <div><b>D12</b><span>"Make a note" stays at the top in both modes.</span></div>
+      <div><b>D13</b><span>Today is an Accent cell in the strip and the grid.</span></div>
+      <div><b>D14</b><span>Strip cells: day letter, date, up to 3 mini-cards.</span></div>
+      <div><b>D15</b><span>Mode switch is a 0.18 s crossfade. No haptic on ordinary taps.</span></div>
+      <div><b>D16</b><span>Empty and future days can be selected and say "No notes yet".</span></div>
+      <div><b>D17</b><span>No unseen ring or "New" badge.</span></div>
+      <div><b>D18</b><span>Tapping a month day opens the week view with that day selected.</span></div>
+      <div><b>N1</b><span>Selected day = an Outline ring around its cell (2 pt gap, 2.5 pt ring). Today = Accent fill. Today and selected = both. Selection never uses a second Accent.</span></div>
+      <div><b>N2</b><span>Tiles run newest first, in the same order the full-size view swipes, so swiping forward goes back in time (Adam, Q2). Tiles carry no doodle.</span></div>
+      <div><b>N10</b><span>The Notes tab has no doodle at all. The tape on the newest tile is removed (Adam, v2), and nothing replaces it: the notes already bring the colour, and the rule is at most one doodle, not at least one. This changes design.md §7 and §10, so it's flagged for the spec run.</span></div>
+      <div><b>N9</b><span>Week and month swipes stop at the month you paired (<code>pairs.created_at</code>) and at the current week or month (Adam, Q4). At an edge the page doesn't move: no bounce, no message, no haptic.</span></div>
+      <div><b>N3</b><span>The day header always uses the weekday and date ("Thursday 29"), never "Today". The Accent cell already says which day is today.</span></div>
+      <div><b>N4</b><span>Dots sit in fixed places: yours on the left, Sam's on the right. The summary line doubles as their legend, so position and words carry the meaning as well as colour.</span></div>
+      <div><b>N5</b><span>Two new tokens for the dots: NoteDotMine and NoteDotPartner (see the last section). Each dot has a 1.5 pt ring, which turns OnAccent on the today cell.</span></div>
+      <div><b>N6</b><span>The toggle is a Small secondary pill with a leading symbol: <code>calendar</code> with "October", <code>calendar.day.timeline.left</code> with "Current week". It's right-aligned, so it grows to the left.</span></div>
+      <div><b>N7</b><span>The full-size view is a dialog: a centred Surface card (radius 28, 2.5 pt Outline) over the dimmed Notes tab. ✕ or a tap outside closes it. It fades in with a slight scale over 0.2 s; there is no bounce.</span></div>
+      <div><b>N8</b><span>The month grid sits in one Card. Cells have no outlines of their own, because 35 outlined cells would be too loud. Only today gets a fill and an outline.</span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Weekly view</h2><p class="muted">The default on open (D11). The strip pages a week at a time, and the content follows your finger while you swipe. That isn't decorative motion: it's the gesture itself, and it snaps to the week with the system paging curve.</p></div>
+    <div class="states">
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="weekToday"></div></div>
+        <div class="note">
+          <h3>1 · Today, with notes <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">D1</span><span class="chip">D11</span><span class="chip">D13</span><span class="chip">D14</span><span class="chip">N1</span><span class="chip">N2</span></div>
+          <ul>
+            <li>What you see on open: this week (Mon 26 – Sun 1), Thursday 29 picked. The cell is Accent because it's today and has the ring because it's selected.</li>
+            <li>The pill reads the selected day's month, "October". Sunday 1 November sits in this week, but the pill only changes if you pick it.</li>
+            <li>Three tiles, newest first: Sam 9:20, Adam 8:05, Sam 7:12. No tile carries a doodle (N10).</li>
+            <li>This is the current week, so the strip won't page left to next week. Friday to Sunday can still be picked (state 3).</li>
+            <li>Tiles show the note and the sender's initial, nothing else. The time is in the full-size view and in each tile's VoiceOver label ("Note from Sam, 7:12 am").</li>
+            <li>Tapping a strip cell moves the ring with a 0.15 s fade and swaps the grid with the same fade. No haptic.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="dk" data-s="weekPast"></div></div>
+        <div class="note">
+          <h3>2 · Past day, after a week swipe <span class="chip mode" data-ml>Dark</span></h3>
+          <div class="chips"><span class="chip">D2</span><span class="chip">D3</span><span class="chip">N1</span><span class="chip">N3</span></div>
+          <ul>
+            <li>Swiping right from state 1 goes to 19–25 October and keeps Thursday picked, so Thursday 22 is selected.</li>
+            <li>No cell is Accent because today isn't in this week. The ring alone shows the selection.</li>
+            <li>Four notes fill two rows, newest first. A day with more notes scrolls under the strip; the header, button and strip stay put.</li>
+            <li>To get back to today: swipe left, or tap "October" and then "Current week". Adam chose no separate "Today" button (Q1).</li>
+            <li>Swiping right keeps going back a week at a time until the week you paired. That week is the last page.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="weekEmpty"></div></div>
+        <div class="note">
+          <h3>3 · Empty or future day <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">D16</span></div>
+          <ul>
+            <li>Friday 30 is tomorrow. You can pick it, and it says "No notes yet" in TextSecondary, centred, with nothing else.</li>
+            <li>A past empty day (Wednesday 28) looks the same. "Yet" still works: notes arrive late from the offline outbox.</li>
+            <li>No "Draw Sam something?" prompt. "Make a note" is just above and always sends to today, so a prompt on a future day would be misleading.</li>
+            <li>The header reads "Friday 30 · No notes" so the count slot never goes blank.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Month view</h2><p class="muted">For looking back across weeks and seeing who has been writing. It answers "when?" and "who?" at a glance, and you tap a day to read it.</p></div>
+    <div class="states">
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="month"></div></div>
+        <div class="note">
+          <h3>4 · October, current month <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">D6</span><span class="chip">D7</span><span class="chip">D8</span><span class="chip">D9</span><span class="chip">D13</span><span class="chip">N4</span><span class="chip">N8</span><span class="chip">N9</span></div>
+          <ul>
+            <li>Mon–Sun columns. Five rows run from Mon 28 Sep to Sun 1 Nov. Spill days are TextSecondary at 50%, with their dots also at 50%.</li>
+            <li>Each day has two fixed dot places: yours on the left (blue), Sam's on the right (red). A day with only Sam's notes shows a single red dot on the right, so you can tell who wrote from position as well as colour.</li>
+            <li>Dots show only whether someone sent a note that day, not how many. The counts are in the summary.</li>
+            <li>The summary line is "23 notes this month" with a legend under it: "11 from you · 12 from Sam". It works as the dot key and as the D6 summary.</li>
+            <li>Tapping any day, including a spill day, opens its week with that day selected (D18, D9). The crossfade is the same as the toggle's.</li>
+            <li>The month name sits inside the card ("October 2026"). The pill now reads "Current week", which takes you back to today.</li>
+            <li><b>Edges:</b> October is the current month, so a left swipe does nothing: the grid stays where it is, with no bounce. Swiping right goes back month by month to the month you paired (say August 2026), then stops the same way.</li>
+            <li>Spill days outside the paired range (before you paired) are still shown greyed, but tapping them does nothing. Inside the range they open their week.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="dk" data-s="month"></div></div>
+        <div class="note">
+          <h3>5 · October, current month <span class="chip mode" data-ml>Dark</span></h3>
+          <div class="chips"><span class="chip">N5</span></div>
+          <ul>
+            <li>Dark dots are lighter, #79AEFF and #FF7A6E, so they reach 6:1 or more on the dark Surface.</li>
+            <li>On the Accent today cell, the dot rings switch to OnAccent. The cream Outline would almost disappear on yellow.</li>
+            <li>Swiping the grid changes month. The summary updates with it, and its count uses tabular digits so it doesn't jump.</li>
+            <li>VoiceOver reads each day as "Tuesday 27 October, notes from Sam". The grid offers "Next month" and "Previous month" as actions, so the swipe isn't the only way to move.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Note dialog</h2><p class="muted">A dialog over the Notes tab, opening on the tapped note. You can still see the tab behind it, so you stay oriented. To close it, tap ✕ or anywhere on the dimmed area.</p></div>
+    <div class="states">
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="viewer"></div></div>
+        <div class="note">
+          <h3>6 · Viewing note 1 of 3 <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">D4</span><span class="chip">D5</span><span class="chip">N2</span><span class="chip">N7</span></div>
+          <ul>
+            <li>Opened from the first tile in state 1, Sam's 9:20 note, the newest. The card's header has the sender's avatar, "Sam", "Thursday 29 Oct · 9:20 am" and ✕ on the right. That's everything D4 asks for.</li>
+            <li>The card is 374 pt wide with 16 pt padding, so the note is 338 pt square: about twice the tile, with radius 20 and a 2.5 pt Outline. The card is about 450 pt tall and centred.</li>
+            <li>Behind it, the scrim is black at 42% in light mode and 60% in dark mode. The card's Outline keeps it separate from the dark background.</li>
+            <li>Opening: the scrim fades in, and the card fades and scales from 0.96 to 1, both over 0.2 s ease-out. Closing is a 0.15 s fade. With Reduce Motion it's a fade only. There's no haptic and no zoom from the tile.</li>
+            <li>The viewer pages in the grid's order. Swiping left goes to the next page, which is older: 9:20 → 8:05 → 7:12. The pager shows where you are; VoiceOver reads "Note 1 of 3". The sender and time update with each page.</li>
+            <li>No wrap-around: the first and last notes are where the swipe stops. You can't swipe into another day.</li>
+            <li>Closing: ✕ (44 pt) or a tap on the scrim. Swipe down isn't used, because the note area's own horizontal swipe is the only gesture inside the card. Both ways of closing go back to the same grid, unchanged.</li>
+            <li>Room for the later actions: Favourite, Save and Unsend will go in one row of small 44 pt pills under the pager. That adds about 58 pt, making the card about 508 pt, which still centres with plenty of margin on the smallest supported phone. Nothing is drawn for them yet.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="dk" data-s="viewer1"></div></div>
+        <div class="note">
+          <h3>7 · Viewing note 4 of 4, own note <span class="chip mode" data-ml>Dark</span></h3>
+          <div class="chips"><span class="chip">D4</span><span class="chip">D5</span><span class="chip">N2</span><span class="chip">N7</span></div>
+          <ul>
+            <li>Opened from the last tile of Thursday 22 (state 2), your 8:47 note, the oldest that day, so it's page 4 of 4. Swiping left does nothing from here.</li>
+            <li>Your own note shows "You" rather than "Adam", the same wording as the summary line.</li>
+            <li>The note image is identical in both modes. Only the card, scrim and chrome change.</li>
+            <li>VoiceOver treats the card as modal: focus starts on the sender, and an escape gesture (the two-finger scrub) closes it.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>The toggle button</h2><p class="muted">It has to look tappable (D10), so it uses the Small secondary button: a 40 pt Surface pill with a 2 pt Outline and a 44 pt hit area. It gets no Accent fill, because "Make a note" is the screen's one primary action.</p></div>
+    <div class="grid2">
+      <div class="mini lt" data-mode="lt"><small>Light · week view, month view, pressed</small><div class="btnrow" data-btns></div></div>
+      <div class="mini dk" data-mode="dk"><small>Dark · week view, month view, pressed</small><div class="btnrow" data-btns></div></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Behaviour</h3>
+        <ul>
+          <li><b>Week view, "October":</b> opens the month of the selected day. If you've swiped to a week in September, it reads "September".</li>
+          <li><b>Month view, "Current week":</b> always goes to today's week with today selected, whatever month you've swiped to. It's how you get home.</li>
+          <li><b>Long labels:</b> "September" is the widest month name. The pill grows to the left and the title stays put. At accessibility text sizes the title row wraps, and the pill moves under the title, left-aligned.</li>
+          <li><b>VoiceOver:</b> "Show month, October, button" and "Show current week, button".</li>
+          <li><b>Pressed:</b> the fill darkens 6% toward TextPrimary over 0.1 s. No scale, no haptic.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Motion</h3>
+        <div class="frames"><span class="f">Week</span><span class="muted">0.18 s ease-out crossfade</span><span class="f">Month</span></div>
+        <ul>
+          <li>Everything below "Make a note" crossfades. The title, toggle and button stay still; only the toggle's label fades between words.</li>
+          <li>Selecting a day: the ring and the grid fade over 0.15 s.</li>
+          <li>Swipes follow the finger and page. No overshoot. At the paired or current edge the page doesn't move.</li>
+          <li>With Reduce Motion: the crossfade stays, and the dialog's scale is dropped, leaving just the fade.</li>
+          <li>Haptics: none anywhere on this screen. The tab bar's own <code>.selection</code> haptic is unchanged.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Design-system changes for the spec run</h2></div>
+    <div class="panel"><ul>
+      <li><b>design.md §7 (Notes) and §10 (Doodles):</b> the Notes tab has no doodle. Remove "the doodle is the tape on the newest tile" from §7. In §10, <code>doodle-tape</code> has no place left; either drop it or keep it unused for later.</li>
+      <li><b>design.md §6 Note tile:</b> remove "the tape strip sits on the newest tile in the Notes grid only".</li>
+      <li><b>New component, Dialog card:</b> a centred Surface card with radius 28 (radius.sheet), 2.5 pt Outline, 16 pt padding and a 44 pt ✕ icon button. The scrim is black at 42% (light) or 60% (dark). It opens with a 0.2 s fade and 0.96 → 1 scale, ease-out, and closes with a 0.15 s fade. ✕ or a tap on the scrim closes it. No sticker.</li>
+      <li><b>Week strip:</b> add "ring = selected, Accent = today" (N1).</li>
+      <li><b>Tokens:</b> NoteDotMine and NoteDotPartner, below.</li>
+    </ul></div>
+    <div class="stack"><h2>Proposed tokens</h2><p class="muted">The dots carry meaning, so they need 3:1 against the card. NotePaperBlue is too pale for that (1.4:1 on Surface), so I'm proposing two new colour sets. The light red is the existing NoteInkRed, and the dark red is the dark Danger value. They're named for their role so Danger keeps meaning "something went wrong".</p></div>
+    <div class="scroll"><table>
+      <thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>On Surface L / D</th><th>On Accent L / D</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td><span class="sw" style="background:#2F6FDB"></span><b>NoteDotMine</b> <span class="muted">new</span></td><td class="n">#2F6FDB</td><td class="n">#79AEFF</td><td class="n">4.67 / 6.83</td><td class="n">3.02 / 1.49*</td><td>Your notes dot, your count in the legend</td></tr>
+        <tr><td><span class="sw" style="background:#E5483B"></span><b>NoteDotPartner</b> <span class="muted">new</span></td><td class="n">#E5483B</td><td class="n">#FF7A6E</td><td class="n">3.87 / 6.06</td><td class="n">2.51 / 1.67*</td><td>Partner's notes dot, their count in the legend</td></tr>
+      </tbody>
+    </table></div>
+    <p class="muted">* On the today cell, each dot's 1.5 pt OnAccent ring (11.6:1 against Accent) marks the shape, so the fill doesn't have to. Blue and red stay distinct for the common kinds of colour blindness, and position (left = you) backs them up.</p>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Answered in v2</h2><p class="muted">Adam's answers to v1's open questions. There are no open questions left.</p></div>
+    <div class="panel">
+      <ol>
+        <li><b>Q1 · A way back to today:</b> no extra button. Use "October" then "Current week", or swipe.</li>
+        <li><b>Q2 · Tile order:</b> newest first. The viewer swipes in the same order (N2 rewritten).</li>
+        <li><b>Q3 · Sentence case:</b> "Current week".</li>
+        <li><b>Q4 · Swipe range:</b> from the month you paired (<code>pairs.created_at</code>, already in the schema) to the current week or month (N9).</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var PAPER = { y: '#FFE88A', p: '#FFC6D9', b: '#BFDDFF', g: '#C9EDB6', l: '#DCCDFF' };
+  var INK = '#1E2A1A';
+  var ME = { i: 'A', tint: '#BFDDFF', name: 'You' };
+  var SAM = { i: 'S', tint: '#FFC6D9', name: 'Sam' };
+  var F = 'font-family="ui-rounded, Nunito, sans-serif" font-weight="900"';
+  var ART = {
+    heart: function (p) { return '<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="' + p + '"/><path d="M56 82c-20-12-30-22-30-34 0-9 7-15 15-15 7 0 12 4 15 10 3-6 8-10 15-10 8 0 15 6 15 15 0 12-10 22-30 34z" fill="none" stroke="' + INK + '" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><text x="56" y="102" text-anchor="middle" ' + F + ' font-size="14" fill="' + INK + '">miss u</text></svg>'; },
+    sun: function (p) { var r = ''; [0,45,90,135,180,225,270,315].forEach(function (d) { r += '<path d="M56 24v-9" stroke="' + INK + '" stroke-width="3" stroke-linecap="round" transform="rotate(' + d + ' 56 50)"/>'; }); return '<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="' + p + '"/><circle cx="56" cy="50" r="16" fill="#FFC61A" stroke="' + INK + '" stroke-width="3"/>' + r + '<text x="56" y="100" text-anchor="middle" ' + F + ' font-size="13" fill="' + INK + '">gm sleepy</text></svg>'; },
+    photo: function () { return '<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="#7FA7C9"/><rect y="66" width="112" height="46" fill="#5E8A4E"/><circle cx="82" cy="30" r="11" fill="#FFE88A"/><path d="M0 70c20-14 40-14 60-4s38 8 52-2v8H0z" fill="#4B7340"/><text x="56" y="100" text-anchor="middle" ' + F + ' font-size="13" fill="#FFFDF5">walk later?</text></svg>'; },
+    cat: function (p) { return '<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="' + p + '"/><path d="M34 76V44l10 10h24l10-10v32c0 8-10 14-22 14S34 84 34 76z" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linejoin="round"/><circle cx="48" cy="68" r="2.5" fill="' + INK + '"/><circle cx="64" cy="68" r="2.5" fill="' + INK + '"/><text x="56" y="28" text-anchor="middle" ' + F + ' font-size="13" fill="' + INK + '">miso says hi</text></svg>'; },
+    text: function (p) { return '<svg viewBox="0 0 112 112" aria-hidden="true"><rect width="112" height="112" fill="' + p + '"/><text x="56" y="52" text-anchor="middle" ' + F + ' font-size="20" fill="' + INK + '">dinner</text><text x="56" y="76" text-anchor="middle" ' + F + ' font-size="20" fill="#E5483B">at 7?</text></svg>'; }
+  };
+  var IC = {
+    pencil: '<path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5zM13.5 7l3 3"/>',
+    cal: '<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    week: '<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M7 14.5h10"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    phone: '<path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/>',
+    note: '<rect x="4.5" y="3.5" width="15" height="17" rx="3"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4"/>',
+    star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>'
+  };
+  function ic(n) { return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + IC[n] + '</svg>'; }
+  function ava(p, s) { return '<span class="ava s' + s + '" style="background:' + p.tint + '">' + p.i + '</span>'; }
+
+  var sb = '<div class="sb"><span>9:41</span><span><span class="bat"></span></span></div><span class="home"></span>';
+  var tabs = '<div class="tabs"><div class="tab"><span class="pill">' + ic('phone') + '</span>Calling</div><div class="tab on"><span class="pill">' + ic('note') + '</span>Notes</div><div class="tab"><span class="pill">' + ic('star') + '</span>Hobbies</div></div>';
+  function tog(month) { return month ? '<span class="tog" role="button">' + ic('week') + 'Current week</span>' : '<span class="tog" role="button">' + ic('cal') + 'October</span>'; }
+  function head(month) { return '<div class="top"><span class="title">Notes</span>' + tog(month) + '</div><div class="pri">' + ic('pencil') + 'Make a note</div>'; }
+
+  var CUR = [['M',26,['p','b']],['T',27,['l']],['W',28,[]],['T',29,['p','y','b']],['F',30,[]],['S',31,[]],['S',1,[]]];
+  var PREV = [['M',19,['g']],['T',20,['y','p']],['W',21,[]],['T',22,['g','l','y','b']],['F',23,['p']],['S',24,['b','y']],['S',25,['l']]];
+  function strip(days, todayIdx, selIdx) {
+    return '<div class="week">' + days.map(function (d, i) {
+      var c = d[2].slice(0, 3).map(function (k, j) { return '<span style="background:' + PAPER[k] + ';left:' + (j * 2.5) + 'px;top:' + (3 - j * 1.5) + 'px"></span>'; }).join('');
+      return '<div class="day' + (i === todayIdx ? ' today' : '') + (i === selIdx ? ' sel' : '') + '"><i>' + d[0] + '</i><b>' + d[1] + '</b><span class="stackmini">' + c + '</span></div>';
+    }).join('') + '</div>';
+  }
+  function tiles(list) {
+    return '<div class="tiles">' + list.map(function (t, i) {
+      return '<div class="tile">' + t[0] + '<span class="from">' + ava(t[1], 24) + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  var MONTH = { 2:[1,0], 6:[1,1], 10:[0,1], 14:[1,0], 17:[1,0], 19:[1,0], 20:[1,1], 22:[1,1], 23:[0,1], 24:[1,1], 25:[0,1], 26:[1,1], 27:[0,1], 29:[1,1] };
+  function dots(m) { return '<span class="dots"><i class="' + (m && m[0] ? 'me' : 'gap') + '"></i><i class="' + (m && m[1] ? 'sam' : 'gap') + '"></i></span>'; }
+  function month() {
+    var cells = '';
+    'MTWTFSS'.split('').forEach(function (l) { cells += '<div class="wl">' + l + '</div>'; });
+    [[28,[0,0]],[29,[0,1]],[30,[1,0]]].forEach(function (s) { cells += '<div class="md spill">' + s[0] + dots(s[1]) + '</div>'; });
+    for (var d = 1; d <= 31; d++) cells += '<div class="md' + (d === 29 ? ' today' : '') + '">' + d + dots(MONTH[d]) + '</div>';
+    cells += '<div class="md spill">1' + dots(null) + '</div>';
+    return '<div class="mcard"><div class="mh">October 2026</div><div class="mg">' + cells + '</div></div>' +
+      '<div class="sum"><b>23 notes this month</b><span class="lg"><span><i style="background:var(--q-me)"></i>11 from you</span><span><i style="background:var(--q-sam)"></i>12 from Sam</span></span></div>';
+  }
+  function viewer(bg, art, p, when, n, of) {
+    var pg = ''; for (var k = 1; k <= of; k++) pg += '<i' + (k === n ? ' class="on"' : '') + '></i>';
+    return bg + '<div class="scrim"></div><div class="dlg" role="dialog"><div class="hd">' + ava(p, 40) + '<span class="who"><b>' + p.name + '</b><span>' + when + '</span></span><span class="ibtn">' + ic('x') + '</span></div>' +
+      '<div class="tile">' + art + '</div><div class="pager">' + pg + '</div></div>';
+  }
+
+  var S = {
+    weekToday: sb + '<div class="scr">' + head(false) + strip(CUR, 3, 3) + '<div class="dh"><b>Thursday 29</b><span>3 notes</span></div>' +
+      tiles([[ART.sun(PAPER.b), SAM], [ART.photo(), ME], [ART.heart(PAPER.p), SAM]]) + '</div>' + tabs,
+    weekPast: sb + '<div class="scr">' + head(false) + strip(PREV, -1, 3) + '<div class="dh"><b>Thursday 22</b><span>4 notes</span></div>' +
+      tiles([[ART.sun(PAPER.b), SAM], [ART.text(PAPER.y), ME], [ART.heart(PAPER.l), SAM], [ART.cat(PAPER.g), ME]]) + '</div>' + tabs,
+    weekEmpty: sb + '<div class="scr">' + head(false) + strip(CUR, 3, 4) + '<div class="dh"><b>Friday 30</b><span>No notes</span></div><div class="empty">No notes yet</div></div>' + tabs,
+    month: sb + '<div class="scr">' + head(true) + month() + '</div>' + tabs
+  };
+  S.viewer = viewer(S.weekToday, ART.sun(PAPER.b), SAM, 'Thursday 29 Oct · 9:20 am', 1, 3);
+  S.viewer1 = viewer(S.weekPast, ART.cat(PAPER.g), ME, 'Thursday 22 Oct · 8:47 am', 4, 4);
+  document.querySelectorAll('.ph[data-s]').forEach(function (p) { p.innerHTML = S[p.getAttribute('data-s')]; });
+  document.querySelectorAll('[data-btns]').forEach(function (r) { r.innerHTML = tog(false) + tog(true) + tog(false).replace('class="tog"', 'class="tog pressed"'); });
+
+  var phones = document.querySelectorAll('[data-mode]');
+  function apply(m) {
+    phones.forEach(function (p) {
+      var mode = m === 'as' ? p.getAttribute('data-mode') : m;
+      p.classList.remove('lt', 'dk');
+      p.classList.add(mode);
+      var st = p.closest('.state');
+      var lab = st && st.querySelector('[data-ml]');
+      if (lab) lab.textContent = mode === 'lt' ? 'Light' : 'Dark';
+    });
+    document.querySelectorAll('.switch button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-m') === m)); });
+    try { localStorage.setItem('nt-mode', m); } catch (e) {}
+  }
+  document.querySelectorAll('.switch button').forEach(function (b) { b.addEventListener('click', function () { apply(b.getAttribute('data-m')); }); });
+  var saved = 'as';
+  try { saved = localStorage.getItem('nt-mode') || 'as'; } catch (e) {}
+  apply(saved);
+})();
+</script>
