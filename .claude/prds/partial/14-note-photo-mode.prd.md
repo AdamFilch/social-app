@@ -70,7 +70,7 @@ Deny access ─► "Camera is off for buttercup" ─ Open Settings ─► Settin
 | Session start blocks the main thread | Med | Toggle stutters | Start and stop the session on a background queue |
 
 ---
-*Status: PARTIAL — PR #PRNUM*
+*Status: PARTIAL — PR #12*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
