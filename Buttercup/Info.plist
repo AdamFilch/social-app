@@ -18,7 +18,7 @@
 		</dict>
 	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>buttercup uses the camera so your partner can see you on video calls.</string>
+	<string>buttercup uses the camera so your partner can see you on video calls and so you can take photos for notes.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>buttercup uses the microphone so your partner can hear you on calls.</string>
 	<key>NSLocalNetworkUsageDescription</key>

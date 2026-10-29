@@ -179,18 +179,18 @@ Positions are for iPhone 11 (414 × 896, safe top 48, safe bottom 34). On other 
 ### 4.5 Text tab (state 5)
 
 ```
-│┌────────────────────────────────────────┐│ canvas visible 160–432 (272)
+│┌────────────────────────────────────────┐│ canvas visible 160–415 (255)
 ││              hi sam                    ││ live preview
-╞══════════════════════════════════════════╡ tools on keyboard, top 432
-│ ( hi sam|                    ) [ Add ]   │ field + Add, 12 from tools top
-│  ●  ●  (●)  ●  ●  ●  ●  ●  ●  ○ ·  ·     │ one row, scrolls, 64
-│ [Rounded] [Serif] [✓ Handwritten] [Mono] │ font chips, 116
-├──────────────────────────────────────────┤ keyboard top 596
+╞══════════════════════════════════════════╡ tools on keyboard, top 415
+│ ( hi sam|                    ) [ Add ]   │ field + Add, 4 from tools top
+│  ●  ●  (●)  ●  ●  ●  ●  ●  ●  ○ ·  ·     │ one row, scrolls, 48
+│ [Rounded] [Serif] [✓ Handwritten] [Mono] │ font chips, 92
+├──────────────────────────────────────────┤ keyboard top 551 (iOS 26)
 │              system keyboard             │
 ```
 
-- **With the keyboard up:** the text tools are a Surface panel, 164 tall, full width, top corners radius 28, sitting on the keyboard (top 432 on iPhone 11, following the keyboard layout guide). It covers the lower part of the canvas, leaving 272 pt visible (160 to 432).
-- **With the keyboard down:** the same three rows sit under the tab row at 630 (field), 682 (dots), 734 (chips), on the screen's Background. The tab row is visible.
+- **With the keyboard up:** the text tools are a Surface panel, 136 tall (4 pt top padding, then three 44 pt rows with no gaps), full width, top corners radius 28, sitting on the keyboard (top 415 on iPhone 11 with the iOS 26 keyboard, following the keyboard layout guide). It covers the lower part of the canvas, leaving 255 pt visible (160 to 415).
+- **With the keyboard down:** the same three rows sit under the tab row at 622 (field), 666 (dots), 710 (chips), on the screen's Background. The tab row is visible.
 - **Row 1, field and Add:**
   - Text field: as in-call §4.7. 48 tall, pill, Background fill, 2 pt Outline, `.body.weight(.semibold)`, placeholder "Type something", 30 characters, submit label `.done`.
   - Add: 10 pt from the field, 48 tall, Accent, 2.5 pt Outline, `.headline`, **no sticker shadow** (R8). Disabled while the trimmed text is empty.
@@ -363,7 +363,7 @@ These are content colours: the same in both modes, because they are part of the 
 | Emoji strip | 2 rows × 72, gap 4, top 628; chips 808 | — |
 | Text tools, keyboard up | 164 tall, top 432; field 12, dots 64, chips 116 | 28 top |
 | Text tools, keyboard down | field 630, dots 682–726, chips 734–778 | — |
-| Visible canvas, keyboard up | 160 to 432 (272) | — |
+| Visible canvas, keyboard up | 160 to 415 (255) | — |
 | Camera row | centred y 692; flash and flip 44, shutter 76, gaps 56 | full |
 | Selection outline | 2.5, 8 out | 16 |
 | Trash badge | 32 / 44, on the outline's corner | full |
@@ -477,7 +477,7 @@ Draw and tabs
 
 Text
 - [ ] Text tab: field + Add (no shadow), one sideways-scrolling row of the same 10 dots, four font chips each drawn in its own font (SF Pro Rounded, New York, Noteworthy, SF Mono).
-- [ ] With the keyboard up, the text tools sit on the keyboard (164 tall on iPhone 11) and at least 272 pt of the canvas stays visible; the text previews live in that area in the chosen font and colour with the 7 pt Ink outline.
+- [ ] With the keyboard up, the text tools sit on the keyboard (136 tall on iPhone 11) and at least 255 pt of the canvas stays visible; the text previews live in that area in the chosen font and colour with the Ink outline (3.5 pt visible).
 - [ ] Add places the text where it previewed, selected; Add is disabled for empty text; 30 character limit.
 
 Photo
