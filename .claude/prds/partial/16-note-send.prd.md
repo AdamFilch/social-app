@@ -47,13 +47,13 @@ Offline ─ Send ─► toast "Sends when you're back online" ─► sent later 
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: Send is at 40% with no shadow on an empty note, and live with the shadow after a stroke, sticker, text or photo.
+- [x] AC1: Send is at 40% with no shadow on an empty note, and live with the shadow after a stroke, sticker, text or photo.
 - [ ] AC2: Send closes the cover at once. The toast "Sent to Partner" shows 12 pt above the tab bar with the success haptic, and fades as timed.
-- [ ] AC3: The uploaded image is 1000 × 1000 HEIC and matches the canvas: no outline, hint, selection outline or trash badge, and stickers and text are in the right place and size.
+- [x] AC3: The uploaded image is 1000 × 1000 HEIC and matches the canvas: no outline, hint, selection outline or trash badge, and stickers and text are in the right place and size.
 - [ ] AC4: With the Mac's Wi-Fi off, the toast reads "Sends when you're back online", and after Wi-Fi comes back the note uploads once.
-- [ ] AC4b: With `supabase stop`, the toast reads "Sent to Partner" (the network path is fine, the known risk in [15]). After `supabase start`, backgrounding and reopening the app uploads the note once.
+- [x] AC4b: With `supabase stop`, the toast reads "Sent to Partner" (the network path is fine, the known risk in [15]). After `supabase start`, backgrounding and reopening the app uploads the note once.
 - [ ] AC5: VoiceOver announces the toast text, and Send's label is "Send to {partner}".
-- [ ] AC6: The build check passes, and an end-to-end send is checked with the seed users.
+- [x] AC6: The build check passes, and an end-to-end send is checked with the seed users.
 
 ## Features Catalog
 - **Extends**: #2 Notes widget
@@ -64,4 +64,19 @@ Offline ─ Send ─► toast "Sends when you're back online" ─► sent later 
 | Rendered text or sticker positions drift from the screen | Med | Note looks different | Render from the same `NoteItem` fractions, and check AC3 against a screenshot |
 
 ---
-*Status: READY — ticket [16]*
+*Status: PARTIAL — PR #PENDING*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | iPhone 17 Pro sim as adam: empty cover has no Send target (disabled, 40%, no shadow, screenshot); Send became "Send to Partner" and live with the shadow after a stroke alone, a sticker alone, an added text alone and a photo alone (`-notePhotoStub YES`). Unadded preview text does not enable it |
+| AC2 | ⚠️ unverified (haptic only) | Cover closes at once; "Sent to Partner" toast with `checkmark` sits 12.3 pt above the tab bar (screenshot at 3x: toast bottom 2332 px, bar top 2369 px); visible at 0.8 s, gone by 3.8 s; a tap fades it at once. The `.success` haptic is wired (`sensoryFeedback(.success, trigger: toastCount)`) but the Simulator can't play haptics |
+| AC3 | ✅ done | Downloaded `11111111…/82d9ca27….heic` from local Storage: `sips` 1000 × 1000, format heic. No outline, hint, selection outline or trash, though the text was selected when Send was tapped. Feature bounding boxes as fractions of the side, screen vs upload: cross 0.280–0.720 / 0.350–0.650 on both; emoji 0.850–0.992 vs 0.850–0.998; text 0.312–0.642 / 0.948–0.992 vs 0.312–0.640 / 0.948–0.994. Colours match once the P3-tagged HEIC is converted to sRGB (heart 241,117,92 on both). The photo note (`88340bf7…`) also matches |
+| AC4 | ⚠️ unverified | Needs the Mac's Wi-Fi off and on by a person |
+| AC4b | ✅ done | `supabase stop` → sticker note sent → toast "Sent to Partner"; `supabase start` → still 2 adam rows; Home, then reopen (same pid) → row and object `6eba35d0…` appear once |
+| AC5 | ⚠️ unverified (announcement only) | Send's accessibility label reads "Send to Partner" (UI snapshot). The toast posts `AccessibilityNotification.Announcement(message)` and is hidden from VoiceOver focus, but VoiceOver can't be heard in the Simulator |
+| AC6 | ✅ done | `supabase db reset && supabase test db` PASS, `supabase db lint` no schema errors, build check `BUILD SUCCEEDED`; end-to-end sends as adam created one `notes` row and one object each |
+
+### Needs attention
+- On a device or with VoiceOver: confirm the `.success` haptic plays when the toast appears (AC2) and that VoiceOver speaks the toast text (AC5).
+- AC4 by hand: Notes tab → turn the Mac's Wi-Fi off → send a note → toast "Sends when you're back online" → Wi-Fi on → exactly one new row in `notes`. The same run also closes [15] AC2.
