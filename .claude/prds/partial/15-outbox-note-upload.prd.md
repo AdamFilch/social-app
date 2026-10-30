@@ -85,7 +85,7 @@ insert succeeded, app killed before the action was deleted ─► next launch �
 | `NWPathMonitor` says online but the server is unreachable | Med | Toast says "Sent" while it's queued | Acceptable: the flusher still delivers. The toast text reflects the network path only (spec §3.8) |
 
 ---
-*Status: PARTIAL — PR #TBD*
+*Status: PARTIAL — PR #13*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
