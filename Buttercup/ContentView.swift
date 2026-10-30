@@ -74,13 +74,30 @@ struct ContentView: View {
 struct NotesTab: View {
     @Environment(SessionStore.self) private var session
     @State private var isComposing = false
+    #if DEBUG
+    @Environment(NotesStore.self) private var notes: NotesStore?
+    @State private var testResult = ""
+    #endif
 
     var body: some View {
-        Button("Make a note") { isComposing = true }
-            .buttonStyle(PillButtonStyle(sticker: true))
-            .fullScreenCover(isPresented: $isComposing) {
-                NewNoteView(partnerName: session.partner?.displayName ?? "")
+        VStack(spacing: 16) {
+            Button("Make a note") { isComposing = true }
+                .buttonStyle(PillButtonStyle(sticker: true))
+            #if DEBUG
+            Button("Send test note") {
+                let image = UIGraphicsImageRenderer(size: CGSize(width: 1000, height: 1000)).image { context in
+                    UIColor.systemYellow.setFill()
+                    context.fill(CGRect(x: 0, y: 0, width: 1000, height: 1000))
+                }
+                testResult = (try? notes?.send(imageData: image.heicData() ?? Data())).map { "\($0)" } ?? "failed"
             }
+            Button("Resend latest note") { notes?.resendLatest() }
+            Text(testResult)
+            #endif
+        }
+        .fullScreenCover(isPresented: $isComposing) {
+            NewNoteView(partnerName: session.partner?.displayName ?? "")
+        }
     }
 }
 
