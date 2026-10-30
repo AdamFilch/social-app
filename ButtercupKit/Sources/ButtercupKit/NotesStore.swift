@@ -38,13 +38,4 @@ public final class NotesStore {
         outbox.enqueue(OutboxAction(sendNote: .init(noteId: note.id, imagePath: note.imagePath)))
         return result
     }
-
-    #if DEBUG
-    public func resendLatest() {
-        var latest = FetchDescriptor<Note>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)])
-        latest.fetchLimit = 1
-        guard let note = try? outbox.context.fetch(latest).first else { return }
-        outbox.enqueue(OutboxAction(sendNote: .init(noteId: note.id, imagePath: note.imagePath)))
-    }
-    #endif
 }

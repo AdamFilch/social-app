@@ -1,3 +1,4 @@
+import ButtercupKit
 import SwiftUI
 
 enum NoteTab: CaseIterable {
@@ -16,6 +17,8 @@ enum NoteTab: CaseIterable {
 
 struct NewNoteView: View {
     let partnerName: String
+    let onSent: (NoteSendResult) -> Void
+    @Environment(NotesStore.self) private var notes
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -219,11 +222,11 @@ struct NewNoteView: View {
             HStack {
                 IconCircleButton(symbol: "xmark", label: "Close") { confirm { dismiss() } }
                 Spacer()
-                Button("Send") {}
+                Button("Send", action: send)
                     .buttonStyle(PillButtonStyle(height: 44, sticker: true))
-                    .disabled(true)
+                    .disabled(!draft.hasProgress)
                     .accessibilityLabel("Send to \(partnerName)")
-                    .accessibilityHint("Draw or add something first")
+                    .accessibilityHint(draft.hasProgress ? "" : "Draw or add something first")
                     .padding(.trailing, 3)
             }
             .frame(height: 44)
@@ -299,6 +302,14 @@ struct NewNoteView: View {
             }
     }
 
+    private func send() {
+        draft.selection = nil
+        guard let image = NoteRenderer.heic(draft, side: canvasFrame.width),
+              let result = try? notes.send(imageData: image) else { return }
+        onSent(result)
+        dismiss()
+    }
+
     private func confirm(_ action: @escaping () -> Void) {
         if draft.hasProgress {
             pendingDiscard = action
@@ -309,5 +320,5 @@ struct NewNoteView: View {
 }
 
 #Preview {
-    NewNoteView(partnerName: "Sam")
+    NewNoteView(partnerName: "Sam") { _ in }
 }
