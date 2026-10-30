@@ -5,7 +5,7 @@
 This ticket makes **Send** work. Once the note has anything on it, Send turns yellow with its sticker shadow. Tapping it clears the selection, flattens the canvas into one 1000 × 1000 image (photo, strokes, stickers and text, without the outline, hint or trash), hands it to the outbox from [15], and closes the screen at once. On the screen underneath, a quiet toast says "Sent to Sam", or "Sends when you're back online" if the phone is offline, with the success haptic.
 
 ## Summary
-Adds `NoteRenderer` (draft → 1000 × 1000 HEIC via `ImageRenderer`), connects Send to `NotesStore.send`, and adds `NoteToast`, shown by the app root above the tab bar. Removes the DEBUG "Send test note" button from [15].
+Adds `NoteRenderer` (draft → 1000 × 1000 HEIC via `ImageRenderer`), connects Send to `NotesStore.send`, and adds `NoteToast`, shown by the app root above the tab bar. Removes the DEBUG "Send test note" and "Resend latest note" buttons and `NotesStore.resendLatest()` from [15].
 
 ## Scope
 **MVP**
@@ -41,7 +41,8 @@ Offline ─ Send ─► toast "Sends when you're back online" ─► sent later 
 | `Buttercup/Notes/NoteRenderer.swift` | **new** |
 | `Buttercup/Notes/NoteToast.swift` | **new** |
 | `Buttercup/Notes/NewNoteView.swift` | Send wiring |
-| `Buttercup/ContentView.swift` | toast overlay; remove the DEBUG button |
+| `Buttercup/ContentView.swift` | toast overlay; remove the DEBUG "Send test note" and "Resend latest note" buttons |
+| `ButtercupKit/Sources/ButtercupKit/NotesStore.swift` | remove the DEBUG `resendLatest()` |
 
 ---
 
@@ -49,7 +50,8 @@ Offline ─ Send ─► toast "Sends when you're back online" ─► sent later 
 - [ ] AC1: Send is at 40% with no shadow on an empty note, and live with the shadow after a stroke, sticker, text or photo.
 - [ ] AC2: Send closes the cover at once. The toast "Sent to Partner" shows 12 pt above the tab bar with the success haptic, and fades as timed.
 - [ ] AC3: The uploaded image is 1000 × 1000 HEIC and matches the canvas: no outline, hint, selection outline or trash badge, and stickers and text are in the right place and size.
-- [ ] AC4: With the local stack stopped, the toast reads "Sends when you're back online". After `supabase start` the note uploads once.
+- [ ] AC4: With the Mac's Wi-Fi off, the toast reads "Sends when you're back online", and after Wi-Fi comes back the note uploads once.
+- [ ] AC4b: With `supabase stop`, the toast reads "Sent to Partner" (the network path is fine, the known risk in [15]). After `supabase start`, backgrounding and reopening the app uploads the note once.
 - [ ] AC5: VoiceOver announces the toast text, and Send's label is "Send to {partner}".
 - [ ] AC6: The build check passes, and an end-to-end send is checked with the seed users.
 
