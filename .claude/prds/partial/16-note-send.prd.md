@@ -64,7 +64,7 @@ Offline ─ Send ─► toast "Sends when you're back online" ─► sent later 
 | Rendered text or sticker positions drift from the screen | Med | Note looks different | Render from the same `NoteItem` fractions, and check AC3 against a screenshot |
 
 ---
-*Status: PARTIAL — PR #PENDING*
+*Status: PARTIAL — PR #14*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
