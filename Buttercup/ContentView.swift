@@ -25,6 +25,8 @@ struct ContentView: View {
     @Environment(SessionStore.self) private var session
     @Environment(CallStore.self) private var calls
     @State private var selection: AppTab = .calling
+    @State private var toast: NoteSendResult?
+    @State private var toastCount = 0
 
     var body: some View {
         TabView(selection: $selection) {
@@ -35,7 +37,7 @@ struct ContentView: View {
                         case .calling:
                             CallingView()
                         case .notes:
-                            NotesTab()
+                            NotesTab(onSent: showToast)
                         case .hobbies:
                             Text(tab.title)
                         }
@@ -44,8 +46,25 @@ struct ContentView: View {
                 }
             }
         }
+        .overlay(alignment: .bottom) {
+            if let toast {
+                NoteToast(
+                    message: toastMessage(toast),
+                    symbol: toast == .online ? "checkmark" : "wifi.slash"
+                )
+                .padding(.bottom, 12)
+                .onTapGesture { withAnimation(.easeOut(duration: 0.2)) { self.toast = nil } }
+                .transition(.opacity)
+            }
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             TabBar(selection: $selection)
+        }
+        .sensoryFeedback(.success, trigger: toastCount)
+        .task(id: toastCount) {
+            guard toast != nil else { return }
+            try? await Task.sleep(for: .seconds(2.65))
+            withAnimation(.easeOut(duration: 0.2)) { toast = nil }
         }
         .accessibilityHidden(calls.showsCallScreen)
         .overlay {
@@ -65,6 +84,16 @@ struct ContentView: View {
         .task { await calls.listen() }
     }
 
+    private func toastMessage(_ result: NoteSendResult) -> String {
+        result == .online ? "Sent to \(session.partner?.displayName ?? "")" : "Sends when you're back online"
+    }
+
+    private func showToast(_ result: NoteSendResult) {
+        withAnimation(.easeOut(duration: 0.15)) { toast = result }
+        toastCount += 1
+        AccessibilityNotification.Announcement(toastMessage(result)).post()
+    }
+
     private var failureMessage: String {
         let name = session.partner?.displayName ?? ""
         return calls.failure == .busy ? "\(name) is on another call" : "Couldn't reach \(name). Try again"
@@ -73,31 +102,19 @@ struct ContentView: View {
 
 struct NotesTab: View {
     @Environment(SessionStore.self) private var session
+    let onSent: (NoteSendResult) -> Void
     @State private var isComposing = false
-    #if DEBUG
-    @Environment(NotesStore.self) private var notes: NotesStore?
-    @State private var testResult = ""
-    #endif
+    @State private var sent: NoteSendResult?
 
     var body: some View {
-        VStack(spacing: 16) {
-            Button("Make a note") { isComposing = true }
-                .buttonStyle(PillButtonStyle(sticker: true))
-            #if DEBUG
-            Button("Send test note") {
-                let image = UIGraphicsImageRenderer(size: CGSize(width: 1000, height: 1000)).image { context in
-                    UIColor.systemYellow.setFill()
-                    context.fill(CGRect(x: 0, y: 0, width: 1000, height: 1000))
-                }
-                testResult = (try? notes?.send(imageData: image.heicData() ?? Data())).map { "\($0)" } ?? "failed"
+        Button("Make a note") { isComposing = true }
+            .buttonStyle(PillButtonStyle(sticker: true))
+            .fullScreenCover(isPresented: $isComposing) {
+                if let sent { onSent(sent) }
+                sent = nil
+            } content: {
+                NewNoteView(partnerName: session.partner?.displayName ?? "") { sent = $0 }
             }
-            Button("Resend latest note") { notes?.resendLatest() }
-            Text(testResult)
-            #endif
-        }
-        .fullScreenCover(isPresented: $isComposing) {
-            NewNoteView(partnerName: session.partner?.displayName ?? "")
-        }
     }
 }
 

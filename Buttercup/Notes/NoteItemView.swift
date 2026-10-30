@@ -18,8 +18,6 @@ struct NoteItemView: View {
 
     private var scale: CGFloat { NoteItem.clampScale(item.scale * magnification) }
 
-    private var size: CGFloat { side * NoteItem.baseSize * scale }
-
     private var rotation: Angle { item.rotation + turn }
 
     var body: some View {
@@ -69,16 +67,8 @@ struct NoteItemView: View {
             .accessibilityAction(named: "Move right") { nudge(0.05, 0) }
     }
 
-    @ViewBuilder
     private var content: some View {
-        switch item.kind {
-        case .sticker(let name):
-            Stickers.image(name).resizable().scaledToFit().frame(width: size, height: size)
-        case .emoji(let emoji):
-            Text(emoji).font(.system(size: size * 0.8)).frame(width: size, height: size)
-        case .text(let text, let font, let colour):
-            TextSticker(text: text, font: font, colour: colour, size: side * NoteItem.textSize * scale)
-        }
+        NoteItemContent(kind: item.kind, side: side, scale: scale)
     }
 
     private var edit: some Gesture {
@@ -125,6 +115,24 @@ struct NoteItemView: View {
 
     private func nudge(_ dx: CGFloat, _ dy: CGFloat) {
         item.center = NoteItem.clampCenter(CGPoint(x: item.center.x + dx, y: item.center.y + dy))
+    }
+}
+
+struct NoteItemContent: View {
+    let kind: NoteItem.Kind
+    let side: CGFloat
+    let scale: CGFloat
+
+    var body: some View {
+        let size = side * NoteItem.baseSize * scale
+        switch kind {
+        case .sticker(let name):
+            Stickers.image(name).resizable().scaledToFit().frame(width: size, height: size)
+        case .emoji(let emoji):
+            Text(emoji).font(.system(size: size * 0.8)).frame(width: size, height: size)
+        case .text(let text, let font, let colour):
+            TextSticker(text: text, font: font, colour: colour, size: side * NoteItem.textSize * scale)
+        }
     }
 }
 
