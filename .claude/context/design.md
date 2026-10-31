@@ -271,6 +271,14 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 
 - Accent fill for the one selected tab or tool. Outline ring for the selected colour. Divider disc for the current category chip. Never two Accent selections in one row.
 
+### Dialog card
+
+- A centred Surface card, 20 pt from the screen edges, radius 28 (radius.sheet), with a 2.5 pt Outline, 16 pt padding and 14 pt between rows. There's no sticker and no blurred shadow.
+- The scrim is black at 42% (light) or 60% (dark) and covers the tab bar.
+- It closes with a 44 pt ✕ Icon circle button or a tap on the scrim.
+- It opens with a 0.2 s ease-out fade and a 0.96 → 1 scale, and closes with a 0.15 s fade. With Reduce Motion it's a fade only.
+- First use: the Notes note dialog.
+
 ## 7. Screens (as mocked up)
 
 - **Calling:**

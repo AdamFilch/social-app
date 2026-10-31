@@ -13,6 +13,7 @@ struct NotesTab: View {
     @Environment(NotesStore.self) private var store
     @Environment(\.scenePhase) private var scenePhase
     let onSent: (NoteSendResult) -> Void
+    @Binding var open: OpenNotes?
     @State private var isComposing = false
     @State private var sent: NoteSendResult?
     @State private var today = Self.calendar.startOfDay(for: .now)
@@ -49,7 +50,8 @@ struct NotesTab: View {
                 day: selectedDay,
                 notes: failedWeek == week ? nil : loaded[week].map { $0.filter { Self.calendar.isDate($0.createdAt, inSameDayAs: selectedDay) } },
                 failed: failedWeek == week,
-                retry: { refresh += 1 }
+                retry: { refresh += 1 },
+                open: $open
             )
             .id(selectedDay)
             .transition(.opacity)
