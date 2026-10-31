@@ -124,7 +124,7 @@ month view ─ tap "Current week" ─► current week, today selected
 | Month cells overflow on iPhone SE at large text | Med | Clipped numbers | Cap at `.accessibility1` and use the Large Content Viewer, per §9 |
 
 ---
-*Status: PARTIAL — PR #<pending>*
+*Status: PARTIAL — PR #19*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
