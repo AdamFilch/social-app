@@ -38,7 +38,7 @@ public final class Outbox {
 
     let container: ModelContainer
     var context: ModelContext { container.mainContext }
-    private let client: SupabaseClient
+    let client: SupabaseClient
     private let monitor = NWPathMonitor()
     private var flushing = false
     private var again = false

@@ -102,9 +102,13 @@ struct ContentView: View {
 
 struct NotesTab: View {
     @Environment(SessionStore.self) private var session
+    @Environment(NotesStore.self) private var notes
     let onSent: (NoteSendResult) -> Void
     @State private var isComposing = false
     @State private var sent: NoteSendResult?
+    #if DEBUG
+    @State private var debugText = ""
+    #endif
 
     var body: some View {
         Button("Make a note") { isComposing = true }
@@ -115,7 +119,24 @@ struct NotesTab: View {
             } content: {
                 NewNoteView(partnerName: session.partner?.displayName ?? "") { sent = $0 }
             }
+            #if DEBUG
+            .overlay(alignment: .bottom) { Text(debugText).fixedSize().offset(y: 60) }
+            .task {
+                await loadDebug()
+                for await _ in notes.changes() { await loadDebug() }
+            }
+            #endif
     }
+
+    #if DEBUG
+    private func loadDebug() async {
+        guard let week = Calendar.current.dateInterval(of: .weekOfYear, for: .now),
+              let rows = try? await notes.notes(in: week) else { return }
+        var loaded = 0
+        for row in rows where await notes.image(for: row) != nil { loaded += 1 }
+        debugText = "\(rows.count) notes this week · \(loaded) images loaded"
+    }
+    #endif
 }
 
 struct TabBar: View {
