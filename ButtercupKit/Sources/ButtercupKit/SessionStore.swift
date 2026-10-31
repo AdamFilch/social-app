@@ -30,6 +30,7 @@ public final class SessionStore {
     public private(set) var state: State = .loading
     public private(set) var me: Profile?
     public private(set) var partner: Profile?
+    public private(set) var pairedAt: Date?
     public var inviteError: String?
     private var pendingInviteCode: String?
 
@@ -45,12 +46,15 @@ public final class SessionStore {
         guard let user = try? await client.auth.session.user else {
             me = nil
             partner = nil
+            pairedAt = nil
             state = .signedOut
             return
         }
         guard let profiles: [Profile] = try? await client.from("profiles").select().execute().value else { return }
         me = profiles.first { $0.id == user.id }
         partner = profiles.first { $0.id != user.id }
+        let pairs: [[String: Date]]? = try? await client.from("pairs").select("created_at").execute().value
+        pairedAt = pairs?.first?["created_at"]
         if me?.displayName.isEmpty ?? true {
             state = .needsName
         } else if partner == nil {

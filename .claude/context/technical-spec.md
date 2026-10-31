@@ -272,7 +272,7 @@ Actions that touch several rows run as one function, so they fully succeed or fu
   1. The editor flattens the note into one 1000 × 1000 HEIC (about 150 KB). Offline, it waits in the App Group with its outbox entry.
   2. Uploaded to the private Storage bucket `notes` at `{sender_id}/{note_id}.heic`, then the `notes` row is inserted.
   3. `push-partner` sends "New note from Adam" (no image) and a WidgetKit push.
-  4. The partner's app downloads it with a short-lived signed URL, caches it, and writes a small thumbnail to the App Group for the widget.
+  4. The partner's app lists rows with `NotesStore.notes(in:)` (one date range, newest first, unsent ones left out), downloads each image with an authenticated `storage.from("notes").download(path:)` under the bucket's select policy, and caches it in memory (`NSCache`, keyed by note id). `NotesStore.changes()` signals any insert or update on `notes` over realtime, and the caller refetches its range. Writing a small thumbnail to the App Group for the widget comes later.
   5. Storage rules: the sender writes to their own folder; the sender and their partner can read.
   6. `unsend_note` deletes the file. Copies saved to Photos stay.
   7. The free 1 GB holds roughly 6,500 notes.

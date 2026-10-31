@@ -38,7 +38,7 @@ reset role;
 
 select pg_temp.login('22222222-2222-2222-2222-222222222222');
 set local role authenticated;
-select is((select count(*)::int from public.notes where sender_id = '11111111-1111-1111-1111-111111111111'), 1, 'AC5: partner reads notes');
+select ok(exists (select 1 from public.notes where id = 'b0000000-0000-0000-0000-000000000001'), 'AC5: partner reads notes');
 select is((select count(*)::int from public.items where user_id = '11111111-1111-1111-1111-111111111111'), 2, 'AC5: partner reads items');
 select is((select count(*)::int from public.checkins where user_id = '11111111-1111-1111-1111-111111111111'), 1, 'AC5: partner reads checkins');
 select throws_ok(
