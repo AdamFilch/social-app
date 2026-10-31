@@ -96,7 +96,7 @@ Paste spec §12 item 4 (the new Dialog card component) into `design.md` §6.
 | Paged `TabView` gestures fight the scrim tap | Low | Taps on the note close the dialog | Put the scrim tap only on the area outside the card |
 
 ---
-*Status: PARTIAL — PR #PRNUM*
+*Status: PARTIAL — PR #18*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
