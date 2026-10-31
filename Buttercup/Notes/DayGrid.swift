@@ -10,6 +10,7 @@ struct DayGrid: View {
     let notes: [NoteRecord]?
     let failed: Bool
     let retry: () -> Void
+    @Binding var open: OpenNotes?
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showsSpinner = false
 
@@ -35,6 +36,10 @@ struct DayGrid: View {
                     .padding(.bottom, 24)
             }
         }
+        .onChange(of: notes?.map(\.id)) {
+            guard let notes, let current = open?.current else { return }
+            if notes.contains(where: { $0.id == current }) { open?.notes = notes } else { open = nil }
+        }
     }
 
     @ViewBuilder private var content: some View {
@@ -57,7 +62,11 @@ struct DayGrid: View {
                     .padding(.top, 56)
             } else {
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: typeSize.isAccessibilitySize ? 1 : 2), spacing: 16) {
-                    ForEach(notes) { NoteTile(note: $0) }
+                    ForEach(notes) { note in
+                        Button { open = OpenNotes(notes: notes, current: note.id) } label: { NoteTile(note: note) }
+                            .buttonStyle(.plain)
+                            .accessibilityHint("Opens the note")
+                    }
                 }
             }
         } else {

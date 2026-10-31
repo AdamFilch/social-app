@@ -27,6 +27,7 @@ struct ContentView: View {
     @State private var selection: AppTab = .calling
     @State private var toast: NoteSendResult?
     @State private var toastCount = 0
+    @State private var openNotes: OpenNotes?
 
     var body: some View {
         TabView(selection: $selection) {
@@ -37,7 +38,7 @@ struct ContentView: View {
                         case .calling:
                             CallingView()
                         case .notes:
-                            NotesTab(onSent: showToast)
+                            NotesTab(onSent: showToast, open: $openNotes)
                         case .hobbies:
                             Text(tab.title)
                         }
@@ -59,6 +60,17 @@ struct ContentView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             TabBar(selection: $selection)
+        }
+        .accessibilityHidden(openNotes != nil)
+        .overlay {
+            DialogCard(isPresented: Binding(get: { openNotes != nil }, set: { if !$0 { openNotes = nil } })) {
+                if let open = openNotes {
+                    NoteDialog(
+                        notes: open.notes,
+                        current: Binding(get: { openNotes?.current ?? open.current }, set: { openNotes?.current = $0 })
+                    ) { openNotes = nil }
+                }
+            }
         }
         .sensoryFeedback(.success, trigger: toastCount)
         .task(id: toastCount) {
