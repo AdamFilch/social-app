@@ -118,4 +118,4 @@ supabase db reset ─► seed rows ─► images uploaded ─► tab shows real 
 | Relative seed timestamps cross midnight in UTC vs the phone's zone | Low | A note lands on the next or previous day | Times are between 7 am and 9 pm; acceptable for test data |
 
 ---
-*Status: COMPLETED — PR #TBD*
+*Status: COMPLETED — PR #15*
