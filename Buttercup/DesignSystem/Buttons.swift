@@ -14,8 +14,10 @@ struct PressableButtonStyle: ButtonStyle {
 
 struct PillButtonStyle: ButtonStyle {
     enum Kind { case primary, secondary }
+    enum Size { case regular, small }
 
     var kind: Kind = .primary
+    var size: Size = .regular
     var height: CGFloat = 52
     var sticker = false
     @Environment(\.isEnabled) private var isEnabled
@@ -23,11 +25,13 @@ struct PillButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let primary = kind == .primary
         let pressed = configuration.isPressed
+        let small = size == .small
         configuration.label
-            .font(.headline)
+            .font(small ? .subheadline.bold() : .headline)
             .foregroundStyle(Color(primary ? "OnAccent" : "TextPrimary"))
-            .padding(.horizontal, 20)
-            .frame(minWidth: 84, minHeight: height)
+            .padding(.leading, small ? 12 : 20)
+            .padding(.trailing, small ? 14 : 20)
+            .frame(minWidth: small ? nil : 84, minHeight: small ? 40 : height)
             .background {
                 Capsule()
                     .fill(Color(primary ? "Accent" : "Surface"))
@@ -35,7 +39,7 @@ struct PillButtonStyle: ButtonStyle {
                         Capsule().fill(Color(primary ? "OnAccent" : "TextPrimary").opacity(pressed ? (primary ? 0.12 : 0.06) : 0))
                     }
             }
-            .overlay(Capsule().strokeBorder(Color("Outline"), lineWidth: 2.5))
+            .overlay(Capsule().strokeBorder(Color("Outline"), lineWidth: small ? 2 : 2.5))
             .background {
                 if sticker && isEnabled {
                     Capsule()
@@ -43,7 +47,8 @@ struct PillButtonStyle: ButtonStyle {
                         .offset(x: pressed ? 0 : 3, y: pressed ? 0 : 3)
                 }
             }
-            .contentShape(Capsule())
+            .padding(.vertical, small ? 2 : 0)
+            .contentShape(small ? AnyShape(.rect) : AnyShape(Capsule()))
             .opacity(isEnabled ? 1 : 0.4)
             .animation(.easeOut(duration: 0.1), value: pressed)
     }

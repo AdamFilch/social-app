@@ -38,9 +38,11 @@ Small size only, and it only ever shows **your partner's** notes. You pick a mod
 
 ## Calendar
 
-- A month view in the app. Each day with notes shows them as **small stacked cards**, and it includes **both of your notes**.
-- **Tap a day** to open a dialog with all of that day's notes in time order, showing who sent each one.
-- From the dialog you can favourite a note, save it to Photos, or unsend it if it's yours and still allowed.
+- The Notes tab shows a week strip with the selected day's notes (newest first) and a month calendar with a dot for each person who sent a note that day.
+- Tapping a month day opens its week.
+- Tapping a note opens a dialog that pages through that day's notes.
+- Favourite, Save and Unsend come in a later ticket.
+- Full design: [notes-tab.md](../design/specs/notes-tab.md).
 - "Today" and day boundaries follow each phone's own time zone (assumed).
 
 ## Favourites and saving

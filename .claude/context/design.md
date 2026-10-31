@@ -47,6 +47,8 @@ The six existing asset-catalog names first, then proposed additions (*new*). Eac
 | Divider *new* | #EDE6CC | #3A342D | 1.5 pt row dividers inside list groups |
 | CallFrost *new* | n/a | #342F29 at 55% | Fill of frosted call controls, over `.ultraThinMaterial` (dark). Call chrome only |
 | OnDanger *new* | n/a | #1B1814 | Symbol on a Danger fill (End call). Call chrome only |
+| NoteDotMine *new* | #2F6FDB | #79AEFF | Dot and legend for your own notes in the Notes month view |
+| NoteDotPartner *new* | #E5483B | #FF7A6E | Dot and legend for your partner's notes in the Notes month view |
 
 **NotePaper pastels** (*new*, the same in both modes because they are part of the note image):
 
@@ -88,11 +90,17 @@ Avatar tints are per person, not per device: each person keeps the same tint on 
 | Divider | Surface | n/a | 1.23 | 1.25 |
 | TextPrimary (light) | each NotePaper | 4.5 | 10.15–12.25 | same |
 | OnDanger | Danger | 4.5 | n/a | 6.9 |
+| NoteDotMine | Surface | 3 (non-text) | 4.67 | 6.83 |
+| NoteDotPartner | Surface | 3 (non-text) | 3.87 | 6.06 |
+| NoteDotMine | Accent | n/a* | 3.02 | 1.49 |
+| NoteDotPartner | Accent | n/a* | 2.51 | 1.67 |
 | TextPrimary (dark) | CallFrost over white video (≈#8F8B86) | 3 (non-text) | n/a | 3.1 |
 
 Everything passes AA. Two pairs are low on purpose:
 - **Accent on Background (light)** is a fill colour. It always has an Outline around it and OnAccent text on it, so its own contrast doesn't carry meaning.
 - **Divider** is a quiet hint. Rows are also separated by height (62 pt).
+
+\* On the today cell, the 1.5 pt OnAccent ring (11.6:1 against Accent) carries the dot's shape. Position (left = you) and the legend words back up the colour, so colour is never the only signal.
 
 ## 4. Type
 
@@ -271,6 +279,10 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 
 - Accent fill for the one selected tab or tool. Outline ring for the selected colour. Divider disc for the current category chip. Never two Accent selections in one row.
 
+### Day dots
+
+- Two fixed 8 pt places (left = you, right = partner), 1.5 pt Outline rings (OnAccent on an Accent cell), with a legend beside them.
+
 ### Dialog card
 
 - A centred Surface card, 20 pt from the screen edges, radius 28 (radius.sheet), with a 2.5 pt Outline, 16 pt padding and 14 pt between rows. There's no sticker and no blurred shadow.
@@ -287,8 +299,8 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
   - Then "Recent calls" as a list group.
   - The doodle is the flower next to the title. There is no sticker.
 - **Notes:**
-  - The title, then the full-width sticker "Make a note".
-  - Then the week strip and the selected day's header and 2-column grid.
+  - The title and the month toggle pill, then the full-width sticker "Make a note".
+  - Then the week strip and the selected day's header and 2-column grid, or the month card with dots and a summary.
   - There is no doodle.
   - Spec: [notes-tab.md](../design/specs/notes-tab.md).
 - **Hobbies:**
