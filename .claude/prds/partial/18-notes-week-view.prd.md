@@ -111,7 +111,7 @@ Paste spec §12 items 2, 3, 7 and 8 into `design.md`: the week strip rules, the 
 | Fetching and image loads stutter while swiping weeks | Med | Janky paging | Fetch on settle, not during the drag; cache images in `NotesStore` |
 
 ---
-*Status: PARTIAL — PR #TBD*
+*Status: PARTIAL — PR #16*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
