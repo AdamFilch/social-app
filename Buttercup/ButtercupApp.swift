@@ -19,7 +19,9 @@ struct ButtercupApp: App {
         _session = State(initialValue: session)
         _calls = State(initialValue: calls)
         let container = try! ModelContainer(for: Note.self, OutboxAction.self, configurations: ModelConfiguration(groupContainer: .identifier(Outbox.appGroup)))
-        _notes = State(initialValue: NotesStore(outbox: Outbox(client: session.client, container: container)))
+        let outbox = Outbox(client: session.client, container: container)
+        outbox.onOnline = { Task { await session.refresh() } }
+        _notes = State(initialValue: NotesStore(outbox: outbox))
     }
 
     var body: some Scene {
@@ -27,6 +29,12 @@ struct ButtercupApp: App {
             Group {
                 switch session.state {
                 case .loading: ProgressView()
+                case .offline:
+                    ContentUnavailableView {
+                        Label("Couldn't connect", systemImage: "wifi.slash")
+                    } actions: {
+                        Button("Try again") { Task { await session.refresh() } }
+                    }
                 case .signedOut: SignInView()
                 case .needsName: NameView()
                 case .unpaired: PairView()

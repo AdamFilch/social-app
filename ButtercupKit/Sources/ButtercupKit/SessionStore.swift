@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import Supabase
 
-public struct Profile: Decodable, Sendable, Identifiable {
+public struct Profile: Codable, Sendable, Identifiable {
     public let id: UUID
     public let displayName: String
     public let timeZone: String
@@ -21,7 +21,7 @@ public struct Profile: Decodable, Sendable, Identifiable {
 @Observable @MainActor
 public final class SessionStore {
     public enum State: Equatable {
-        case loading, signedOut, needsName, unpaired, ready
+        case loading, offline, signedOut, needsName, unpaired, ready
     }
 
     public static let tints = ["NotePaperBlue", "NotePaperPink", "NotePaperGreen", "NotePaperLilac", "NotePaperYellow"]
@@ -43,18 +43,24 @@ public final class SessionStore {
     }
 
     public func refresh() async {
-        guard let user = try? await client.auth.session.user else {
+        let user: User
+        do {
+            user = try await client.auth.session.user
+        } catch {
+            if error is URLError, client.auth.currentSession != nil { return restore() }
             me = nil
             partner = nil
             pairedAt = nil
+            Self.defaults?.removeObject(forKey: Self.savedKey)
             state = .signedOut
             return
         }
-        guard let profiles: [Profile] = try? await client.from("profiles").select().execute().value else { return }
+        guard let profiles: [Profile] = try? await client.from("profiles").select().execute().value else { return restore() }
         me = profiles.first { $0.id == user.id }
         partner = profiles.first { $0.id != user.id }
         let pairs: [[String: Date]]? = try? await client.from("pairs").select("created_at").execute().value
         pairedAt = pairs?.first?["created_at"]
+        Self.defaults?.set(try? JSONEncoder().encode(Saved(me: me, partner: partner, pairedAt: pairedAt)), forKey: Self.savedKey)
         if me?.displayName.isEmpty ?? true {
             state = .needsName
         } else if partner == nil {
@@ -124,6 +130,28 @@ public final class SessionStore {
     public func signOut() async {
         try? await client.auth.signOut()
         await refresh()
+    }
+
+    private struct Saved: Codable {
+        let me: Profile?
+        let partner: Profile?
+        let pairedAt: Date?
+    }
+
+    private static let savedKey = "session"
+    private static let defaults = UserDefaults(suiteName: Outbox.appGroup)
+
+    private func restore() {
+        guard state == .loading || state == .offline else { return }
+        guard let data = Self.defaults?.data(forKey: Self.savedKey),
+              let saved = try? JSONDecoder().decode(Saved.self, from: data) else {
+            state = .offline
+            return
+        }
+        me = saved.me
+        partner = saved.partner
+        pairedAt = saved.pairedAt
+        state = me?.displayName.isEmpty ?? true ? .needsName : partner == nil ? .unpaired : .ready
     }
 
     private func pickTintIfNeeded() async {

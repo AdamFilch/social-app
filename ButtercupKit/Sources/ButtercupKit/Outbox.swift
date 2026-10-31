@@ -35,6 +35,7 @@ public final class Outbox {
     public static let directory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)!
 
     public var isOnline: Bool { monitor.currentPath.status == .satisfied }
+    public var onOnline: (() -> Void)?
 
     let container: ModelContainer
     var context: ModelContext { container.mainContext }
@@ -48,7 +49,10 @@ public final class Outbox {
         self.container = container
         monitor.pathUpdateHandler = { [weak self] path in
             guard path.status == .satisfied else { return }
-            Task { @MainActor in await self?.flush() }
+            Task { @MainActor in
+                self?.onOnline?()
+                await self?.flush()
+            }
         }
         monitor.start(queue: .main)
     }
