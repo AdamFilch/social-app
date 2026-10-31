@@ -100,15 +100,15 @@ month view ─ tap "Current week" ─► current week, today selected
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: In the week view the pill reads the selected day's month with `calendar`. Tapping it cross-fades in about 0.18 s to that month, and the pill reads "Current week".
-- [ ] AC2: As `adam@example.com` in October 2026, the grid is Monday-first, with Sep 28–30 and Nov 1 greyed at 50%, and today Accent.
-- [ ] AC3: Seed days show a left blue dot for Adam's notes and a right red dot for Sam's. A Sam-only day has its dot on the right. On today the dot rings are OnAccent.
-- [ ] AC4: The summary counts match the seed, without the unsent note, and the legend uses Sam's display name.
-- [ ] AC5: Swiping pages by month and stops at the pairing month and the current month.
-- [ ] AC6: Tapping a day opens its week with that day selected. Tapping an in-range spill day opens its week. A spill day before pairing does nothing.
-- [ ] AC7: "Current week" returns to the current week with today selected from any month.
+- [x] AC1: In the week view the pill reads the selected day's month with `calendar`. Tapping it cross-fades in about 0.18 s to that month, and the pill reads "Current week".
+- [x] AC2: As `adam@example.com` in October 2026, the grid is Monday-first, with Sep 28–30 and Nov 1 greyed at 50%, and today Accent.
+- [x] AC3: Seed days show a left blue dot for Adam's notes and a right red dot for Sam's. A Sam-only day has its dot on the right. On today the dot rings are OnAccent.
+- [x] AC4: The summary counts match the seed, without the unsent note, and the legend uses Sam's display name.
+- [x] AC5: Swiping pages by month and stops at the pairing month and the current month.
+- [x] AC6: Tapping a day opens its week with that day selected. Tapping an in-range spill day opens its week. A spill day before pairing does nothing.
+- [x] AC7: "Current week" returns to the current week with today selected from any month.
 - [ ] AC8: VoiceOver reads the toggle, day labels, month actions and summary as in §9.
-- [ ] AC9: Checked in light and dark against mockup states 4–5 and the toggle panel, and the build check passes.
+- [x] AC9: Checked in light and dark against mockup states 4–5 and the toggle panel, and the build check passes.
 
 ## Required Changes
 - **`design.md`:** paste spec §12 items 1 (dot tokens and contrast) and 5 (Day dots), and the rest of item 6 (the Notes month view).
@@ -124,4 +124,21 @@ month view ─ tap "Current week" ─► current week, today selected
 | Month cells overflow on iPhone SE at large text | Med | Clipped numbers | Cap at `.accessibility1` and use the Large Content Viewer, per §9 |
 
 ---
-*Status: READY — ticket [20]*
+*Status: PARTIAL — PR #<pending>*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | Simulator: pill reads "October" with `calendar`; tap shows the October grid and "Current week". A screen recording put the in-place cross-fade at about 0.17–0.2 s (1.88 → 2.05 s) with nothing sliding |
+| AC2 | ✅ done | 31 Oct 2026 (October was the current month): Monday-first grid, Sep 28–30 and Nov 1 semibold TextSecondary at 50%, 31 Oct Accent with a 2 pt Outline |
+| AC3 | ✅ done | Blue left dots on 17, 23, 30 Oct; red right-only dots on 11, 20, 28, 29 Oct; both on 31 Oct with OnAccent rings (dark rings on the dark-mode Accent cell); 26 Oct (unsent note) has none |
+| AC4 | ✅ done | "11 notes this month", "4 from you", "7 from Partner" match the seed grouped in Asia/Jakarta, with the unsent note left out; September reads "No notes in September" with zeros |
+| AC5 | ✅ done | Swiping right from October goes to September (paired 16 Sep) and stops there; swiping left on October stays put |
+| AC6 | ✅ done | Tapping 15 Sep opens the week of 14 Sep with Tue 15 selected and the pill "September"; the spill day 1 Oct on the September page opens the week of 28 Sep with Thu 1 selected; Aug 31 and 1–13 Sep (before the pairing week) have no button trait, and tapping 7 Sep does nothing |
+| AC7 | ✅ done | From September's month page, "Current week" opens the week of 26 Oct with Sat 31 (today) selected |
+| AC8 | ⚠️ unverified | The accessibility tree shows "Show month, October" / "Show current week", day labels like "Sunday, 11 October, notes from Partner" and "Saturday, 31 October, today, notes from you and Partner", button traits only within the limits, and the summary as one element. VoiceOver speech and the "Previous month" / "Next month" actions weren't heard; that needs a person |
+| AC9 | ✅ done | Light and dark screenshots match mockup states 4–5 rendered in Safari; the toggle panel matches, including the pressed fill (no scale); `xcodebuild … build` succeeds |
+
+### Needs attention
+- A person runs VoiceOver on the month view: the toggle, a few day labels (including a spill day and today), the "Previous month" / "Next month" actions at both edges, and the summary.
+
