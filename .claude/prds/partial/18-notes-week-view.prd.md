@@ -88,16 +88,16 @@ Sam sends ─► realtime ─► refetch ─► tile fades in first
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: As `adam@example.com`, opening the Notes tab shows the current week Mon–Sun with today Accent and ringed, and today's seed notes newest first.
-- [ ] AC2: Strip cells show up to 3 mini-cards from that day's newest images; empty days show none.
-- [ ] AC3: Tapping a past day, an empty day and a future day in the current week each select it, with the 0.15 s cross-fade and no haptic. The header never says "Today".
-- [ ] AC4: Swiping the strip pages by week and keeps the weekday. It stops at the pairing week (about 45 days back in the seed) and at the current week.
-- [ ] AC5: The unsent seed note appears nowhere.
-- [ ] AC6: Stopping the local stack and reopening shows the load-failed state; "Try again" recovers after `supabase start`.
-- [ ] AC7: Inserting a note for Sam today with SQL makes it fade in at the top of today's grid.
-- [ ] AC8: Switching to Calling and back keeps the selected day.
+- [x] AC1: As `adam@example.com`, opening the Notes tab shows the current week Mon–Sun with today Accent and ringed, and today's seed notes newest first.
+- [x] AC2: Strip cells show up to 3 mini-cards from that day's newest images; empty days show none.
+- [x] AC3: Tapping a past day, an empty day and a future day in the current week each select it, with the 0.15 s cross-fade and no haptic. The header never says "Today".
+- [x] AC4: Swiping the strip pages by week and keeps the weekday. It stops at the pairing week (about 45 days back in the seed) and at the current week.
+- [x] AC5: The unsent seed note appears nowhere.
+- [x] AC6: Stopping the local stack and reopening shows the load-failed state; "Try again" recovers after `supabase start`.
+- [x] AC7: Inserting a note for Sam today with SQL makes it fade in at the top of today's grid.
+- [x] AC8: Switching to Calling and back keeps the selected day.
 - [ ] AC9: VoiceOver reads the strip as adjustable with week actions and tiles as "Note from …". At AX sizes the grid is one column.
-- [ ] AC10: Checked in light and dark against mockup states 1–3, and the build check passes.
+- [x] AC10: Checked in light and dark against mockup states 1–3, and the build check passes.
 
 ## Required Changes
 Paste spec §12 items 2, 3, 7 and 8 into `design.md`: the week strip rules, the Note tile without tape, `doodle-tape` marked unused, and the Dynamic Type line. Also paste the Notes half of item 6 (week view, no doodle).
@@ -111,4 +111,21 @@ Paste spec §12 items 2, 3, 7 and 8 into `design.md`: the week strip rules, the 
 | Fetching and image loads stutter while swiping weeks | Med | Janky paging | Fetch on settle, not during the drag; cache images in `NotesStore` |
 
 ---
-*Status: READY — ticket [18]*
+*Status: PARTIAL — PR #16*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | Simulator as adam: week Mon 26 – Sun 1, Sat 31 Accent and ringed, 4 seed notes newest first (local UTC+7 day) |
+| AC2 | ✅ done | Cells show 1–3 stacked image crops (Sat shows 3 of 4); empty days show none |
+| AC3 | ✅ done | Tapped Wed 28 (past), Mon 26 (empty), Sun 1 (future): each selected, header "Wednesday 28" / "Monday 26" / "Sunday 1". Fade is `withAnimation(.easeOut(duration: 0.15))`; no `sensoryFeedback` in the new files |
+| AC4 | ✅ done | Swipes paged 26 Oct → 14 Sep keeping Monday; a further swipe stayed on 14 Sep (pairing week); swiping forward stopped at 26 Oct |
+| AC5 | ✅ done | Unsent `-0008` (Mon 26 local) does not appear: Mon 26 reads "no notes" |
+| AC6 | ✅ done | Stack stopped, app foregrounded: "Couldn't load notes. Try again" after the client's retries; after `supabase start`, "Try again" reloaded 6 notes |
+| AC7 | ✅ done | SQL insert of a Partner note appeared first in today's grid via realtime (5 notes); fade is the 0.15 s animation on the load |
+| AC8 | ✅ done | Wed 28 selected, Calling, back: Wed 28 still selected |
+| AC9 | ⚠️ unverified | Accessibility tree shows the strip as an adjustable element "Week of 26 October" plus labelled cells; one-column grid seen at accessibility-extra-large. VoiceOver speech, the custom actions and tile labels were not heard: needs a person with VoiceOver on |
+| AC10 | ✅ done | Light and dark screenshots compared with mockup states 1–3; build check passes |
+
+### Needs attention
+- Run VoiceOver on a device or simulator: swipe up/down on the strip, check the "Previous week" / "Next week" actions appear only within limits, and that tiles read "Note from Partner, <time>".
