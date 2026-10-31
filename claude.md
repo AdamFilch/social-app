@@ -23,6 +23,7 @@ Prereqs: `brew install supabase/tap/supabase livekit livekit-cli deno`, Docker D
 | Liveness check (run first) | `supabase status` |
 | Start local stack | `supabase start` |
 | Rebuild DB from migrations + seed | `supabase db reset` |
+| Upload seed note images (after every reset) | `supabase/seed-notes.sh` |
 | Tests | `supabase test db` |
 | Lint | `supabase db lint` |
 | New migration | `supabase migration new <name>` |
@@ -68,7 +69,7 @@ To test pairing, run two simulators: one shows its invite code on the pair scree
 Run the loop in this order and stop at the first failure:
 
 1. `supabase status`: confirm the stack is up.
-2. `supabase db reset`: rebuild from migrations and seed, so tests never run against leftover state.
+2. `supabase db reset && supabase/seed-notes.sh`: rebuild from migrations and seed, so tests never run against leftover state, then upload the seed notes' images (a reset empties the bucket).
 3. `supabase test db`: pgTAP tests.
 4. `supabase db lint`: must report no errors.
 5. When `supabase/functions/` changed: start `livekit-server --dev` and `supabase functions serve` (see Backend), wait out the 502 and 503 responses, then run the function tests.
