@@ -225,7 +225,7 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 - **Sender tag:** a 24 pt avatar, 8 pt in from the bottom-left corner.
 - **New (unseen by you):** the 3 pt Highlight ring with a 3 pt gap. Where there is room, a "New" badge appears next to the tile. Both fade out over 0.15 s once you have opened the note.
 - **Sizes:** 112 on the Calling card, half-width in the Notes grid (about 181 on iPhone 11), and full width in the note viewer.
-- **Doodle:** the tape strip sits on the newest tile in the Notes grid only.
+- The Notes tab doesn't use the New ring until notes have a seen state.
 - **Accessibility label:** "Note from Sam, 12 minutes ago, new".
 
 ### Small widget
@@ -250,8 +250,9 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 ### Week strip (Notes)
 
 - Seven cells, about 48 × 74 pt each, with 6 pt gaps, radius 14 and a 2 pt Outline on Surface.
-- Each cell shows the day letter (caption), the date (headline, monospaced digits), and up to three stacked mini-cards in that day's NotePaper colours.
-- Today is an Accent cell. Tapping a day opens that day's notes, as the calendar does.
+- Mini-cards are 15 pt crops of the day's three newest note images, newest on top.
+- Today is an Accent cell. The selected day has a 2 pt Background gap and a 2.5 pt Outline ring outside the cell. Today and selected shows both.
+- Swiping pages by week; the same weekday stays selected.
 
 ### Icon circle button
 
@@ -278,10 +279,10 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
   - Then "Recent calls" as a list group.
   - The doodle is the flower next to the title. There is no sticker.
 - **Notes:**
-  - The title and month, then the full-width sticker primary "Make a note".
-  - Then the week strip.
-  - Then "Today" with a count, over a two-column grid of tiles with sender tags.
-  - The doodle is the tape on the newest tile.
+  - The title, then the full-width sticker "Make a note".
+  - Then the week strip and the selected day's header and 2-column grid.
+  - There is no doodle.
+  - Spec: [notes-tab.md](../design/specs/notes-tab.md).
 - **Hobbies:**
   - One card per hobby. The header has an icon tile, the hobby name and both avatars with done badges, and a status sentence sits under it.
   - Your current item has a cover placeholder, title, progress text, progress bar and a +1 button.
@@ -330,7 +331,7 @@ Four SVG assets, drawn once and exported as template-free PDF or SVG in the asse
 | --- | --- | --- |
 | `doodle-flower` | 34 pt | Next to the Calling title; empty widget; empty states about calls |
 | `doodle-sparkle` | 30 pt | Next to the Hobbies title; "all done today" moments |
-| `doodle-tape` | 52 × 18 pt | Across the top edge of the newest note tile in the Notes grid |
+| `doodle-tape` | 52 × 18 pt | Unused (removed from the Notes grid 2026-10-29); kept for later |
 | `doodle-squiggle` | 110 × 14 pt | Under a title in onboarding and pairing screens |
 
 **Rules for doodles:**
@@ -364,7 +365,7 @@ Four SVG assets, drawn once and exported as template-free PDF or SVG in the asse
 - All text pairs pass AA in both modes (section 3). Outlines and rings pass 3:1.
 - Touch targets are at least 44 pt. Call buttons are 56, rows 62, +1 is 48 and chips have a 44 pt hit area.
 - Nothing is shown by colour alone: missed, new, done and selected each have a word or a symbol change.
-- Dynamic Type at all sizes. At accessibility sizes the call pair stacks, the Notes grid becomes one column and the week strip scrolls horizontally inside its own row.
+- Dynamic Type at all sizes. At accessibility sizes the call pair stacks, the Notes grid becomes one column, and week-strip and month cells cap at `.accessibility1` and use the Large Content Viewer.
 - With Reduce Motion, zooms become fades. Nothing else moves anyway.
 - VoiceOver labels:
   - Avatars use the person's name.
