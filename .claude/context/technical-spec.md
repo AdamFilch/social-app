@@ -29,7 +29,7 @@ App and widget share one **App Group**, which holds the SwiftData store and note
 Full brand guide: [design.md](design.md). Mockup: [design-directions](https://claude.ai/artifact/C3QVDouTjcQZEoruGFxDqi).
 
 - **Look:** Buttercup Field in light mode, Sticky Note in dark (T17). The mode follows the system setting. It is a custom look, not standard Liquid Glass.
-- **Colours:** named tokens in `Buttercup/Assets.xcassets`, each with light and dark values (hex values in design.md §3).
+- **Colours:** named tokens in `Buttercup/Assets.xcassets`, each with light and dark values (hex values in design.md §3). Notes dots: `NoteDotMine`, `NoteDotPartner` (light and dark).
   - Core: `Accent`, `Background`, `Surface`, `TextPrimary`, `TextSecondary` and `Danger`.
   - Added: `OnAccent`, `Outline`, `Highlight`, `OnHighlight` and `Divider`.
   - Note paper (the same in both modes): `NotePaperYellow`, `NotePaperPink`, `NotePaperBlue`, `NotePaperGreen` and `NotePaperLilac`.
