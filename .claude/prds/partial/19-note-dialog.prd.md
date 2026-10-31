@@ -47,7 +47,7 @@ Adds `DialogCard`, a scrim and a card that cover the app tab bar, and `NoteDialo
 | # | Decision | Choice | Why | Decided by |
 |----|----------|--------|-----|------------|
 | G1 | How it covers the tab bar | A root overlay in `ContentView`, the same pattern the call screen uses | Spec §5 allows either. The overlay needs no fight with `.fullScreenCover`'s system transition | Claude — straightforward |
-| G2 | Paging | `TabView(selection:)` with `.page(indexDisplayMode: .never)` and a custom pager | Native, and stops at the ends without wrapping | Claude — straightforward |
+| G2 | Paging | Paging `ScrollView` (`.scrollTargetBehavior(.paging)`) with a custom pager | `TabView(.page)` crashed in UIKit (EXC_BAD_ACCESS in `_wrappedProcessTraitChanges`) on a fast open/close; the paging `ScrollView` is the spec §5 alternative and passed the same stress test | User |
 
 All spec decisions (D4–D5, F1, N7, Q2) apply as written in spec §13.
 
