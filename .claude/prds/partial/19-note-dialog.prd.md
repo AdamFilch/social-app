@@ -75,14 +75,14 @@ sender unsends the open note ─► refetch ─► dialog closes
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: As `adam@example.com`, tapping today's middle tile opens the dialog on that note. The scrim covers the tab bar, and the card is 20 pt from the edges.
-- [ ] AC2: The header shows Sam's avatar, "Sam" and "Thursday 29 Oct · 9:20 am" (or "You" for Adam's notes), plus ✕.
-- [ ] AC3: Swiping goes newest → oldest, stops at both ends, and updates the header and pager. A one-note day has no pager.
-- [ ] AC4: ✕ and a scrim tap close it with a 0.15 s fade. Swipe down does nothing.
-- [ ] AC5: Open and close timings match §7, with no scale under Reduce Motion and no haptics.
-- [ ] AC6: Setting `unsent_at` on the open note with SQL closes the dialog.
+- [x] AC1: As `adam@example.com`, tapping today's middle tile opens the dialog on that note. The scrim covers the tab bar, and the card is 20 pt from the edges.
+- [x] AC2: The header shows Sam's avatar, "Sam" and "Thursday 29 Oct · 9:20 am" (or "You" for Adam's notes), plus ✕.
+- [x] AC3: Swiping goes newest → oldest, stops at both ends, and updates the header and pager. A one-note day has no pager.
+- [x] AC4: ✕ and a scrim tap close it with a 0.15 s fade. Swipe down does nothing.
+- [x] AC5: Open and close timings match §7, with no scale under Reduce Motion and no haptics.
+- [x] AC6: Setting `unsent_at` on the open note with SQL closes the dialog.
 - [ ] AC7: VoiceOver traps focus in the dialog, starts on the name, reads "note 1 of 3", and the escape gesture closes it.
-- [ ] AC8: Checked in light and dark against mockup states 6–7, and the build check passes.
+- [x] AC8: Checked in light and dark against mockup states 6–7, and the build check passes.
 
 ## Required Changes
 Paste spec §12 item 4 (the new Dialog card component) into `design.md` §6.
@@ -96,4 +96,20 @@ Paste spec §12 item 4 (the new Dialog card component) into `design.md` §6.
 | Paged `TabView` gestures fight the scrim tap | Low | Taps on the note close the dialog | Put the scrim tap only on the area outside the card |
 
 ---
-*Status: READY — ticket [19]*
+*Status: PARTIAL — PR #PRNUM*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | As adam, tapping today's second tile (Partner, 8.12) opened the dialog on that note (pager ○●○○). A scrim tap at the Calling tab's spot closed it without switching tabs, so the scrim covers the tab bar. The card measured 361.7 pt wide on a 402 pt screen (20 pt each side) |
+| AC2 | ✅ done | Header showed the pink "P" avatar with ring, "Partner", "Saturday, 31 Oct · 8.12" and ✕. Adam's note shows "You" with the "A" avatar. Date and time follow the device locale, the same formatter as `NoteTile` (comma and "8.12" come from the locale) |
+| AC3 | ✅ done | Paging went 8.57 → 8.18 → 7.39 → 1.40 and stopped at both ends, with the header and pager updating on each page. Thursday 29 (one note) shows no pager |
+| AC4 | ✅ done | ✕ and a scrim tap both closed it. Vertical swipes on the note and card left it open. Frame timing of the close: about 0.12–0.15 s fade, no width change |
+| AC5 | ✅ done | Screen recording: on open the scrim darkens and the card grows to full width over about 0.17–0.2 s. With Reduce Motion on, the card is at full width from the first frame (fade only). No `sensoryFeedback` or feedback generator in the new code |
+| AC6 | ✅ done | `update notes set unsent_at = now()` on another note kept the dialog open with the page, header and pager in sync. On the open note it closed the dialog with no crash, including after notes before it were removed |
+| AC7 | ⚠️ unverified | `.isModal`, focus on the name, the "note 1 of 3" label, adjustable actions and the escape action are in the code, but VoiceOver speech, the focus trap and the escape gesture need a person on a device |
+| AC8 | ✅ done | Compared states 6 and 7 against the mockup in light and dark (scrim 42 / 60%, Outline card, ring avatar, pager). `xcodebuild … -destination 'platform=iOS Simulator,name=iPhone 17' build` succeeded |
+
+### Needs attention
+- AC7: with VoiceOver on, open a note and check that focus starts on the name, that swipes stay inside the card, that the note reads "Note from Partner, …, note 1 of N", that swipe up and down change notes, and that the two-finger scrub closes it.
+- G2 deviation: the note pages in a paging `ScrollView` (spec §5's alternative), not `TabView(.page)`. With `TabView(.page)` in the root overlay, opening and closing the dialog quickly crashed the app twice (EXC_BAD_ACCESS in `-[UIView _wrappedProcessTraitChanges:withBehavior:]`). The paging `ScrollView` passed the same stress test. Please confirm, or reopen G2.
