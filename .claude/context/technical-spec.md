@@ -72,6 +72,7 @@ Minimal. Tab changes get only `.selection`, the lightest haptic. Ordinary button
 ### Sync and offline
 
 - **On launch:** pull rows changed since the last sync into SwiftData.
+- **Session offline:** `SessionStore` saves `me`, `partner` and `pairedAt` to the App Group `UserDefaults` after each refresh and restores them when a launch can't reach the server, so a stored session opens the tabs offline. Only a missing or rejected session shows sign-in.
 - **While open:** Supabase Realtime subscriptions on `notes`, `items`, `checkins` and `calls` apply partner changes live.
 - **While closed:** notifications and WidgetKit pushes (sent by `push-partner`) wake the widgets.
 - **Outbox:** every write (send note, +1, set progress, check-in, finish item, favourite, unsend) is saved as an `OutboxAction` in SwiftData first, then sent. A flusher retries when `NWPathMonitor` reports a connection. Rows use ids made on the phone, so a retry never creates a duplicate. Calls need a connection and skip the outbox.
