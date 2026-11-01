@@ -5,6 +5,7 @@ Oct 20, 2026 · approved by Adam (mockup v2) · designer run 2
 **Source**: [mockups/in-call-screen.html](../mockups/in-call-screen.html)
 **Tickets**: restyles [3] Frontend Calls (D7) and the UI of [5] Face stickers and [6] Drawing-pad stickers
 **Decisions**: C1–C18 (Adam, 2026-10-20, `~/.claude/plans/please-use-taste-skills-binary-pelican.md`) and N1–N7 (Adam's answers to the run 1 open questions), listed in the mockup's legend
+**Amended 2026-10-31 by [soundboard.md](soundboard.md)** (Sounds, decisions S1, A1, M17, M18): the Stickers button is in every call bar, the tray gains a Sounds tab, and it opens on Sounds when stickers aren't possible. Amended passages are marked *(amended: soundboard)*.
 
 ## 0. Revisions to PRDs [5] and [6]
 
@@ -15,8 +16,8 @@ This spec changes these tickets. The PRDs themselves are not edited here; the de
 | R1 | [5] "Tray (sheet with detents)", "tray sheet at medium detent; dragging out of the tray dismisses it to its small detent" | A fixed panel, 50% of the screen height with no detents, drawn inside the call view (not a `.sheet`). It covers the control bar and closes when a sticker lands on the face | C3, C4 |
 | R2 | [6] D22 "PencilKit canvas + `PKToolPicker`" | `PKCanvasView` with its tool picker hidden, driven by the pad's own toolbar (pen, eraser, undo, 5 colour dots) | C6, N2 |
 | R3 | [6] "Done" / "Cancel" buttons, full-height pad sheet | ✕ icon circle (left) and ✓ Accent icon circle (right) in the pad header; the pad replaces the tray panel in place | C7, C14 |
-| R4 | [3] D40 / [5] main bar "keeps mute, camera on/off, audio route, hang up" | Unchanged while the partner is big. While your own view is big, a Stickers button joins the bar on the far left | C15 |
-| R5 | [5] tabs Emoji · Text · Images, [6] adds Draw | Pill tabs Stickers · Emoji · Text · Draw · Hats · Glasses. "Images" is renamed "Stickers" and comes first. Hats and Glasses appear only when their tickets ship | N3 |
+| R4 | [3] D40 / [5] main bar "keeps mute, camera on/off, audio route, hang up" | A Stickers button is always first in the bar, in every call state: Stickers · Mute · Camera · Route · End *(amended: soundboard; was "only while your own view is big")* | C15, A1 ([soundboard.md](soundboard.md)) |
+| R5 | [5] tabs Emoji · Text · Images, [6] adds Draw | Pill tabs Stickers · Emoji · Text · Draw · Hats · Glasses · Sounds. "Images" is renamed "Stickers" and comes first. Hats and Glasses appear only when their tickets ship; Sounds appears when the soundboard ticket ships *(amended: soundboard)* | N3, S1, M11 ([soundboard.md](soundboard.md)) |
 | R6 | [5] "Emoji grid (system emoji keyboard input)" | Apple's full emoji set in the tray's own grid, grouped into categories with jump chips. Long-press opens the skin-tone picker. No system keyboard and no search | N4 |
 | R7 | [5] "Images tab empty: No image stickers yet." | "No stickers yet." | N3 |
 | R8 | [5]/[6] "sticker in drag mode" (undefined) | Defined in §3.6: the new sticker appears pinned to the nose point, already selected, ready to drag | Spec |
@@ -60,8 +61,8 @@ Goal: during a call the partner's face is the screen. Controls are quiet, dark a
 
 ### 3.3 Tray
 
-1. Open: Add stickers (medium tile, state B) goes to state C and opens the tray, or the Stickers button in the bar (state C).
-2. The tray opens on the last tab used in this app session (N7). The first open opens on Stickers.
+1. Open: Add stickers (medium tile, state B) goes to state C and opens the tray, or the Stickers button in the bar, which is there in every call state *(amended: soundboard)*.
+2. The tray opens on the last tab used in this app session (N7). The first open opens on Stickers. *(amended: soundboard)* Exception: when stickers aren't possible (audio call, your camera off, back camera) or the partner is big, it opens on Sounds. With your camera off or flipped, the face tabs (Stickers, Emoji, Text, Draw, Hats, Glasses) are shown at 40% and do nothing, with the line "Stickers come back when your camera's on" (M17). With the partner big and your front camera on, the face tabs work: tapping one first swaps your view big (state C), then shows that tab (M18). See [soundboard.md](soundboard.md) §3.6.
 3. Tap a pill to switch tabs. Tabs don't change on a horizontal swipe; horizontal swipes scroll the tab's grid (C5).
 4. Drag a cell up out of the panel onto your face. As the finger crosses the panel's top edge, the panel slides away and the control bar fades back. Release on the big view: the sticker pins to the nearest face point (per [5]), light impact haptic, tray stays closed (C4).
 5. Drag back below the panel's top edge before release: the panel returns and nothing is added.
@@ -113,14 +114,14 @@ All sizes are in points on iPhone 11 (414 × 896, safe area top 48, bottom 34). 
 │   ( 🎙 )   ( 📹 )   ( 🔊 )   ( ☎︎ )       │ control bar, 56 pt circles
 │              ─────────                   │ home indicator
 └──────────────────────────────────────────┘
-State C: ( ☺︎+ ) joins on the far left: ( ☺︎+ ) ( 🎙 ) ( 📹 ) ( 🔊 ) ( ☎︎ )
+Every state: ( ☺︎+ ) ( 🎙 ) ( 📹 ) ( 🔊 ) ( ☎︎ )   (amended: soundboard; drawn above as it was before)
 ```
 
 - **Big video:** full bleed, ignoring safe areas, `scaledToFill`.
 - **Name pill:** centred, top = safe top + 10, height 32, horizontal padding 14, frosted (§6.2). Partner's name in `.subheadline.bold()` TextPrimary (dark), then the timer in `.subheadline.weight(.semibold).monospacedDigit()` at TextPrimary 85% opacity, 8 pt apart. Not interactive. The name truncates at the tail so the timer always shows (pill max width 220).
 - **Small tile:** 100 × 150, radius 20 continuous, 16 from the side edges. Top corners: top = safe top + 8. Bottom corners: bottom edge = control bar top − 16. Shadow `.shadow(color: .black.opacity(0.35), radius: 10, y: 6)`. No border.
 - **Control bar:** `HStack` of 56 pt circles spread with equal spacing across the width minus 16 pt on each side; bottom of the circles = safe bottom + 12 (iPhone 11: circles from 794 to 850). Always visible, except under an open panel (C3).
-- **Order:** Mute · Camera · Audio route · End call. In state C: Stickers · Mute · Camera · Audio route · End call (C15). End call is always last, on the right.
+- **Order:** Stickers · Mute · Camera · Audio route · End call, in every state *(amended: soundboard; was "Stickers only in state C")*. End call is always last, on the right. With five 56 pt circles across 382 pt the gaps are about 25 pt.
 - Status bar uses light content (`.preferredColorScheme(.dark)` on the call chrome).
 
 ### 4.2 Medium tile (states B and D)
@@ -307,7 +308,7 @@ State C: ( ☺︎+ ) joins on the far left: ( ☺︎+ ) ( 🎙 ) ( 📹 ) ( 🔊
 | `TrashButton` | `onRemove` | 56 frosted, Danger symbol |
 | `Checkerboard` | `square: 12` | §6.6 |
 
-`EffectTab` is an enum: `stickers, emoji, text, draw, hats, glasses`. A tab is listed only when its feature is enabled.
+`EffectTab` is an enum: `stickers, emoji, text, draw, hats, glasses, sounds` *(amended: soundboard)*. A tab is listed only when its feature is enabled. `EffectTab.needsFace` is true for every case except `sounds`.
 
 ## 6. Visual details
 
@@ -422,8 +423,8 @@ Fades and ease-outs only; no springs, no bounce, nothing idles (C18, design.md �
 | Medium, you (B) / partner (D) | §4.2 |
 | Swapped (C) | You big, partner small, 5-button bar |
 | Mute on | Mute circle `.active`, `mic.slash` |
-| Camera off (yours) | Camera circle `.active`, `video.slash`. Your tile shows your avatar. The Stickers button and Add stickers are disabled (40%), because there's no face (D34 keeps placed stickers for later) |
-| Back camera (after Flip) | Stickers button and Add stickers disabled; stickers hidden from video (D33) and shown again on flip back |
+| Camera off (yours) | Camera circle `.active`, `video.slash`. Your tile shows your avatar. Add stickers on the medium tile is disabled (40%), because there's no face (D34 keeps placed stickers for later). *(amended: soundboard)* The Stickers button stays enabled and opens the tray on Sounds with the face tabs dimmed (§3.3 step 2) |
+| Back camera (after Flip) | Add stickers disabled; stickers hidden from video (D33) and shown again on flip back. *(amended: soundboard)* The Stickers button opens the tray on Sounds with the face tabs dimmed |
 | Partner camera off | §4.3 in the big view or the partner's tile |
 | Audio route | `AVRoutePickerView` inside the circle with the frosted style. The symbol follows the current route: `speaker.wave.2` speaker, `iphone` receiver, `airpods` / `headphones`, `car` for CarPlay |
 | Long partner name | Name truncates in the pill (max 220 wide); timer always shows |
@@ -437,7 +438,7 @@ Fades and ease-outs only; no springs, no bounce, nothing idles (C18, design.md �
 | Tray open on each tab | §4.4–4.9 |
 | Stickers empty (no PNGs) | Grid replaced by "No stickers yet.", centred in the content area, `.body`, TextSecondary |
 | 10 stickers placed | Grid cells, emoji and Draw/Text actions at 40% and not interactive. The hint line (Stickers) and the chip row (Emoji) are replaced by "That's 10. Remove one to add more." in `.subheadline.weight(.medium)`, TextSecondary. Text: Add disabled. Draw: ✓ disabled after drawing, with the same line under the canvas |
-| Too hot (thermal `.critical`, D35) | Stickers hidden from video. Opening the tray shows the same disabled treatment with "Stickers are paused while your phone cools down." The line goes away when the heat drops |
+| Too hot (thermal `.critical`, D35) | Stickers hidden from video. Opening the tray shows the same disabled treatment with "Stickers are paused while your phone cools down." The line goes away when the heat drops. *(amended: soundboard)* The 10-sticker cap and the heat pause don't touch the Sounds tab |
 | Dragging a sticker out | A copy of the glyph at 1.2× follows the finger, 0.9 opacity; the panel slides away once the finger is above its top edge |
 | Drag cancelled | Panel fades back; copy fades out at the finger |
 | Face lost | Stickers freeze where they were (D20); no UI |
@@ -474,7 +475,7 @@ No loading states: all tray content is bundled.
 | Dim area | — | `accessibilityAction(.escape)` shrinks the tile |
 | Expand | "Make my view big" / "Make Sam big" | — |
 | Flip camera | "Flip camera" | value "Front" / "Back" |
-| Add stickers (tile) / Stickers (bar) | "Add stickers" | disabled hint "Turn on your front camera to add stickers" |
+| Add stickers (tile) / Stickers (bar) | "Add stickers" (tile) / "Effects and sounds" (bar, *amended: soundboard*) | tile disabled hint "Turn on your front camera to add stickers"; the bar button is never disabled |
 | Mute | "Mute" / "Unmute" | value "Muted" when on |
 | Camera | "Turn camera off" / "Turn camera on" | value "Camera off" when off |
 | Audio route | "Audio output" | value: route name ("Speaker", "iPhone", "AirPods") |
@@ -504,7 +505,7 @@ Call chrome
 - [ ] The call view forces the dark scheme; the effects panel follows the system scheme.
 - [ ] No Outline or sticker shadow is drawn over video; the frosted fill is `.ultraThinMaterial` + `CallFrost`.
 - [ ] Name pill is centred at safe top + 10 with the partner's name and a monospaced timer that ticks each second.
-- [ ] Control bar: 56 pt circles evenly spaced, bottom at safe bottom + 12, order Mute · Camera · Route · End; Stickers is added first while you are big.
+- [ ] Control bar: 56 pt circles evenly spaced, bottom at safe bottom + 12, order Stickers · Mute · Camera · Route · End in every call state *(amended: soundboard)*.
 - [ ] Mute on and camera off fill Accent and swap to slashed symbols; End call is Danger with an OnDanger symbol.
 - [ ] Audio route opens the system route picker and its symbol follows the route.
 
@@ -519,8 +520,8 @@ Panel
 - [ ] Tray and pad are an in-view panel of 50% screen height with 28 pt top corners, not a `.sheet`; it covers the bar and the bar returns on close.
 - [ ] The partner's small tile moves to a top corner while the panel is open.
 - [ ] ✕, swipe down past 30% (or fast), and the escape gesture all close it.
-- [ ] Pill row lists Stickers · Emoji · Text · Draw (plus Hats · Glasses when enabled), scrolls horizontally, and scrolls the selected pill into view. Tabs change only on tap.
-- [ ] The tray reopens on the last tab used in the session; the first open of a session shows Stickers.
+- [ ] Pill row lists Stickers · Emoji · Text · Draw (plus Hats · Glasses · Sounds when enabled), scrolls horizontally, and scrolls the selected pill into view. Tabs change only on tap.
+- [ ] The tray reopens on the last tab used in the session; the first open of a session shows Stickers. *(amended: soundboard)* With stickers impossible or the partner big, it opens on Sounds; with your camera off or flipped the face tabs are at 40% and inert.
 - [ ] Stickers grid: 3 rows of 84 pt cells, scrolls horizontally, fifth column peeks; hint line shown; empty state reads "No stickers yet."
 - [ ] Emoji: Apple's full set in a 3-row strip of 72 pt cells, sections with labels at their start, nine chips that jump with a 0.35 s ease-out and highlight the current category.
 - [ ] Long-press an emoji with tones shows the 6-option picker; the pick is remembered per emoji.
@@ -532,7 +533,7 @@ Panel
 Stickers on face
 - [ ] Tap a sticker: Accent outline in the preview only (verified not present in the partner's video) and the 56 pt trash appears 16 above the bar.
 - [ ] Trash removes it; tapping elsewhere deselects and hides the trash.
-- [ ] 10-cap, thermal and camera-off/back-camera states disable the tray as in §8.
+- [ ] 10-cap, thermal and camera-off/back-camera states disable the face tabs as in §8; the Sounds tab stays usable *(amended: soundboard)*.
 
 Motion, haptics, accessibility
 - [ ] No spring animations anywhere in the call screen; values as in §7; Reduce Motion turns movement into 0.2 s fades.
