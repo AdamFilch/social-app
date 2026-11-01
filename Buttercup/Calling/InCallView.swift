@@ -4,8 +4,11 @@ import SwiftUI
 struct InCallView: View {
     @Environment(SessionStore.self) private var session
     @Environment(CallStore.self) private var calls
+    @Environment(StickerLayer.self) private var stickers
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var tile = Tile.small
+    @State private var tray = false
+    @State private var detent = PresentationDetent.medium
 
     enum Tile {
         case small, mid, swapped
@@ -17,6 +20,9 @@ struct InCallView: View {
                 if tile == .swapped { me } else { partner }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .overlay {
+                if editing { StickerGestures(mirror: calls.front) }
+            }
             .clipped()
             .ignoresSafeArea()
             .contentShape(Rectangle())
@@ -30,12 +36,42 @@ struct InCallView: View {
             VStack(spacing: 8) {
                 status
                 Spacer()
+                if editing, let id = stickers.selected {
+                    Button("Remove sticker", systemImage: "trash") { stickers.remove(id) }
+                        .labelStyle(.iconOnly)
+                        .font(.title2)
+                        .buttonStyle(.borderedProminent)
+                        .buttonBorderShape(.circle)
+                        .tint(Color("Danger"))
+                        .transition(.opacity)
+                }
                 bar
             }
             .frame(maxWidth: .infinity)
         }
         .background(.black)
         .animation(reduceMotion ? .easeOut(duration: 0.2) : .smooth, value: tile)
+        .animation(.easeOut(duration: 0.15), value: stickers.selected)
+        .sheet(isPresented: $tray) {
+            StickerTray(detent: $detent)
+                .presentationDetents([StickerTray.small, .medium], selection: $detent)
+                .presentationBackgroundInteraction(.enabled)
+                .presentationDragIndicator(.visible)
+        }
+        .onChange(of: editing) { _, on in
+            if !on {
+                tray = false
+                stickers.selected = nil
+            }
+        }
+        .onChange(of: stickers.selected) { _, id in
+            if id != nil { tray = false }
+        }
+        .sensoryFeedback(.impact(weight: .light), trigger: stickers.drops)
+    }
+
+    private var editing: Bool {
+        tile == .swapped && calls.cameraOn && calls.front
     }
 
     private var me: some View {
@@ -60,6 +96,14 @@ struct InCallView: View {
                         Task { await calls.flipCamera() }
                     }
                     Spacer()
+                    if calls.cameraOn, calls.front {
+                        Button("Add sticker", systemImage: "face.smiling") {
+                            detent = .medium
+                            tile = .swapped
+                            tray = true
+                        }
+                        Spacer()
+                    }
                     Button("Expand", systemImage: "arrow.up.left.and.arrow.down.right") { tile = .swapped }
                 }
                 .labelStyle(.iconOnly)

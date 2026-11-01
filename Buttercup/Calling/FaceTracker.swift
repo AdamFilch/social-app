@@ -9,6 +9,7 @@ protocol FaceTracker: AnyObject {
 
 final class ARKitFaceTracker: NSObject, FaceTracker, ARSessionDelegate, @unchecked Sendable {
     var onFrame: ((CVPixelBuffer, ARFaceAnchor?, TimeInterval) -> Void)?
+    private(set) var camera: ARCamera?
     private let session = ARSession()
     private let log = Logger(subsystem: "com.adamfilchoir.buttercup", category: "FaceTracker")
     private var thermal: NSObjectProtocol?
@@ -45,6 +46,7 @@ final class ARKitFaceTracker: NSObject, FaceTracker, ARSessionDelegate, @uncheck
 
     func session(_: ARSession, didUpdate frame: ARFrame) {
         let face = frame.anchors.lazy.compactMap { $0 as? ARFaceAnchor }.first
+        camera = frame.camera
         onFrame?(frame.capturedImage, face, frame.timestamp)
     }
 }
