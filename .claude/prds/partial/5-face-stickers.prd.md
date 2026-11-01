@@ -157,7 +157,7 @@ isTracked = false ─► last transforms reused ─► stickers frozen ─► fa
 | Core Image render > 33 ms on iPhone 11 | Med | Frame drops | Pre-render sticker images once; one `CIContext` (Metal); measured in [7] |
 
 ---
-*Status: PARTIAL — PR #TBD*
+*Status: PARTIAL — PR #20*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
