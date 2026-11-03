@@ -197,11 +197,17 @@ private struct LayerView: UIViewRepresentable {
 
         required init?(coder _: NSCoder) { nil }
 
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            if window != nil { layer.addSublayer(hosted) }
+            setNeedsLayout()
+        }
+
         override func layoutSubviews() {
             super.layoutSubviews()
+            guard hosted.superlayer === layer else { return }
             CATransaction.begin()
             CATransaction.setDisableActions(true)
-            layer.addSublayer(hosted)
             hosted.frame = bounds
             CATransaction.commit()
         }
