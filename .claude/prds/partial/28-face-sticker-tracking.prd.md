@@ -180,7 +180,7 @@ Face returns → stickers drawn on the first tracked frame at their anchors
 | Raw ARKit frames are already mirrored or rotated differently than assumed | Med | Preview or partner flipped wrongly | Verify both screens on device (AC2) before tuning the rest |
 
 ---
-*Status: PARTIAL — PR #TBD*
+*Status: PARTIAL — PR #21*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
