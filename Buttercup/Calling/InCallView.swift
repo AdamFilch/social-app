@@ -75,7 +75,7 @@ struct InCallView: View {
     }
 
     private var me: some View {
-        Feed(track: calls.localVideo, profile: session.me, mirror: calls.front)
+        Feed(track: calls.localVideo, profile: session.me, mirror: calls.front, preview: calls.front && calls.videoSource != nil ? stickers.compositor.preview : nil)
     }
 
     private var partner: some View {
@@ -165,12 +165,45 @@ struct Feed: View {
     let track: VideoTrack?
     let profile: Profile?
     var mirror = false
+    var preview: CALayer?
 
     var body: some View {
-        if let track {
+        if track != nil, let preview {
+            LayerView(layer: preview)
+        } else if let track {
             SwiftUIVideoView(track, layoutMode: .fill, mirrorMode: mirror ? .mirror : .off)
         } else {
             Color(white: 0.15).overlay { Avatar(profile: profile, size: 88) }
+        }
+    }
+}
+
+private struct LayerView: UIViewRepresentable {
+    let layer: CALayer
+
+    func makeUIView(context _: Context) -> Host {
+        Host(hosted: layer)
+    }
+
+    func updateUIView(_: Host, context _: Context) {}
+
+    final class Host: UIView {
+        let hosted: CALayer
+
+        init(hosted: CALayer) {
+            self.hosted = hosted
+            super.init(frame: .zero)
+        }
+
+        required init?(coder _: NSCoder) { nil }
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            layer.addSublayer(hosted)
+            hosted.frame = bounds
+            CATransaction.commit()
         }
     }
 }

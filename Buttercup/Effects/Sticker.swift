@@ -86,12 +86,16 @@ private extension UIFont {
     }
 }
 
+enum Anchor {
+    case surface(triangle: Int, weights: SIMD3<Float>)
+    case plane(SIMD3<Float>)
+}
+
 struct PlacedSticker: Identifiable {
     let sticker: Sticker
-    var vertexIndex: Int?
-    var offset: SIMD2<Float>
+    var anchor: Anchor
     var scale: Float = 1
-    var rotation: Float
+    var rotation: Float = 0
     let image: CIImage
 
     var id: UUID { sticker.id }
@@ -107,22 +111,27 @@ final class StickerLayer {
     var selected: UUID?
     var dragging: Sticker?
     private(set) var drops = 0
+    private(set) var faceTracked = false
     let compositor = StickerCompositor()
 
+    init() {
+        compositor.onTracking = { [weak self] tracked in
+            Task { @MainActor in self?.faceTracked = tracked }
+        }
+    }
+
     var full: Bool { items.count >= Self.cap }
+    var blocked: Bool { full || !faceTracked }
 
     func add(_ sticker: Sticker, at point: CGPoint?) {
-        guard !full, let image = sticker.render() else { return }
-        let pin = compositor.pin(at: point)
-        items.append(PlacedSticker(sticker: sticker, vertexIndex: pin.vertexIndex, offset: pin.offset, rotation: -pin.roll, image: image))
+        guard !full, let anchor = compositor.pin(at: point), let image = sticker.render() else { return }
+        items.append(PlacedSticker(sticker: sticker, anchor: anchor, image: image))
         drops += 1
     }
 
     func move(_ id: UUID, to point: CGPoint) {
-        guard let index = items.firstIndex(where: { $0.id == id }) else { return }
-        let pin = compositor.pin(at: point)
-        items[index].vertexIndex = pin.vertexIndex
-        items[index].offset = pin.offset
+        guard let index = items.firstIndex(where: { $0.id == id }), let anchor = compositor.pin(at: point) else { return }
+        items[index].anchor = anchor
     }
 
     func update(_ id: UUID, _ change: (inout PlacedSticker) -> Void) {

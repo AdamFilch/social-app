@@ -63,11 +63,8 @@ struct StickerGestures: View {
         if let id = stickers.selected {
             TimelineView(.animation) { _ in
                 if let p = stickers.compositor.placement(id) {
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(.white, style: StrokeStyle(lineWidth: 2.5, dash: [8, 6]))
-                        .frame(width: p.size.width * map().scale + 16, height: p.size.height * map().scale + 16)
-                        .rotationEffect(.radians(mirror ? p.angle : -p.angle))
-                        .position(map().toView(p.center))
+                    Path { $0.addLines(p.corners.map(map().toView)); $0.closeSubpath() }
+                        .stroke(.white, style: StrokeStyle(lineWidth: 2.5, lineJoin: .round, dash: [8, 6]))
                 }
             }
             .allowsHitTesting(false)
