@@ -153,8 +153,8 @@ Face returns → stickers drawn on the first tracked frame at their anchors
 - [ ] AC4 (device): A sticker dropped above the head or beside it stays there relative to the head as you move; one dropped on the cheek stays on the cheek. No drop snaps back to the face.
 - [ ] AC5 (device): With no face tracked, tray cells, Add and the emoji field are disabled with "Show your face to add stickers", and a drop adds nothing.
 - [ ] AC6 (device): The compositor logs its per-frame time (both renders) with `Logger`; on an iPhone 11 it stays under 33 ms in a call with 10 stickers.
-- [ ] AC7: Simulator (no face): the tray shows the no-face disabled state, and the call still connects with your own preview showing the mirrored clip.
-- [ ] AC8: `xcodebuild` builds for the simulator and for `generic/platform=iOS`.
+- [x] AC7: Simulator (no face): the tray shows the no-face disabled state, and the call still connects with your own preview showing the mirrored clip.
+- [x] AC8: `xcodebuild` builds for the simulator and for `generic/platform=iOS`.
 
 ## Required Changes
 - **Anchor and placement**: `Anchor` type, surface hit test and plane intersection in `pin(at:)`, and removal of the 3 cm snap (see [Overview](#overview), D43, D49, D50).
@@ -180,4 +180,26 @@ Face returns → stickers drawn on the first tracked frame at their anchors
 | Raw ARKit frames are already mirrored or rotated differently than assumed | Med | Preview or partner flipped wrongly | Verify both screens on device (AC2) before tuning the rest |
 
 ---
-*Status: READY — ticket [28]*
+*Status: PARTIAL — PR #TBD*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ⚠️ unverified | Device only (D36). In code: `render` sets `projection = nil` on any frame without a tracked `ARFaceAnchor`, so nothing is placed or drawn; no projection is kept between frames. |
+| AC2 | ⚠️ unverified | Device only for stickers. On two simulators the self tile showed the test clip mirrored ("test clip" read backwards) and the partner saw it unmirrored. |
+| AC3 | ⚠️ unverified | Device only (D36). |
+| AC4 | ⚠️ unverified | Device only (D36). |
+| AC5 | ⚠️ unverified | Device only (D36). The same disabled state was seen on the simulator (AC7). |
+| AC6 | ⚠️ unverified | Logging is in: `StickerCompositor` logs "Frame time avg X ms, max Y ms, N stickers" every 30 frames (category `StickerCompositor`). The simulator showed avg 3.7–4.7 ms with the clip and 0 stickers; the iPhone 11 number with 10 stickers needs a device. |
+| AC7 | ✅ done | iPhone 16e and iPhone Air simulators in a local Video call: the self tile showed the mirrored clip; Add sticker opened the tray with "Show your face to add stickers", emoji cells, the emoji field and Add (with "Hi" typed) at 40%; tapping the 🌸 and Add placed nothing. |
+| AC8 | ✅ done | `xcodebuild … -destination 'platform=iOS Simulator,…' build` and `… -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build` both succeed with no warnings in app code. |
+
+### Needs attention
+Run on two iPhones in a Video call, front camera on, then tick the ACs:
+1. AC5 first: with the tray open, cover the camera. Cells, the emoji field and Add go dim with "Show your face to add stickers"; dragging a cell onto the view adds nothing. Uncover: they come back.
+2. AC4: drag 👑 from the tray to about 3 cm above your hairline and 🌸 onto your left cheek. Move and turn your head: the crown stays above your head, the flower stays on the cheek, and neither snaps back.
+3. AC3: tilt your head (stickers tilt), turn left and right and nod (they turn and narrow). Turn until the cheek faces away: the flower disappears and returns as you turn back.
+4. AC2: add the text "hi". Your own screen is a mirror and "hi" reads left to right; the partner's screen is unmirrored and "hi" also reads left to right. Check an image sticker the same way.
+5. AC1: cover the camera: all stickers vanish on that frame and return when you uncover it. Slowly move your face off the left edge: stickers slide off-screen with it and none stay stuck at the edge.
+6. AC6: with 10 stickers placed, watch Console (subsystem `com.adamfilchoir.buttercup`, category `StickerCompositor`) for a minute. Avg and max should stay under 33 ms.
+7. Also check: a twist turns the sticker the same way your fingers turn (in the mirrored view), and the dashed selection outline follows the tilted, foreshortened sticker.
