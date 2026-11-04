@@ -1,135 +1,128 @@
 import SwiftUI
 
-struct StickerTray: View {
-    static let small = PresentationDetent.height(110)
-
+struct EffectsPanel: View {
     @Environment(StickerLayer.self) private var stickers
-    @Binding var detent: PresentationDetent
-    @State private var tab = Tab.emoji
-    @State private var typed = ""
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let height: CGFloat
+    let faceAllowed: Bool
+    let onClose: () -> Void
+    let onAdd: (Sticker.Kind) -> Void
     @State private var text = ""
-    @State private var color = StickerColor.ink
+    @State private var colour = InkColour.ink
+    @State private var drag: CGFloat = 0
+    @FocusState private var focused: Bool
 
-    enum Tab {
-        case emoji, text, images
+    private var reason: String? {
+        faceAllowed ? stickers.blockedReason : "Stickers come back when your camera's on"
     }
 
     var body: some View {
-        VStack(spacing: 16) {
-            Picker("Sticker kind", selection: $tab) {
-                Text("Emoji").tag(Tab.emoji)
-                Text("Text").tag(Tab.text)
-                Text("Images").tag(Tab.images)
+        @Bindable var stickers = stickers
+        VStack(spacing: 0) {
+            VStack(spacing: 8) {
+                Capsule()
+                    .fill(Color("TextSecondary").opacity(0.45))
+                    .frame(width: 36, height: 5)
+                    .padding(.top, 7)
+                HStack(spacing: 0) {
+                    IconCircleButton(symbol: "xmark", label: "Close stickers", action: onClose)
+                    PillTabRow(
+                        tabs: EffectTab.allCases,
+                        selection: $stickers.tab,
+                        disabled: faceAllowed ? [] : Set(EffectTab.allCases),
+                        title: \.title
+                    )
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Effects")
+                    .accessibilityAddTraits(.isHeader)
+                }
+                .padding(.leading, 16)
+                .frame(height: 44)
             }
-            .pickerStyle(.segmented)
+            .contentShape(Rectangle())
+            .gesture(swipeDown)
+            content
+                .padding(.top, 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .animation(.easeOut(duration: 0.15), value: stickers.tab)
+        }
+        .frame(height: focused ? 292 : height, alignment: .top)
+        .background {
+            UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28, style: .continuous)
+                .fill(Color("Surface"))
+                .ignoresSafeArea(.container, edges: .bottom)
+        }
+        .offset(y: drag)
+        .animation(.easeOut(duration: 0.25), value: focused)
+        .accessibilityAction(.escape, onClose)
+    }
 
-            if stickers.blocked {
-                Text(stickers.faceTracked ? "That's 10. Remove one to add more." : "Show your face to add stickers")
-                    .font(.subheadline.weight(.medium))
+    @ViewBuilder private var content: some View {
+        let blocked = !faceAllowed || stickers.blocked
+        switch stickers.tab {
+        case .stickers:
+            if Stickers.names.isEmpty {
+                Text("No stickers yet.")
                     .foregroundStyle(Color("TextSecondary"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack(spacing: 12) {
+                    StickerGrid(names: Stickers.names, hint: "Double-tap to add to your face") { onAdd(.image($0)) }
+                        .disabled(blocked)
+                        .opacity(blocked ? 0.4 : 1)
+                    line(reason ?? "Drag one onto your face")
+                }
+                .transition(.opacity)
             }
+        case .emoji:
+            EmojiStrip(categories: Emoji.categories, hint: "Double-tap to add. Actions for skin tone", footer: reason) { onAdd(.emoji($0)) }
+                .padding(.top, -4)
+                .transition(.opacity)
+        case .text:
+            VStack(spacing: 12) {
+                TextStickerComposer(
+                    text: $text,
+                    colour: $colour,
+                    font: .constant(.rounded),
+                    focus: $focused,
+                    colours: Sticker.textColours,
+                    onAdd: addText
+                )
+                .disabled(blocked)
+                .opacity(blocked ? 0.4 : 1)
+                if let reason { line(reason) }
+            }
+            .onAppear { if !blocked { focused = true } }
+            .transition(.opacity)
+        }
+    }
 
-            ScrollView {
-                switch tab {
-                case .emoji: emoji
-                case .text: textTab
-                case .images: images
+    private func line(_ text: String) -> some View {
+        Text(text)
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(Color("TextSecondary"))
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 16)
+    }
+
+    private func addText() {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        focused = false
+        onAdd(.text(trimmed, colour))
+    }
+
+    private var swipeDown: some Gesture {
+        DragGesture(minimumDistance: 10)
+            .onChanged { value in
+                if !reduceMotion { drag = max(0, value.translation.height) }
+            }
+            .onEnded { value in
+                if value.translation.height > height * 0.3 || value.velocity.height > 600 {
+                    onClose()
+                } else {
+                    withAnimation(.easeOut(duration: 0.2)) { drag = 0 }
                 }
             }
-        }
-        .padding(24)
-        .animation(.easeOut(duration: 0.15), value: tab)
-    }
-
-    private var emoji: some View {
-        VStack(spacing: 16) {
-            grid(Sticker.emoji) { emoji in
-                item(.emoji(emoji)) { Text(emoji).font(.system(size: 40)) }
-            }
-            TextField("Or type any emoji", text: $typed)
-                .textFieldStyle(.roundedBorder)
-                .submitLabel(.done)
-                .onSubmit {
-                    guard let first = typed.first else { return }
-                    place(.emoji(String(first)))
-                    typed = ""
-                }
-                .dimmed(stickers.blocked)
-        }
-    }
-
-    private var textTab: some View {
-        VStack(spacing: 16) {
-            TextField("Your text", text: $text)
-                .textFieldStyle(.roundedBorder)
-            HStack(spacing: 12) {
-                ForEach(StickerColor.allCases) { swatch in
-                    Button { color = swatch } label: {
-                        Circle()
-                            .fill(Color(swatch.uiColor))
-                            .strokeBorder(Color("Outline"), lineWidth: color == swatch ? 3 : 1.5)
-                            .frame(width: 40, height: 40)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(swatch.name)
-                    .accessibilityAddTraits(color == swatch ? .isSelected : [])
-                }
-            }
-            item(.text(text, color)) {
-                Text("Add")
-                    .font(.headline)
-                    .foregroundStyle(Color("OnAccent"))
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .background(Color("Accent"), in: .capsule)
-            }
-            .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty)
-        }
-    }
-
-    @ViewBuilder private var images: some View {
-        if Sticker.images.isEmpty {
-            Text("No image stickers yet.")
-                .foregroundStyle(Color("TextSecondary"))
-                .padding(.top, 32)
-        } else {
-            grid(Sticker.images) { name in
-                item(.image(name)) {
-                    Image(uiImage: Sticker.imageURL(name).flatMap { UIImage(contentsOfFile: $0.path) } ?? UIImage())
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 64, height: 64)
-                        .accessibilityLabel(name)
-                }
-            }
-        }
-    }
-
-    private func grid<Content: View>(_ values: [String], @ViewBuilder content: @escaping (String) -> Content) -> some View {
-        LazyVGrid(columns: [GridItem(.adaptive(minimum: 72))], spacing: 12) {
-            ForEach(values, id: \.self, content: content)
-        }
-    }
-
-    private func item<Label: View>(_ kind: Sticker.Kind, @ViewBuilder label: () -> Label) -> some View {
-        Button { place(kind) } label: { label() }
-            .buttonStyle(.plain)
-            .dimmed(stickers.blocked)
-            .onDrag {
-                guard !stickers.blocked else { return NSItemProvider() }
-                stickers.dragging = Sticker(kind: kind)
-                detent = Self.small
-                return NSItemProvider(object: "sticker" as NSString)
-            }
-    }
-
-    private func place(_ kind: Sticker.Kind) {
-        stickers.add(Sticker(kind: kind), at: nil)
-        detent = Self.small
-    }
-}
-
-private extension View {
-    func dimmed(_ off: Bool) -> some View {
-        disabled(off).opacity(off ? 0.4 : 1)
     }
 }

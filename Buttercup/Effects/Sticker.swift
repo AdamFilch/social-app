@@ -2,39 +2,22 @@ import CoreImage
 import SwiftUI
 import UIKit
 
-enum StickerColor: String, CaseIterable, Identifiable {
-    case ink, accent, pink, blue, green, lilac
+enum EffectTab: CaseIterable {
+    case stickers, emoji, text
 
-    var id: Self { self }
-
-    var name: String {
+    var title: String {
         switch self {
-        case .ink: "Ink"
-        case .accent: "Yellow"
-        case .pink: "Pink"
-        case .blue: "Blue"
-        case .green: "Green"
-        case .lilac: "Lilac"
+        case .stickers: "Stickers"
+        case .emoji: "Emoji"
+        case .text: "Text"
         }
-    }
-
-    var uiColor: UIColor {
-        let asset = switch self {
-        case .ink: "Outline"
-        case .accent: "Accent"
-        case .pink: "NotePaperPink"
-        case .blue: "NotePaperBlue"
-        case .green: "NotePaperGreen"
-        case .lilac: "NotePaperLilac"
-        }
-        return UIColor(named: asset)!.resolvedColor(with: UITraitCollection(userInterfaceStyle: .light))
     }
 }
 
 struct Sticker: Identifiable {
     enum Kind {
         case emoji(String)
-        case text(String, StickerColor)
+        case text(String, InkColour)
         case image(String)
 
         var isText: Bool {
@@ -45,11 +28,11 @@ struct Sticker: Identifiable {
     let id = UUID()
     let kind: Kind
 
-    static let emoji = ["🌸", "❤️", "⭐️", "🌈", "😎", "🥸", "👑", "🎀", "🦋", "🍓", "🔥", "✨", "💋", "🐶", "🐱", "🌻"]
+    static let textColours: [InkColour] = [.ink, .buttercup, .pink, .blue, .green, .lilac]
 
-    static let images = (Bundle.main.urls(forResourcesWithExtension: "png", subdirectory: "stickers") ?? [])
-        .map { $0.deletingPathExtension().lastPathComponent }
-        .sorted()
+    static func dropped(_ payload: String) -> Kind {
+        Stickers.names.contains(payload) ? .image(payload) : .emoji(payload)
+    }
 
     static func imageURL(_ name: String) -> URL? {
         Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "stickers")
@@ -62,7 +45,7 @@ struct Sticker: Identifiable {
         case .emoji(let emoji):
             Self.draw(emoji, font: .systemFont(ofSize: 360), color: .black, outline: nil)
         case .text(let text, let color):
-            Self.draw(text, font: .systemFont(ofSize: 160, weight: .heavy).rounded, color: color.uiColor, outline: StickerColor.ink.uiColor)
+            Self.draw(text, font: .systemFont(ofSize: 160, weight: .heavy).rounded, color: color.uiColor, outline: InkColour.ink.uiColor)
         }
     }
 
@@ -113,24 +96,38 @@ final class StickerLayer {
         didSet { compositor.items = items }
     }
     var selected: UUID?
-    var dragging: Sticker?
+    var tab = EffectTab.stickers
     private(set) var drops = 0
     private(set) var faceTracked = false
+    private(set) var hot = ProcessInfo.processInfo.thermalState == .critical
     let compositor = StickerCompositor()
 
     init() {
         compositor.onTracking = { [weak self] tracked in
             Task { @MainActor in self?.faceTracked = tracked }
         }
+        NotificationCenter.default.addObserver(forName: ProcessInfo.thermalStateDidChangeNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.hot = ProcessInfo.processInfo.thermalState == .critical }
+        }
     }
 
     var full: Bool { items.count >= Self.cap }
-    var blocked: Bool { full || !faceTracked }
+    var blocked: Bool { full || hot || !faceTracked }
 
-    func add(_ sticker: Sticker, at point: CGPoint?) {
-        guard !full, let anchor = compositor.pin(at: point), let image = sticker.render() else { return }
+    var blockedReason: String? {
+        if hot { "Stickers are paused while your phone cools down." }
+        else if full { "That's 10. Remove one to add more." }
+        else if !faceTracked { "Show your face to add stickers" }
+        else { nil }
+    }
+
+    @discardableResult
+    func add(_ sticker: Sticker, at point: CGPoint?, select: Bool = false) -> Bool {
+        guard !blocked, let anchor = compositor.pin(at: point), let image = sticker.render() else { return false }
         items.append(PlacedSticker(sticker: sticker, anchor: anchor, image: image))
+        if select { selected = sticker.id }
         drops += 1
+        return true
     }
 
     func move(_ id: UUID, to point: CGPoint) {
@@ -151,6 +148,5 @@ final class StickerLayer {
     func clear() {
         items = []
         selected = nil
-        dragging = nil
     }
 }
