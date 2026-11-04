@@ -23,7 +23,7 @@ struct StickerTray: View {
             }
             .pickerStyle(.segmented)
 
-            if !stickers.faceTracked || stickers.full {
+            if stickers.blocked {
                 Text(stickers.faceTracked ? "That's 10. Remove one to add more." : "Show your face to add stickers")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color("TextSecondary"))
@@ -54,8 +54,7 @@ struct StickerTray: View {
                     place(.emoji(String(first)))
                     typed = ""
                 }
-                .disabled(stickers.blocked)
-                .opacity(stickers.blocked ? 0.4 : 1)
+                .dimmed(stickers.blocked)
         }
     }
 
@@ -114,8 +113,7 @@ struct StickerTray: View {
     private func item<Label: View>(_ kind: Sticker.Kind, @ViewBuilder label: () -> Label) -> some View {
         Button { place(kind) } label: { label() }
             .buttonStyle(.plain)
-            .disabled(stickers.blocked)
-            .opacity(stickers.blocked ? 0.4 : 1)
+            .dimmed(stickers.blocked)
             .onDrag {
                 guard !stickers.blocked else { return NSItemProvider() }
                 stickers.dragging = Sticker(kind: kind)
@@ -127,5 +125,11 @@ struct StickerTray: View {
     private func place(_ kind: Sticker.Kind) {
         stickers.add(Sticker(kind: kind), at: nil)
         detent = Self.small
+    }
+}
+
+private extension View {
+    func dimmed(_ off: Bool) -> some View {
+        disabled(off).opacity(off ? 0.4 : 1)
     }
 }

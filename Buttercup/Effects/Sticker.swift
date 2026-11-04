@@ -36,6 +36,10 @@ struct Sticker: Identifiable {
         case emoji(String)
         case text(String, StickerColor)
         case image(String)
+
+        var isText: Bool {
+            if case .text = self { true } else { false }
+        }
     }
 
     let id = UUID()

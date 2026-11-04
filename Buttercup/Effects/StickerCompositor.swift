@@ -10,20 +10,20 @@ final class StickerCompositor: @unchecked Sendable {
     }
 
     private struct Projection {
-        let anchor: ARFaceAnchor
+        let face: ARFaceAnchor
         let camera: ARCamera
         let raw: CGSize
         let toDisplay: CGAffineTransform
         let vertices: [SIMD3<Float>]
         let indices: [Int16]
 
-        init(anchor: ARFaceAnchor, camera: ARCamera, raw: CGSize, toDisplay: CGAffineTransform) {
-            self.anchor = anchor
+        init(face: ARFaceAnchor, camera: ARCamera, raw: CGSize, toDisplay: CGAffineTransform) {
+            self.face = face
             self.camera = camera
             self.raw = raw
             self.toDisplay = toDisplay
-            vertices = anchor.geometry.vertices
-            indices = anchor.geometry.triangleIndices
+            vertices = face.geometry.vertices
+            indices = face.geometry.triangleIndices
         }
 
         var eye: SIMD3<Float> {
@@ -32,7 +32,7 @@ final class StickerCompositor: @unchecked Sendable {
         }
 
         func world(_ v: SIMD3<Float>, _ w: Float = 1) -> SIMD3<Float> {
-            let p = anchor.transform * SIMD4(v, w)
+            let p = face.transform * SIMD4(v, w)
             return SIMD3(p.x, p.y, p.z)
         }
 
@@ -77,10 +77,10 @@ final class StickerCompositor: @unchecked Sendable {
 
         func onPlane(_ point: CGPoint) -> Anchor? {
             let z = vertices.map(\.z).max() ?? 0
-            let plane = anchor.transform * simd_float4x4(SIMD4(1, 0, 0, 0), SIMD4(0, 0, 1, 0), SIMD4(0, -1, 0, 0), SIMD4(0, 0, z, 1))
+            let plane = face.transform * simd_float4x4(SIMD4(1, 0, 0, 0), SIMD4(0, 0, 1, 0), SIMD4(0, -1, 0, 0), SIMD4(0, 0, z, 1))
             let p = point.applying(toDisplay.inverted())
             guard let world = camera.unprojectPoint(CGPoint(x: p.x, y: raw.height - p.y), ontoPlane: plane, orientation: .landscapeRight, viewportSize: raw) else { return nil }
-            let local = anchor.transform.inverse * SIMD4(world, 1)
+            let local = face.transform.inverse * SIMD4(world, 1)
             return .plane(SIMD3(local.x, local.y, z))
         }
 
@@ -123,7 +123,7 @@ final class StickerCompositor: @unchecked Sendable {
     private let context = MTLCreateSystemDefaultDevice().map { CIContext(mtlDevice: $0) } ?? CIContext()
     private var pools: [String: CVPixelBufferPool] = [:]
     private let log = Logger(subsystem: "com.adamfilchoir.buttercup", category: "StickerCompositor")
-    private var timing = (frames: 0, total: 0.0, worst: 0.0)
+    private var frameTimes = (frames: 0, total: 0.0, worst: 0.0)
 
     init() {
         preview.videoGravity = .resizeAspectFill
@@ -168,24 +168,20 @@ final class StickerCompositor: @unchecked Sendable {
         let size = raw.extent.applying(upright).size
         let mirror = CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: size.width, ty: 0)
         let toDisplay = mirrored ? upright.concatenating(mirror) : upright
-        let (layers, changed): ([(CIImage, [CGPoint], Bool)], Bool?) = lock.withLock {
+        let (layers, changed): ([Layer], Bool?) = lock.withLock {
             display = size
             if let face, let camera, face.isTracked {
-                projection = Projection(anchor: face, camera: camera, raw: raw.extent.size, toDisplay: toDisplay)
+                projection = Projection(face: face, camera: camera, raw: raw.extent.size, toDisplay: toDisplay)
             } else {
                 projection = nil
             }
             placements = [:]
-            var layers: [(CIImage, [CGPoint], Bool)] = []
+            var layers: [Layer] = []
             if let projection {
                 for item in stickers {
                     guard let corners = projection.quad(item) else { continue }
                     placements[item.id] = Placement(corners: corners)
-                    if case .text = item.sticker.kind {
-                        layers.append((item.image, corners, true))
-                    } else {
-                        layers.append((item.image, corners, false))
-                    }
+                    layers.append(Layer(image: item.image, corners: corners, readable: item.sticker.kind.isText))
                 }
             }
             let now = projection != nil
@@ -195,32 +191,43 @@ final class StickerCompositor: @unchecked Sendable {
         if let changed { onTracking?(changed) }
 
         let visible = ProcessInfo.processInfo.thermalState == .critical ? [] : layers
+        let video = raw.transformed(by: toDisplay)
         var overlay = CIImage.empty()
         var flipped = CIImage.empty()
-        for (image, c, text) in visible {
-            overlay = warp(image, text ? c : [c[1], c[0], c[3], c[2]]).composited(over: overlay)
-            let m = c.map { $0.applying(mirror) }
-            flipped = warp(image, [m[1], m[0], m[3], m[2]]).composited(over: flipped)
+        for layer in visible {
+            let c = layer.corners
+            overlay = warp(layer.image, layer.readable ? c : Self.swapSides(c)).composited(over: overlay)
+            flipped = warp(layer.image, Self.swapSides(c.map { $0.applying(mirror) })).composited(over: flipped)
         }
 
         var output = buffer
         if !visible.isEmpty || mirrored, let target = makeBuffer(size) {
-            context.render(overlay.composited(over: raw.transformed(by: toDisplay)), to: target)
+            context.render(overlay.composited(over: video), to: target)
             output = target
         }
         if let target = makeBuffer(size) {
-            context.render(flipped.composited(over: raw.transformed(by: toDisplay).transformed(by: mirror)), to: target)
+            context.render(flipped.composited(over: video.transformed(by: mirror)), to: target)
             show(target)
         }
 
         let ms = Double(DispatchTime.now().uptimeNanoseconds - start) / 1_000_000
-        timing = (timing.frames + 1, timing.total + ms, max(timing.worst, ms))
-        if timing.frames == 30 {
-            let (average, worst) = (timing.total / 30, timing.worst)
+        frameTimes = (frameTimes.frames + 1, frameTimes.total + ms, max(frameTimes.worst, ms))
+        if frameTimes.frames == 30 {
+            let (average, worst) = (frameTimes.total / 30, frameTimes.worst)
             log.notice("Frame time avg \(average, format: .fixed(precision: 1)) ms, max \(worst, format: .fixed(precision: 1)) ms, \(visible.count) stickers")
-            timing = (0, 0, 0)
+            frameTimes = (0, 0, 0)
         }
         return output
+    }
+
+    private struct Layer {
+        let image: CIImage
+        let corners: [CGPoint]
+        let readable: Bool
+    }
+
+    private static func swapSides(_ c: [CGPoint]) -> [CGPoint] {
+        [c[1], c[0], c[3], c[2]]
     }
 
     private func warp(_ image: CIImage, _ c: [CGPoint]) -> CIImage {
