@@ -47,6 +47,8 @@ The six existing asset-catalog names first, then proposed additions (*new*). Eac
 | Divider *new* | #EDE6CC | #3A342D | 1.5 pt row dividers inside list groups |
 | CallFrost *new* | n/a | #342F29 at 55% | Fill of frosted call controls, over `.ultraThinMaterial` (dark). Call chrome only |
 | OnDanger *new* | n/a | #1B1814 | Symbol on a Danger fill (End call). Call chrome only |
+| NoteDotMine *new* | #2F6FDB | #79AEFF | Dot and legend for your own notes in the Notes month view |
+| NoteDotPartner *new* | #E5483B | #FF7A6E | Dot and legend for your partner's notes in the Notes month view |
 
 **NotePaper pastels** (*new*, the same in both modes because they are part of the note image):
 
@@ -88,11 +90,17 @@ Avatar tints are per person, not per device: each person keeps the same tint on 
 | Divider | Surface | n/a | 1.23 | 1.25 |
 | TextPrimary (light) | each NotePaper | 4.5 | 10.15–12.25 | same |
 | OnDanger | Danger | 4.5 | n/a | 6.9 |
+| NoteDotMine | Surface | 3 (non-text) | 4.67 | 6.83 |
+| NoteDotPartner | Surface | 3 (non-text) | 3.87 | 6.06 |
+| NoteDotMine | Accent | n/a* | 3.02 | 1.49 |
+| NoteDotPartner | Accent | n/a* | 2.51 | 1.67 |
 | TextPrimary (dark) | CallFrost over white video (≈#8F8B86) | 3 (non-text) | n/a | 3.1 |
 
 Everything passes AA. Two pairs are low on purpose:
 - **Accent on Background (light)** is a fill colour. It always has an Outline around it and OnAccent text on it, so its own contrast doesn't carry meaning.
 - **Divider** is a quiet hint. Rows are also separated by height (62 pt).
+
+\* On the today cell, the 1.5 pt OnAccent ring (11.6:1 against Accent) carries the dot's shape. Position (left = you) and the legend words back up the colour, so colour is never the only signal.
 
 ## 4. Type
 
@@ -225,7 +233,7 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 - **Sender tag:** a 24 pt avatar, 8 pt in from the bottom-left corner.
 - **New (unseen by you):** the 3 pt Highlight ring with a 3 pt gap. Where there is room, a "New" badge appears next to the tile. Both fade out over 0.15 s once you have opened the note.
 - **Sizes:** 112 on the Calling card, half-width in the Notes grid (about 181 on iPhone 11), and full width in the note viewer.
-- **Doodle:** the tape strip sits on the newest tile in the Notes grid only.
+- The Notes tab doesn't use the New ring until notes have a seen state.
 - **Accessibility label:** "Note from Sam, 12 minutes ago, new".
 
 ### Small widget
@@ -250,8 +258,9 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 ### Week strip (Notes)
 
 - Seven cells, about 48 × 74 pt each, with 6 pt gaps, radius 14 and a 2 pt Outline on Surface.
-- Each cell shows the day letter (caption), the date (headline, monospaced digits), and up to three stacked mini-cards in that day's NotePaper colours.
-- Today is an Accent cell. Tapping a day opens that day's notes, as the calendar does.
+- Mini-cards are 15 pt crops of the day's three newest note images, newest on top.
+- Today is an Accent cell. The selected day has a 2 pt Background gap and a 2.5 pt Outline ring outside the cell. Today and selected shows both.
+- Swiping pages by week; the same weekday stays selected.
 
 ### Icon circle button
 
@@ -270,6 +279,18 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 
 - Accent fill for the one selected tab or tool. Outline ring for the selected colour. Divider disc for the current category chip. Never two Accent selections in one row.
 
+### Day dots
+
+- Two fixed 8 pt places (left = you, right = partner), 1.5 pt Outline rings (OnAccent on an Accent cell), with a legend beside them.
+
+### Dialog card
+
+- A centred Surface card, 20 pt from the screen edges, radius 28 (radius.sheet), with a 2.5 pt Outline, 16 pt padding and 14 pt between rows. There's no sticker and no blurred shadow.
+- The scrim is black at 42% (light) or 60% (dark) and covers the tab bar.
+- It closes with a 44 pt ✕ Icon circle button or a tap on the scrim.
+- It opens with a 0.2 s ease-out fade and a 0.96 → 1 scale, and closes with a 0.15 s fade. With Reduce Motion it's a fade only.
+- First use: the Notes note dialog.
+
 ## 7. Screens (as mocked up)
 
 - **Calling:**
@@ -278,10 +299,10 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
   - Then "Recent calls" as a list group.
   - The doodle is the flower next to the title. There is no sticker.
 - **Notes:**
-  - The title and month, then the full-width sticker primary "Make a note".
-  - Then the week strip.
-  - Then "Today" with a count, over a two-column grid of tiles with sender tags.
-  - The doodle is the tape on the newest tile.
+  - The title and the month toggle pill, then the full-width sticker "Make a note".
+  - Then the week strip and the selected day's header and 2-column grid, or the month card with dots and a summary.
+  - There is no doodle.
+  - Spec: [notes-tab.md](../design/specs/notes-tab.md).
 - **Hobbies:**
   - One card per hobby. The header has an icon tile, the hobby name and both avatars with done badges, and a status sentence sits under it.
   - Your current item has a cover placeholder, title, progress text, progress bar and a +1 button.
@@ -330,7 +351,7 @@ Four SVG assets, drawn once and exported as template-free PDF or SVG in the asse
 | --- | --- | --- |
 | `doodle-flower` | 34 pt | Next to the Calling title; empty widget; empty states about calls |
 | `doodle-sparkle` | 30 pt | Next to the Hobbies title; "all done today" moments |
-| `doodle-tape` | 52 × 18 pt | Across the top edge of the newest note tile in the Notes grid |
+| `doodle-tape` | 52 × 18 pt | Unused (removed from the Notes grid 2026-10-29); kept for later |
 | `doodle-squiggle` | 110 × 14 pt | Under a title in onboarding and pairing screens |
 
 **Rules for doodles:**
@@ -364,7 +385,7 @@ Four SVG assets, drawn once and exported as template-free PDF or SVG in the asse
 - All text pairs pass AA in both modes (section 3). Outlines and rings pass 3:1.
 - Touch targets are at least 44 pt. Call buttons are 56, rows 62, +1 is 48 and chips have a 44 pt hit area.
 - Nothing is shown by colour alone: missed, new, done and selected each have a word or a symbol change.
-- Dynamic Type at all sizes. At accessibility sizes the call pair stacks, the Notes grid becomes one column and the week strip scrolls horizontally inside its own row.
+- Dynamic Type at all sizes. At accessibility sizes the call pair stacks, the Notes grid becomes one column, and week-strip and month cells cap at `.accessibility1` and use the Large Content Viewer.
 - With Reduce Motion, zooms become fades. Nothing else moves anyway.
 - VoiceOver labels:
   - Avatars use the person's name.
