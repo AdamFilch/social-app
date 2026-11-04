@@ -71,7 +71,7 @@ Non-obvious design decisions:
 
 ## Acceptance Criteria
 - [ ] AC1: Every criterion in spec §10, except the Draw ones, holds. Check each one on the iPhone 17 simulator in a two-simulator call (adam and partner), in light and dark mode, and note the evidence for each.
-- [ ] AC2: The pill row shows Stickers · Emoji · Text only.
+- [x] AC2: The pill row shows Stickers · Emoji · Text only.
 - [ ] AC3: The face-lost and no-face states behave as [28] (D44, D47), not as the spec's "freeze" row.
 - [ ] AC4 (device): Drag from the tray onto the face on an iPhone: the panel slides away as the finger crosses its top, and the drop follows [28]'s anchor rules.
 - [ ] AC5: Builds for the simulator and `generic/platform=iOS`; the minimum iOS 18 runtime launches the call screen.
@@ -94,4 +94,19 @@ Non-obvious design decisions:
 | Drag out of a non-sheet panel conflicts with the panel's swipe-down | Med | Missed drops | Swipe-down only on grabber and header (spec §4.4) |
 
 ---
-*Status: READY — ticket [29]*
+*Status: PARTIAL — PR #PRNUM*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ⚠️ unverified | Checked on an iPhone 17 (adam) and iPhone 16e (partner) simulator call, light and dark. Seen: dark chrome with light status bar; frosted controls (material + `CallFrost`) with no outlines; name pill with ticking monospaced timer; bar Stickers · Mute · Camera · Route · End in states A and C; Mute and Camera off fill Accent with `mic.slash` / `video.slash`; End is Danger with OnDanger; small tile drag snapped to bottom-left 16 pt above the bar; tap → medium tile with 40% dim and live bar, tap dim shrinks; medium (you) Expand / Flip / Add stickers, medium (partner) Expand only; Expand swaps both ways; camera-off views for both people (128 / 96 / 56 avatars, "Camera off"); panel in-view at 50% height, 28 pt corners, light panel over dark chrome and dark panel in dark mode, covers the bar and the bar returns; partner tile moves to the top corner on its side; ✕ and swipe-down close it; reopens on the last tab, first open on Stickers; Stickers grid with hint; Emoji strip, chips jump and highlight, long-press tone picker with the remembered tone; Text field focus shrinks the panel, Add enabled only with text, six dots, checkerboard preview; camera off dims every tab with "Stickers come back when your camera's on" (the last three with a temporary local bypass of the no-face block, reverted before commit). Not verified: anything that needs a tracked face (tap / Add / drop placing at the nose point, selected Accent outline only in the preview, trash, 10-cap), drag out of the panel, the panel riding the software keyboard (the simulator's software keyboard couldn't be toggled), the system route picker (no picker on the simulator), VoiceOver labels and actions, Reduce Motion and Reduce Transparency, haptics. |
+| AC2 | ✅ done | Screenshots of the panel show the pills Stickers · Emoji · Text and nothing else (`EffectTab` has only those cases). |
+| AC3 | ⚠️ unverified | No-face state (D47) seen on the simulator: every tab's content at 40% with "Show your face to add stickers" and nothing placed. Face-lost hide (D44) is [28]'s compositor, unchanged here; needs a device. |
+| AC4 | ⚠️ unverified | Device only. In code: the big self view's `onDrop` delegate hides the panel while the finger is above the panel's top edge, brings it back below, and drops through [28]'s `pin(at:)`. |
+| AC5 | ⚠️ unverified | `xcodebuild` for `platform=iOS Simulator,name=iPhone 17` and `generic/platform=iOS` (`CODE_SIGNING_ALLOWED=NO`) both succeed. No iOS 18 simulator runtime is installed (only iOS 26.0 and 26.1), so the minimum-version launch wasn't run. |
+
+### Needs attention
+- Install an iOS 18 simulator runtime and open the call screen on it (AC5).
+- On two iPhones in a Video call: drag a sticker and an emoji out of the panel onto your face (AC4); tap a cell, type text and Add (nose point, selected, panel closes); tap a sticker to see the Accent outline (check it isn't in the partner's video) and the trash; place 10 and check the cap line; cover the camera to check D44 and D47 (AC3); open the Text tab and check the 292 pt panel sits on the keyboard; open the audio route picker.
+- Run VoiceOver, Reduce Motion and Reduce Transparency over the call screen and the panel (spec §9).
+
