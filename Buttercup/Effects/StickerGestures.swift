@@ -45,7 +45,7 @@ struct StickerGestures: View {
                             let turn = Float(value.second?.rotation.radians ?? 0)
                             stickers.update(target.id) {
                                 $0.scale = min(max(target.scale * scale, 0.3), 5)
-                                $0.rotation = target.rotation + (mirror ? turn : -turn)
+                                $0.rotation = target.rotation + (mirror ? -turn : turn)
                             }
                         }
                         .onEnded { _ in target = nil }

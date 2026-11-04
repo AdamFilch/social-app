@@ -106,7 +106,7 @@ final class StickerCompositor: @unchecked Sendable {
             let width = aspect > 1 ? longest / aspect : longest
             let x = right * width / 2
             let y = up * width * aspect / 2
-            return [center - x + y, center + x + y, center + x - y, center - x - y].map(project)
+            return [center + x + y, center - x + y, center - x - y, center + x - y].map(project)
         }
     }
 
@@ -161,12 +161,14 @@ final class StickerCompositor: @unchecked Sendable {
         }
     }
 
-    func render(_ buffer: CVPixelBuffer, face: ARFaceAnchor? = nil, camera: ARCamera? = nil, orientation: CGImagePropertyOrientation) -> CVPixelBuffer {
+    func render(_ buffer: CVPixelBuffer, face: ARFaceAnchor? = nil, camera: ARCamera? = nil, orientation: CGImagePropertyOrientation, mirrored: Bool = false) -> CVPixelBuffer {
         let start = DispatchTime.now().uptimeNanoseconds
         let raw = CIImage(cvPixelBuffer: buffer)
-        let toDisplay = raw.orientationTransform(for: orientation)
-        let size = raw.extent.applying(toDisplay).size
-        let (layers, changed): ([(CIImage, [CGPoint])], Bool?) = lock.withLock {
+        let upright = raw.orientationTransform(for: orientation)
+        let size = raw.extent.applying(upright).size
+        let mirror = CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: size.width, ty: 0)
+        let toDisplay = mirrored ? upright.concatenating(mirror) : upright
+        let (layers, changed): ([(CIImage, [CGPoint], Bool)], Bool?) = lock.withLock {
             display = size
             if let face, let camera, face.isTracked {
                 projection = Projection(anchor: face, camera: camera, raw: raw.extent.size, toDisplay: toDisplay)
@@ -174,12 +176,16 @@ final class StickerCompositor: @unchecked Sendable {
                 projection = nil
             }
             placements = [:]
-            var layers: [(CIImage, [CGPoint])] = []
+            var layers: [(CIImage, [CGPoint], Bool)] = []
             if let projection {
                 for item in stickers {
                     guard let corners = projection.quad(item) else { continue }
                     placements[item.id] = Placement(corners: corners)
-                    layers.append((item.image, corners))
+                    if case .text = item.sticker.kind {
+                        layers.append((item.image, corners, true))
+                    } else {
+                        layers.append((item.image, corners, false))
+                    }
                 }
             }
             let now = projection != nil
@@ -189,22 +195,21 @@ final class StickerCompositor: @unchecked Sendable {
         if let changed { onTracking?(changed) }
 
         let visible = ProcessInfo.processInfo.thermalState == .critical ? [] : layers
-        let mirror = CGAffineTransform(a: -1, b: 0, c: 0, d: 1, tx: size.width, ty: 0)
         var overlay = CIImage.empty()
-        var mirrored = CIImage.empty()
-        for (image, c) in visible {
-            overlay = warp(image, c).composited(over: overlay)
+        var flipped = CIImage.empty()
+        for (image, c, text) in visible {
+            overlay = warp(image, text ? c : [c[1], c[0], c[3], c[2]]).composited(over: overlay)
             let m = c.map { $0.applying(mirror) }
-            mirrored = warp(image, [m[1], m[0], m[3], m[2]]).composited(over: mirrored)
+            flipped = warp(image, [m[1], m[0], m[3], m[2]]).composited(over: flipped)
         }
 
         var output = buffer
-        if !visible.isEmpty, let target = makeBuffer(raw.extent.size) {
-            context.render(overlay.transformed(by: toDisplay.inverted()).composited(over: raw), to: target)
+        if !visible.isEmpty || mirrored, let target = makeBuffer(size) {
+            context.render(overlay.composited(over: raw.transformed(by: toDisplay)), to: target)
             output = target
         }
         if let target = makeBuffer(size) {
-            context.render(mirrored.composited(over: raw.transformed(by: toDisplay).transformed(by: mirror)), to: target)
+            context.render(flipped.composited(over: raw.transformed(by: toDisplay).transformed(by: mirror)), to: target)
             show(target)
         }
 

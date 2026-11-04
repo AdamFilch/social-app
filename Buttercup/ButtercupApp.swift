@@ -21,8 +21,8 @@ struct ButtercupApp: App {
             let tracker = ARKitFaceTracker()
             calls.videoSource = { capturer in
                 tracker.onFrame = { [weak capturer, weak tracker] buffer, face, time in
-                    let buffer = compositor.render(buffer, face: face, camera: tracker?.camera, orientation: .right)
-                    capturer?.capture(buffer, timeStampNs: Int64(time * 1_000_000_000), rotation: ._90)
+                    let buffer = compositor.render(buffer, face: face, camera: tracker?.camera, orientation: .right, mirrored: true)
+                    capturer?.capture(buffer, timeStampNs: Int64(time * 1_000_000_000))
                 }
                 tracker.start()
             }
