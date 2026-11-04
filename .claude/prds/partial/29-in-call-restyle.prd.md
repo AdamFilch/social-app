@@ -94,7 +94,7 @@ Non-obvious design decisions:
 | Drag out of a non-sheet panel conflicts with the panel's swipe-down | Med | Missed drops | Swipe-down only on grabber and header (spec §4.4) |
 
 ---
-*Status: PARTIAL — PR #PRNUM*
+*Status: PARTIAL — PR #22*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
