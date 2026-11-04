@@ -51,6 +51,8 @@ enum Emoji {
 struct EmojiStrip: View {
     let categories: [EmojiCategory]
     var rows = 3
+    var hint = "Double-tap to add to the note"
+    var footer: String?
     let onTap: (String) -> Void
     @State private var current: String?
     @State private var toning: Toning?
@@ -66,7 +68,17 @@ struct EmojiStrip: View {
         ScrollViewReader { proxy in
             VStack(spacing: 6) {
                 strip
-                chips(proxy)
+                    .disabled(footer != nil)
+                    .opacity(footer != nil ? 0.4 : 1)
+                if let footer {
+                    Text(footer)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color("TextSecondary"))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                } else {
+                    chips(proxy)
+                }
             }
         }
         .coordinateSpace(.named("EmojiStrip"))
@@ -86,7 +98,7 @@ struct EmojiStrip: View {
                             .accessibilityAddTraits(.isHeader)
                         LazyHGrid(rows: Array(repeating: GridItem(.fixed(72), spacing: 4), count: rows), spacing: 4) {
                             ForEach(category.emoji, id: \.emoji) { entry in
-                                EmojiCell(entry: entry, onTap: { if toning == nil { onTap($0) } }) { shown, frame in
+                                EmojiCell(entry: entry, hint: hint, onTap: { if toning == nil { onTap($0) } }) { shown, frame in
                                     withAnimation(.easeOut(duration: 0.15)) {
                                         toning = Toning(entry: entry, selection: shown, frame: frame)
                                     }
@@ -181,6 +193,7 @@ struct EmojiStrip: View {
 
 private struct EmojiCell: View {
     let entry: EmojiEntry
+    let hint: String
     let onTap: (String) -> Void
     let onLongPress: (String, CGRect) -> Void
     @AppStorage private var tone: String
@@ -188,8 +201,9 @@ private struct EmojiCell: View {
 
     static func toneKey(_ emoji: String) -> String { "emojiTone.\(emoji)" }
 
-    init(entry: EmojiEntry, onTap: @escaping (String) -> Void, onLongPress: @escaping (String, CGRect) -> Void) {
+    init(entry: EmojiEntry, hint: String, onTap: @escaping (String) -> Void, onLongPress: @escaping (String, CGRect) -> Void) {
         self.entry = entry
+        self.hint = hint
         self.onTap = onTap
         self.onLongPress = onLongPress
         _tone = AppStorage(wrappedValue: "", Self.toneKey(entry.emoji))
@@ -212,7 +226,7 @@ private struct EmojiCell: View {
             }
             .accessibilityElement()
             .accessibilityLabel(Emoji.names[shown] ?? entry.name)
-            .accessibilityHint("Double-tap to add to the note")
+            .accessibilityHint(hint)
             .accessibilityAddTraits(.isButton)
             .accessibilityAction { onTap(shown) }
             .accessibilityActions {
