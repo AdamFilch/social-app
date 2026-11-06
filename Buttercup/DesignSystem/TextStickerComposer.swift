@@ -25,6 +25,21 @@ struct TextSticker: View {
     }
 }
 
+struct Checkerboard: View {
+    var body: some View {
+        Canvas { context, size in
+            let square: CGFloat = 12
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color("Background")))
+            for row in 0..<Int((size.height / square).rounded(.up)) {
+                for column in 0..<Int((size.width / square).rounded(.up)) where (row + column).isMultiple(of: 2) {
+                    let tile = CGRect(x: CGFloat(column) * square, y: CGFloat(row) * square, width: square, height: square)
+                    context.fill(Path(tile), with: .color(Color("Divider")))
+                }
+            }
+        }
+    }
+}
+
 struct TextStickerComposer: View {
     enum Preview { case inline, external }
 
@@ -75,9 +90,10 @@ struct TextStickerComposer: View {
                 TextSticker(text: text.isEmpty ? "Type something" : text, font: font, colour: colour.color, size: 40)
                     .opacity(text.isEmpty ? 0.4 : 1)
                     .frame(maxWidth: .infinity, minHeight: 80, maxHeight: 80)
-                    .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color("Background")))
+                    .background(Checkerboard().clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)))
                     .padding(.horizontal, 16)
-                    .accessibilityHidden(true)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Preview, \(text), \(colour.name.lowercased())")
             }
         }
     }

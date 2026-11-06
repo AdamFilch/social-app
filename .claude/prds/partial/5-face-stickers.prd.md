@@ -127,16 +127,16 @@ isTracked = false ─► last transforms reused ─► stickers frozen ─► fa
 
 ## Acceptance Criteria
 <!-- Device ACs are a manual checklist (D36). -->
-- [ ] AC1: Simulator: Add sticker opens the big self view and the tray; an emoji dropped on the clip shows in the browser participant's view (the compositor runs; placement is approximate with no face).
+- [x] AC1: Simulator: Add sticker opens the big self view and the tray; an emoji dropped on the clip shows in the browser participant's view (the compositor runs; placement is approximate with no face).
 - [ ] AC2 (device): A dropped sticker stays on the same face spot while you turn and tilt your head, as seen on the partner's phone.
 - [ ] AC3 (device): Drag moves it to a new spot; pinch resizes; twist rotates; tap → trash removes it.
 - [ ] AC4 (device): Text sticker with a chosen colour appears with an ink outline.
-- [ ] AC5: Image tab lists every PNG in `assets/stickers`.
-- [ ] AC6: The 11th sticker can't be added and the caption shows.
+- [x] AC5: Image tab lists every PNG in `assets/stickers`.
+- [x] AC6: The 11th sticker can't be added and the caption shows.
 - [ ] AC7 (device): Covering the camera freezes stickers; uncovering resumes tracking.
-- [ ] AC8: Camera off then on keeps the stickers; ending the call and starting a new one starts with none.
+- [x] AC8: Camera off then on keeps the stickers; ending the call and starting a new one starts with none.
 - [ ] AC9: Back camera hides Add sticker and draws no stickers.
-- [ ] AC10: `xcodebuild` builds for the simulator and a generic iOS device.
+- [x] AC10: `xcodebuild` builds for the simulator and a generic iOS device.
 
 ## Required Changes
 - **Effects**: sticker types, compositor, tray, gestures (see [Overview](#overview)).
@@ -157,4 +157,27 @@ isTracked = false ─► last transforms reused ─► stickers frozen ─► fa
 | Core Image render > 33 ms on iPhone 11 | Med | Frame drops | Pre-render sticker images once; one `CIContext` (Metal); measured in [7] |
 
 ---
-*Status: READY — ticket [5]*
+*Status: PARTIAL — PR #20*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | Two simulators (adam on iPhone 17 Pro, partner on iPhone 17) in a local Video call: Add sticker on the mid tile opened the big self view with the tray; a 🌸 tapped in the tray showed on adam's preview and on the partner's screen over the test clip. Placed by tap: dragging out of the tray started (the tray dropped to its small detent) but the simulator tooling couldn't complete a system drop. |
+| AC2 | ⚠️ unverified | Device only (D36). |
+| AC3 | ⚠️ unverified | Device only (D36). On the simulator: tap selected the sticker (dashed outline, trash at bottom middle), drag moved it under the finger, trash removed it. Pinch and twist not driven. |
+| AC4 | ⚠️ unverified | Device only (D36). On the simulator a Pink "Hi love" showed with an ink outline on the partner's screen. |
+| AC5 | ✅ done | Images tab listed flower, heart and star, the three PNGs in `assets/stickers` (bundled as the `stickers` folder). |
+| AC6 | ✅ done | After 10 stars the tray showed "That's 10. Remove one to add more." and the items were greyed out; tapping the star again added nothing. |
+| AC7 | ⚠️ unverified | Device only (D36). |
+| AC8 | ✅ done | Camera off then on: the 10 stars were still drawn. Hang up, new Video call: no stickers on either side and the tray had no cap caption. |
+| AC9 | ⚠️ unverified | Flip does nothing on the simulator ([4]), so the back camera can't be reached there. In code, Add sticker and the sticker gestures need `calls.front`, and the back camera publishes through LiveKit's capturer, which never goes through the compositor. |
+| AC10 | ✅ done | `xcodebuild … -destination 'platform=iOS Simulator,name=iPhone 17' build` and `… -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build` both succeed with no warnings in the new code. |
+
+### Needs attention
+Run on two iPhones (a Personal Team signing works), front camera on, in a Video call:
+1. AC2: tap your tile, Add sticker, drag 🌸 out of the tray onto your left cheek. You should feel a light tap on drop. Turn and tilt your head: on the partner's phone the flower stays on the cheek, tilts with your head and grows or shrinks as you move closer or further.
+2. AC3: drag the flower to your forehead (it re-pins there), pinch it bigger, twist it. Tap it: a dashed outline (only on your screen) and a trash button at the bottom middle appear. Tap the trash: it's gone on both phones.
+3. AC4: open the tray, Text, type "hi", pick Pink, Add. The partner sees pink rounded text with a dark outline, readable left to right.
+4. AC7: cover the front camera with your hand. Stickers stay where they were. Uncover: they follow your face again.
+5. AC9: flip to the back camera. The mid tile shows no Add sticker and the partner sees no stickers. Flip back: the stickers return.
+6. Also check: dropping a sticker off the face snaps it onto the nearest face point; text stickers read backwards in your own mirrored preview (expected).

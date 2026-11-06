@@ -18,6 +18,7 @@ struct StickerGrid: View {
     let names: [String]
     var rows = 3
     var cellFill = Color("Background")
+    var hint = "Double-tap to add to the note"
     let onTap: (String) -> Void
 
     var body: some View {
@@ -52,6 +53,6 @@ struct StickerGrid: View {
                 .frame(width: 84, height: 84)
         }
         .accessibilityLabel(Stickers.label(name))
-        .accessibilityHint("Double-tap to add to the note")
+        .accessibilityHint(hint)
     }
 }

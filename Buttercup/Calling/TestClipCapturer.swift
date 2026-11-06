@@ -3,7 +3,7 @@ import AVFoundation
 import ButtercupKit
 
 enum TestClipCapturer {
-    static func start(_ capturer: BufferCapturer) {
+    static func start(_ capturer: BufferCapturer, compositor: StickerCompositor) {
         guard let url = Bundle.main.url(forResource: "test-clip", withExtension: "mp4") else { return }
         Task.detached { [weak capturer] in
             let asset = AVURLAsset(url: url)
@@ -20,7 +20,7 @@ enum TestClipCapturer {
                 reader.startReading()
                 while let sample = output.copyNextSampleBuffer() {
                     guard let capturer else { return }
-                    if let pixels = CMSampleBufferGetImageBuffer(sample) { capturer.capture(pixels) }
+                    if let pixels = CMSampleBufferGetImageBuffer(sample) { capturer.capture(compositor.render(pixels, orientation: .up)) }
                     try? await Task.sleep(for: .seconds(1 / Double(fps)))
                 }
             }
