@@ -2,13 +2,14 @@ import ButtercupKit
 import SwiftUI
 
 enum AppTab: CaseIterable {
-    case calling, notes, hobbies
+    case calling, notes, hobbies, settings
 
     var title: String {
         switch self {
         case .calling: "Calling"
         case .notes: "Notes"
         case .hobbies: "Hobbies"
+        case .settings: "Settings"
         }
     }
 
@@ -17,6 +18,7 @@ enum AppTab: CaseIterable {
         case .calling: "phone"
         case .notes: "note.text"
         case .hobbies: "star"
+        case .settings: "gearshape"
         }
     }
 }
@@ -41,6 +43,8 @@ struct ContentView: View {
                             NotesTab(onSent: showToast, open: $openNotes)
                         case .hobbies:
                             Text(tab.title)
+                        case .settings:
+                            SettingsView()
                         }
                     }
                     .toolbar(.hidden, for: .tabBar)

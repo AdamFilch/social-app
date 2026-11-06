@@ -10,6 +10,7 @@ struct ButtercupApp: App {
     @State private var stickers: StickerLayer
     @State private var notes: NotesStore
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("appearance") private var appearance = "system"
 
     init() {
         assert(UIFont(name: "Noteworthy-Bold", size: 18) != nil)
@@ -58,6 +59,7 @@ struct ButtercupApp: App {
                 case .ready: ContentView()
                 }
             }
+            .preferredColorScheme(appearance == "light" ? .light : appearance == "dark" ? .dark : nil)
             .environment(session)
             .environment(calls)
             .environment(stickers)

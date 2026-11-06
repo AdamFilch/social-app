@@ -60,6 +60,7 @@ struct InCallView: View {
             }
         }
         .background(.black)
+        .environment(\.colorScheme, .dark)
         .preferredColorScheme(.dark)
         .animation(.easeOut(duration: 0.15), value: stickers.selected)
         .animation(.easeOut(duration: 0.2), value: calls.cameraOn)
