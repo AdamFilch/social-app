@@ -89,6 +89,7 @@ struct CallRow: View {
 struct Avatar: View {
     let profile: Profile?
     var size: CGFloat = 64
+    var outline: CGFloat = 0
 
     var body: some View {
         Text(profile?.displayName.prefix(1).uppercased() ?? "")
@@ -96,5 +97,6 @@ struct Avatar: View {
             .foregroundStyle(Color("OnAccent"))
             .frame(width: size, height: size)
             .background(Color(profile?.avatarTint ?? "NotePaperYellow"), in: .circle)
+            .overlay(Circle().strokeBorder(Color("Outline"), lineWidth: outline))
     }
 }

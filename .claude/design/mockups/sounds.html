@@ -1,0 +1,822 @@
+<title>Buttercup Sounds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=JetBrains+Mono:wght@600;700&display=swap">
+<style>
+/* Layout: a working sheet, same as the Notes and in-call mockups. Decisions, then each state as an iPhone 11 with notes beside it, then motion, VoiceOver, flags and open questions. The switch flips every phone between its labelled mode, all light or all dark. Call chrome is always dark; only the tray panel follows the mode. */
+:root {
+  --bg: #FFF8E2;
+  --card: #FFFDF5;
+  --fg: #1E2A1A;
+  --muted: #56634F;
+  --line: #1E2A1A;
+  --soft: #EDE6CC;
+  --mark: #FFC61A;
+  --bezel: #12100E;
+  --round: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --emoji: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; --bezel: #000; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #1B1814; --card: #28241F; --fg: #FFF8E2; --muted: #B7AC9E; --line: #EDE3CC; --soft: #3A342D; --mark: #FFCB2E; --bezel: #000; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--round); font-size: 16px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 96px; display: grid; gap: 72px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(36px, 7vw, 60px); font-weight: 900; letter-spacing: -0.02em; }
+h2 { font-size: 30px; font-weight: 900; letter-spacing: -0.01em; }
+h3 { font-size: 20px; font-weight: 900; }
+p { margin: 0; max-width: 68ch; }
+code { font-family: var(--mono); font-size: 0.9em; }
+.lede { font-size: 18px; }
+.muted { color: var(--muted); }
+.stack { display: grid; gap: 14px; }
+.sec { display: grid; gap: 32px; }
+.states { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 48px 32px; }
+.state { display: grid; gap: 16px; align-content: start; justify-items: center; min-width: 0; }
+.note { display: grid; gap: 8px; width: 100%; max-width: 434px; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 15px; }
+.note ul li::marker { color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; font-weight: 800; padding: 1px 9px; border-radius: 999px; border: 2px solid var(--line); background: var(--card); }
+.chip.mode { background: var(--soft); border-color: transparent; }
+.legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px 28px; font-size: 15px; }
+.legend div { display: grid; grid-template-columns: 44px 1fr; gap: 8px; }
+.legend b { font-weight: 900; }
+.panel { background: var(--card); border: 2.5px solid var(--line); border-radius: 22px; padding: 24px; display: grid; gap: 14px; min-width: 0; align-content: start; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 16px; }
+.panel ul, .panel ol { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1.5px solid var(--soft); vertical-align: top; }
+th { font-size: 14px; color: var(--muted); font-weight: 800; }
+.switch { display: inline-flex; gap: 4px; padding: 4px; border: 2px solid var(--line); border-radius: 999px; background: var(--card); flex-wrap: wrap; justify-self: start; }
+.switch button { font: 800 14px var(--round); color: var(--muted); background: none; border: 2px solid transparent; border-radius: 999px; padding: 6px 14px; min-height: 36px; cursor: pointer; }
+.switch button[aria-pressed="true"] { background: var(--mark); color: #1E2A1A; border-color: var(--line); }
+.switch button:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+.flag { border-left: 0; }
+.flag b.f { display: inline-block; min-width: 30px; }
+
+/* device */
+.dev { padding: 10px; border-radius: 60px; background: var(--bezel); flex: none; }
+@media (max-width: 480px) { .dev { zoom: 0.8; } }
+@media (max-width: 380px) { .dev { zoom: 0.72; } }
+.lt { --q-bg: #FFF8E2; --q-surf: #FFFDF5; --q-text: #1E2A1A; --q-sec: #56634F; --q-acc: #FFC61A; --q-onacc: #1E2A1A; --q-out: #1E2A1A; --q-div: #EDE6CC; --q-danger: #C2362B; --q-play: #FFE490; --q-menu: rgba(249,247,240,.96); --k-bg: #D3D5DB; --k-key: #FFFFFF; --k-mod: #ACB0BA; --k-txt: #000; }
+.dk { --q-bg: #1B1814; --q-surf: #28241F; --q-text: #FFF8E2; --q-sec: #B7AC9E; --q-acc: #FFCB2E; --q-onacc: #1B1814; --q-out: #EDE3CC; --q-div: #3A342D; --q-danger: #FF7A6E; --q-play: #68571F; --q-menu: rgba(52,47,41,.96); --k-bg: #2C2C2E; --k-key: #6B6B6E; --k-mod: #46464A; --k-txt: #fff; }
+.ph { position: relative; width: 414px; height: 896px; border-radius: 50px; overflow: hidden; background: var(--q-bg); color: var(--q-text); font-family: var(--round); isolation: isolate; }
+.ph.call { background: #1B1814; color: #FFF8E2; }
+.ph svg.i { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.sb { position: absolute; top: 0; left: 0; right: 0; height: 48px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 30px 8px 34px; font-size: 15px; font-weight: 800; z-index: 5; }
+.call .sb { color: #FFF8E2; }
+.bat { width: 24px; height: 11px; border: 1.5px solid currentColor; border-radius: 3px; position: relative; display: inline-block; margin-left: 6px; vertical-align: -1px; }
+.bat::after { content: ""; position: absolute; inset: 1.5px 5px 1.5px 1.5px; background: currentColor; border-radius: 1px; }
+.home { position: absolute; bottom: 8px; left: 50%; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: var(--q-text); z-index: 20; }
+.call > .home { background: #FFF8E2; }
+
+.scr { position: absolute; top: 52px; left: 0; right: 0; bottom: 87px; padding: 4px 20px 0; display: grid; align-content: start; gap: 20px; overflow: hidden; }
+.top { display: flex; align-items: center; justify-content: space-between; height: 48px; }
+.title { font-size: 34px; font-weight: 900; letter-spacing: -0.01em; }
+
+/* sound tiles */
+.sg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; position: relative; }
+.snd { height: 108px; border-radius: 20px; border: 2.5px solid var(--q-out); background: var(--q-surf); padding: 10px 12px 11px; display: grid; align-content: space-between; position: relative; overflow: hidden; }
+.snd .em { font-family: var(--emoji); font-size: 30px; line-height: 1; position: relative; }
+.snd b { font-size: 15px; font-weight: 800; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; position: relative; }
+.snd .wipe { position: absolute; left: 0; top: 0; bottom: 0; background: var(--q-play); }
+.snd .stopb { position: absolute; top: 9px; right: 9px; width: 26px; height: 26px; border-radius: 50%; background: var(--q-text); display: grid; place-items: center; }
+.snd .stopb i { width: 9px; height: 9px; border-radius: 2px; background: var(--q-surf); display: block; }
+.snd.rec { background: var(--q-acc); color: var(--q-onacc); box-shadow: 3px 3px 0 var(--q-out); }
+.snd.rec.quiet { box-shadow: none; }
+.snd.rec .plus { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--q-onacc); display: grid; place-items: center; }
+.snd.rec .plus svg.i { width: 18px; height: 18px; stroke-width: 2.8; }
+.snd.slot { background: transparent; border: 2.5px dashed var(--q-sec); }
+.snd.ghost { position: absolute; width: 116px; z-index: 6; opacity: .94; box-shadow: 0 10px 24px rgba(0,0,0,.22); }
+.finger { position: absolute; width: 44px; height: 44px; border-radius: 50%; background: rgba(120,120,120,.35); border: 2px solid rgba(255,255,255,.6); z-index: 7; }
+.empty { display: grid; gap: 6px; text-align: center; padding: 28px 12px 0; }
+.empty b { font-size: 17px; font-weight: 800; }
+.empty span { font-size: 15px; font-weight: 600; color: var(--q-sec); }
+
+.tabs { position: absolute; left: 0; right: 0; bottom: 0; background: var(--q-surf); border-top: 2.5px solid var(--q-out); padding: 8px 8px 0; height: 87px; display: grid; grid-template-columns: repeat(4, 1fr); z-index: 2; }
+.tab { display: grid; justify-items: center; align-content: start; gap: 3px; font-size: 12px; font-weight: 800; color: var(--q-sec); }
+.tab .pill { width: 60px; height: 34px; border-radius: 999px; display: grid; place-items: center; border: 2px solid transparent; }
+.tab.on { color: var(--q-text); }
+.tab.on .pill { background: var(--q-acc); border-color: var(--q-out); color: var(--q-onacc); }
+.tab svg.i { width: 21px; height: 21px; }
+.tab.on svg.i { fill: currentColor; }
+
+/* dialog, sheet, menu */
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.42); z-index: 6; }
+.dk .scrim { background: rgba(0,0,0,.6); }
+.dlg { position: absolute; left: 20px; right: 20px; background: var(--q-surf); border: 2.5px solid var(--q-out); border-radius: 28px; padding: 16px; z-index: 7; display: grid; gap: 14px; }
+.dlg.mid { top: 50%; transform: translateY(-50%); }
+.hd { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.hd .t { font-size: 20px; font-weight: 900; flex: 1; }
+.hd .rdot { width: 12px; height: 12px; border-radius: 50%; background: var(--q-danger); flex: none; }
+.ibtn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--q-out); background: var(--q-bg); color: var(--q-text); display: grid; place-items: center; flex: none; }
+.ibtn.acc { background: var(--q-acc); color: var(--q-onacc); border-width: 2.5px; }
+.ibtn svg.i { width: 20px; height: 20px; stroke-width: 2.6; }
+.ibtn svg.i.fill { fill: currentColor; stroke: none; }
+.track { height: 72px; border-radius: 16px; border: 2px solid var(--q-out); background: var(--q-bg); position: relative; overflow: hidden; display: flex; align-items: center; gap: 2px; padding: 0 10px; flex: 1; min-width: 0; }
+.track.sm { height: 52px; }
+.track i { display: block; width: 3px; border-radius: 2px; background: var(--q-text); flex: none; }
+.track i.f { background: var(--q-sec); opacity: .35; }
+.track .ph-line { position: absolute; top: 6px; bottom: 6px; width: 2.5px; border-radius: 2px; background: var(--q-danger); }
+.trow { display: flex; justify-content: space-between; align-items: baseline; margin-top: -6px; font-variant-numeric: tabular-nums; }
+.trow b { font-size: 22px; font-weight: 900; }
+.trow span { font-size: 15px; font-weight: 700; color: var(--q-sec); }
+.bigstop { justify-self: center; width: 88px; height: 88px; border-radius: 50%; background: var(--q-acc); border: 2.5px solid var(--q-out); display: grid; place-items: center; }
+.bigstop i { width: 28px; height: 28px; border-radius: 6px; background: var(--q-onacc); display: block; }
+.bigstop.s72 { width: 72px; height: 72px; }
+.bigstop.s72 i { width: 22px; height: 22px; border-radius: 5px; }
+.cap { text-align: center; font-size: 15px; font-weight: 600; color: var(--q-sec); }
+.lbl { font-size: 15px; font-weight: 800; color: var(--q-sec); margin-bottom: -8px; display: flex; justify-content: space-between; }
+.lbl span { font-variant-numeric: tabular-nums; font-weight: 700; }
+.field { height: 48px; border: 2px solid var(--q-out); border-radius: 999px; background: var(--q-bg); padding: 0 18px; font-size: 17px; font-weight: 600; display: flex; align-items: center; min-width: 0; }
+.field .ph-t { color: var(--q-sec); }
+.field .cnt { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--q-sec); font-variant-numeric: tabular-nums; }
+.caret { width: 2px; height: 22px; background: #2F7BF6; margin: 0 1px; flex: none; }
+.foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.tbtn { height: 44px; padding: 0 8px; display: flex; align-items: center; font-size: 17px; font-weight: 800; color: var(--q-text); }
+.prim { height: 52px; padding: 0 28px; border-radius: 999px; background: var(--q-acc); color: var(--q-onacc); border: 2.5px solid var(--q-out); box-shadow: 3px 3px 0 var(--q-out); display: flex; align-items: center; font-size: 17px; font-weight: 800; margin-right: 3px; }
+.prim.sm { height: 40px; padding: 0 16px; font-size: 15px; }
+.prim.dis { opacity: .4; box-shadow: none; }
+.sec2 { height: 52px; padding: 0 22px; border-radius: 999px; background: var(--q-surf); color: var(--q-text); border: 2.5px solid var(--q-out); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 17px; font-weight: 800; flex: 1; }
+.sec2.danger { color: var(--q-danger); }
+.smb { height: 40px; padding: 0 14px; border-radius: 999px; background: var(--q-surf); border: 2px solid var(--q-out); display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 800; color: var(--q-text); flex: none; }
+.smb svg.i { width: 16px; height: 16px; }
+.smb svg.i.fill { fill: currentColor; stroke: none; }
+.body { font-size: 17px; line-height: 1.4; }
+
+.kb { position: absolute; left: 0; right: 0; bottom: 0; height: 291px; background: var(--k-bg); z-index: 8; padding: 8px 3px 0; display: grid; align-content: start; gap: 11px; }
+.kb .pred { height: 36px; display: flex; justify-content: space-around; align-items: center; font-size: 16px; color: var(--k-txt); font-family: system-ui, sans-serif; margin-bottom: -4px; }
+.kb .r { display: flex; justify-content: center; gap: 6px; }
+.kb .k { width: 35px; height: 43px; border-radius: 5px; background: var(--k-key); color: var(--k-txt); display: grid; place-items: center; font: 400 22px system-ui, sans-serif; box-shadow: 0 1px 0 rgba(0,0,0,.3); }
+.kb .k.m { background: var(--k-mod); width: 44px; font-size: 15px; }
+.kb .k.sp { width: 188px; font-size: 15px; }
+.kb .k.ret { width: 88px; font-size: 15px; background: var(--k-mod); }
+
+.sheet { position: absolute; left: 0; right: 0; top: 58px; bottom: 0; background: var(--q-surf); border-radius: 28px 28px 0 0; z-index: 7; padding: 20px 20px 0; display: grid; gap: 18px; align-content: start; }
+.sheet .grab { position: absolute; top: 7px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--q-sec); opacity: .45; }
+.shd { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 44px; }
+.shd .tbtn { justify-self: start; padding: 0; }
+.shd b { font-size: 17px; font-weight: 800; }
+.shd .prim { justify-self: end; }
+.erow { display: flex; align-items: center; gap: 12px; }
+.well { width: 64px; height: 64px; border-radius: 16px; border: 2px solid var(--q-out); background: var(--q-bg); display: grid; place-items: center; font: 36px/1 var(--emoji); flex: none; }
+.hintline { font-size: 15px; font-weight: 600; color: var(--q-sec); }
+.trim { position: relative; height: 76px; }
+.trim .track { position: absolute; inset: 0; height: 76px; padding: 0 12px; }
+.trim .out { position: absolute; top: 2px; bottom: 2px; background: var(--q-bg); opacity: .78; }
+.trim .frame { position: absolute; top: 0; bottom: 0; border-top: 3px solid var(--q-out); border-bottom: 3px solid var(--q-out); }
+.trim .h { position: absolute; top: -2px; bottom: -2px; width: 20px; border-radius: 8px; background: var(--q-acc); border: 2.5px solid var(--q-out); display: grid; place-items: center; }
+.trim .h::after { content: ""; width: 3px; height: 22px; border-radius: 2px; background: var(--q-onacc); }
+.ttimes { display: flex; justify-content: space-between; font: 700 14px var(--mono); color: var(--q-sec); margin-top: -8px; }
+.ttimes b { color: var(--q-text); }
+
+.blurgrid { filter: blur(6px); opacity: .55; }
+.lift { position: absolute; z-index: 7; width: 116px; }
+.menu { position: absolute; z-index: 7; width: 236px; border-radius: 14px; background: var(--q-menu); box-shadow: 0 12px 40px rgba(0,0,0,.25); overflow: hidden; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+.menu div { height: 46px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; font: 400 17px system-ui, -apple-system, sans-serif; color: var(--q-text); }
+.menu div + div { border-top: 0.5px solid rgba(128,128,128,.4); }
+.menu div.d { color: var(--q-danger); }
+.menu svg.i { width: 19px; height: 19px; stroke-width: 2; }
+
+/* call chrome (always dark) */
+.off { position: absolute; top: 0; left: 0; right: 0; background: #1B1814; display: grid; place-content: center; justify-items: center; gap: 12px; text-align: center; padding-top: 40px; }
+.big-ava { width: 128px; height: 128px; border-radius: 50%; background: #FFC6D9; border: 2.5px solid #EDE3CC; color: #1E2A1A; display: grid; place-items: center; font-size: 58px; font-weight: 900; }
+.off b { font-size: 22px; font-weight: 900; }
+.off > span:last-child { font-size: 15px; font-weight: 600; color: #B7AC9E; display: inline-flex; gap: 6px; align-items: center; }
+.off svg.i { width: 16px; height: 16px; }
+.vid { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.fr { background: rgba(52, 47, 41, 0.55); -webkit-backdrop-filter: blur(18px) saturate(1.3); backdrop-filter: blur(18px) saturate(1.3); color: #FFF8E2; }
+.who { position: absolute; top: 58px; left: 50%; transform: translateX(-50%); height: 32px; border-radius: 999px; padding: 0 14px; display: flex; gap: 8px; align-items: center; font-size: 15px; font-weight: 800; white-space: nowrap; z-index: 2; }
+.who span { font-weight: 600; font-variant-numeric: tabular-nums; color: #E6DCC6; }
+.recpill { position: absolute; top: 98px; left: 50%; transform: translateX(-50%); height: 32px; border-radius: 999px; padding: 0 14px 0 12px; display: flex; gap: 8px; align-items: center; font-size: 15px; font-weight: 800; white-space: nowrap; z-index: 2; }
+.recpill i { width: 10px; height: 10px; border-radius: 50%; background: #FF7A6E; display: block; }
+.cb { position: absolute; left: 16px; right: 16px; top: 794px; display: flex; justify-content: space-evenly; z-index: 4; }
+.cbtn { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; }
+.cbtn svg.i { width: 26px; height: 26px; stroke-width: 2.2; }
+.cbtn.end { background: #FF7A6E; color: #1B1814; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.cbtn.end svg.i { fill: currentColor; stroke: none; }
+.st { position: absolute; width: 100px; height: 150px; border-radius: 20px; overflow: hidden; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); z-index: 3; top: 56px; right: 16px; }
+.pn { position: absolute; left: 0; right: 0; bottom: 0; height: 448px; border-radius: 28px 28px 0 0; background: var(--q-surf); color: var(--q-text); z-index: 5; }
+.pn .home { display: block; background: var(--q-text); }
+.pn .grab { position: absolute; top: 7px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--q-sec); opacity: 0.45; }
+.phead { position: absolute; top: 20px; left: 16px; right: 16px; height: 44px; display: flex; align-items: center; gap: 8px; }
+.phead .t { flex: 1; text-align: center; font-size: 17px; font-weight: 800; }
+.phead .sp { width: 44px; flex: none; }
+.tabsc { flex: 1; min-width: 0; overflow: hidden; height: 44px; display: flex; align-items: center; margin-right: -16px; }
+.tabsr { display: flex; gap: 4px; padding-left: 4px; padding-right: 16px; }
+.tb { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; display: flex; align-items: center; font-size: 15px; font-weight: 800; color: var(--q-sec); border: 2px solid transparent; }
+.tb.dis { opacity: .4; }
+.tb.on { background: var(--q-acc); color: var(--q-onacc); border-color: var(--q-out); }
+.tg { position: absolute; top: 80px; left: 16px; right: 0; display: grid; grid-template-rows: repeat(3, 84px); grid-auto-flow: column; grid-auto-columns: 120px; gap: 8px; overflow: hidden; }
+.tc { border-radius: 16px; background: var(--q-bg); padding: 9px 10px 9px; display: grid; align-content: space-between; position: relative; overflow: hidden; }
+.tc .em { font: 24px/1 var(--emoji); position: relative; }
+.tc b { font-size: 13px; font-weight: 800; line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; position: relative; }
+.tc .wipe { position: absolute; left: 0; top: 0; bottom: 0; background: var(--q-play); }
+.tc .stopb { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--q-text); display: grid; place-items: center; }
+.tc .stopb i { width: 8px; height: 8px; border-radius: 2px; background: var(--q-bg); display: block; }
+.tc.rec { background: var(--q-acc); color: var(--q-onacc); border: 2px solid var(--q-out); box-shadow: 3px 3px 0 var(--q-out); }
+.tc.rec .plus { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--q-onacc); display: grid; place-items: center; }
+.tc.rec svg.i { width: 15px; height: 15px; stroke-width: 2.8; }
+.phint { position: absolute; top: 364px; left: 16px; right: 16px; font-size: 15px; font-weight: 600; color: var(--q-sec); text-align: center; }
+.pbody { position: absolute; top: 84px; left: 16px; right: 16px; display: grid; gap: 14px; }
+
+.mini { padding: 20px; border-radius: 22px; display: grid; gap: 14px; background: var(--q-bg); color: var(--q-text); border: 2px solid var(--line); min-width: 0; }
+.mini small { font-size: 13px; font-weight: 700; color: var(--q-sec); }
+.mini .tabs { position: relative; height: 72px; border-radius: 0 0 14px 14px; max-width: 414px; width: 100%; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="g-adam" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#7A6B5A"/><stop offset="1" stop-color="#2B241D"/></radialGradient>
+    <radialGradient id="g-sam" cx="50%" cy="38%" r="75%"><stop offset="0" stop-color="#8B6F78"/><stop offset="1" stop-color="#2E2226"/></radialGradient>
+    <symbol id="v-adam" viewBox="0 0 414 896" preserveAspectRatio="xMidYMid slice"><rect width="414" height="896" fill="url(#g-adam)"/><ellipse cx="207" cy="330" rx="96" ry="120" fill="#C9A27F"/><path d="M111 300c0-80 40-120 96-120s96 40 96 120c-20-40-50-56-96-56s-76 16-96 56z" fill="#3A2B1E"/><path d="M60 896c0-160 60-300 147-300s147 140 147 300z" fill="#3E5A3A"/></symbol>
+    <symbol id="v-sam" viewBox="0 0 100 150" preserveAspectRatio="xMidYMid slice"><rect width="100" height="150" fill="url(#g-sam)"/><ellipse cx="50" cy="62" rx="24" ry="30" fill="#E3B89A"/><path d="M22 70c-4-34 10-48 28-48s32 14 28 48c-6-22-14-28-28-28s-22 6-28 28z" fill="#5A2E22"/><path d="M14 150c0-36 16-58 36-58s36 22 36 58z" fill="#B8577A"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header class="stack">
+    <p class="muted" style="font-weight:800">buttercup · mockup v2 · draft · 31 Oct 2026</p>
+    <h1>Sounds</h1>
+    <p class="lede">A shared soundboard for two. Either of you records a short clip, names it, and it's on both phones. In a call, tapping one plays it for both of you; outside a call it plays just for you. The tab is a grid of tiles you tap without thinking, with "+ Record" always first.</p>
+    <p class="muted">Every phone is an iPhone 11 at 414 × 896 pt, seen as Adam unless it says Sam. Each phone is labelled light or dark; the switch shows them all in one mode. Call chrome is always dark; only the tray panel follows the mode.</p>
+    <div class="switch" role="group" aria-label="Phone appearance">
+      <button type="button" data-m="as" aria-pressed="true">As labelled</button>
+      <button type="button" data-m="lt" aria-pressed="false">All light</button>
+      <button type="button" data-m="dk" aria-pressed="false">All dark</button>
+    </div>
+  </header>
+
+  <section class="sec">
+    <div class="stack"><h2>Decisions</h2><p class="muted">S1–S25 are settled with Adam. M1–M18 are mine, made to fill the gaps. A1–A5 are Adam's answers to the v1 questions.</p></div>
+    <div class="legend">
+      <div><b>S1</b><span>A Sounds tab, plus a Sounds pill in the in-call tray. Not in the note composer.</span></div>
+      <div><b>S2</b><span>In a call, a tap mixes the sound into your outgoing audio and plays it locally.</span></div>
+      <div><b>S3</b><span>Outside a call, it plays on your phone only.</span></div>
+      <div><b>S4</b><span>Recording in a call captures both voices.</span></div>
+      <div><b>S5</b><span>The partner sees "{name} is recording" while it runs.</span></div>
+      <div><b>S6</b><span>10 s maximum, auto-stop at the limit.</span></div>
+      <div><b>S7</b><span>Either partner can delete, with a confirm.</span></div>
+      <div><b>S8</b><span>Tap to start, tap to stop.</span></div>
+      <div><b>S9</b><span>"Name this sound": title required, Play to re-listen, Discard.</span></div>
+      <div><b>S10–13</b><span>Long-press menu: Edit (rename, trim, optional emoji; 🔊 when none) and Delete. Trim and emoji only in Edit.</span></div>
+      <div><b>S14</b><span>One sound at a time. Another tap stops the first; tapping the playing tile stops it.</span></div>
+      <div><b>S15</b><span>Tabs: Calling · Notes · Sounds · Hobbies.</span></div>
+      <div><b>S16</b><span>First tile is "+ Record", on the tab and in the tray.</span></div>
+      <div><b>S17–20</b><span>Long-press then drag to reorder, one shared order, Sounds tab only. New sounds go right after "+ Record". The tray only plays.</span></div>
+      <div><b>S21</b><span>If the call ends mid-recording, it's discarded.</span></div>
+      <div><b>S22</b><span>Tiles show title and emoji only.</span></div>
+      <div><b>S23</b><span>The partner's new sounds appear live, with no push.</span></div>
+      <div><b>S24</b><span>Sounds still go out while you're muted.</span></div>
+      <div><b>S25</b><span>The tray stays open after a tap.</span></div>
+      <div><b>M1</b><span>Three columns of 116 × 108 pt tiles: Surface, 2.5 pt Outline, radius 20 (the note-tile corner). Emoji top left, title bottom left, two lines then a tail ellipsis.</span></div>
+      <div><b>M2</b><span>"+ Record" is an Accent tile with the sticker shadow. It's the tab's one creating action, so the tab has no other primary button. While a dialog or sheet is up, the tile drops its shadow, so the card's confirming action is the only sticker on screen.</span></div>
+      <div><b>M3</b><span>Playing: an Accent tint fills the tile left to right at the clip's real pace, and a small stop badge sits top right. Nothing else moves.</span></div>
+      <div><b>M4</b><span>Tapping "+ Record" starts recording straight away in a dialog card. There's no separate "ready" step.</span></div>
+      <div><b>M5</b><span>The countdown is the waveform itself: a 10 s track that fills as you speak, elapsed time on the left, time left on the right, an 88 pt Stop under it.</span></div>
+      <div><b>M6</b><span>"Name this sound" replaces the recording content in the same card (crossfade) and sits above the keyboard. Discard is a text button that asks "Discard this sound?" first (A3).</span></div>
+      <div><b>M7</b><span>Long-press opens the system context menu (Edit, Delete). Keep holding and move, and it becomes a drag, the way the Home Screen works.</span></div>
+      <div><b>M8</b><span>Edit is a sheet: Cancel / Edit sound / Save. The emoji well opens the emoji keyboard; "Remove" goes back to 🔊.</span></div>
+      <div><b>M9</b><span>The trimmer works like the one in Photos: two Accent handles, an Outline frame, the cut-off ends dimmed. Steps of 0.1 s, at least 0.5 s kept.</span></div>
+      <div><b>M10</b><span>The delete confirm is a dialog card, with "Delete" (destructive) and "Keep it".</span></div>
+      <div><b>M11</b><span>In the tray, Sounds is the last pill. Cells are 120 × 84 in three rows that scroll sideways, like Stickers. Hint: "Tap to play for you both".</span></div>
+      <div><b>M12</b><span>Recording in a call swaps the panel content in place, the way Draw swaps to the pad.</span></div>
+      <div><b>M13</b><span>The partner's pill is frosted and sits under the name pill, with a static Danger dot and "Adam is recording".</span></div>
+      <div><b>M14</b><span>Tab icon: <code>speaker.wave.2</code>, with <code>.fill</code> when selected.</span></div>
+      <div><b>M15</b><span>No new haptics. Recording, play, save and reorder are all silent to the hand.</span></div>
+      <div><b>M16</b><span>No doodle on the Sounds tab. The emoji on the tiles bring the colour.</span></div>
+      <div><b>M17</b><span>When the tray opens and stickers aren't possible (audio call, or your camera off or flipped), the face pills stay in the row but are disabled at 40%, and a line in the panel says why. Hiding them would make the row jump when the camera comes back.</span></div>
+      <div><b>M18</b><span>With Sam big, the face pills stay enabled. Tapping one makes your view big first (state C), the same as "Add stickers" on the medium tile.</span></div>
+      <div><b>A1</b><span>The Stickers button is always in the call's control bar. It opens on Sounds whenever stickers aren't possible: audio call, camera off, or Sam big.</span></div>
+      <div><b>A2</b><span>Outside a call, sounds play even with the silent switch on (the <code>.playback</code> audio session).</span></div>
+      <div><b>A3</b><span>Discard asks first: "Discard this sound?" with Discard and Keep.</span></div>
+      <div><b>A4</b><span>Trim keeps the original file and stores start and end points (S11).</span></div>
+      <div><b>A5</b><span>When you play a sound in a call, Sam just hears it. There's no visual cue.</span></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Sounds tab</h2><p class="muted">Opened on the sofa, or mid-chat to play something back. It's a launcher, so tiles are big, all the same size, and tapping one does one thing.</p></div>
+    <div class="states">
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="empty"></div></div>
+        <div class="note">
+          <h3>1 · Empty, first run <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">S16</span><span class="chip">M2</span><span class="chip">M16</span></div>
+          <ul>
+            <li>The grid still starts with "+ Record" in its usual first slot, so the empty tab looks like the full one with no tiles yet. There's no big empty-state button that would vanish later.</li>
+            <li>Copy under the grid: "No sounds yet. Record one for Sam?" then "Up to 10 seconds. Sounds you save show up for you both." That second line covers S6 and the shared library in one go.</li>
+            <li>The copy goes once there's one sound, from either of you (S23).</li>
+            <li>First tap on "+ Record" triggers the system mic prompt. If it's denied, the dialog says "buttercup can't use the microphone. Turn it on in Settings" with an "Open Settings" button.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="dk" data-s="grid"></div></div>
+        <div class="note">
+          <h3>2 · Full grid, one playing <span class="chip mode" data-ml>Dark</span></h3>
+          <div class="chips"><span class="chip">S3</span><span class="chip">S14</span><span class="chip">S22</span><span class="chip">M1</span><span class="chip">M3</span></div>
+          <ul>
+            <li>"Miso's meow" is about 60% through. The tint fills at the clip's own pace (linear, because it's real progress) and clears as soon as it ends.</li>
+            <li>The stop badge tells you a second tap stops it (S14). Tapping "Ba dum tss" stops the meow and starts that one: one tile clears, the other starts filling.</li>
+            <li>Sounds without an emoji show 🔊 ("Good morning song").</li>
+            <li>Long titles get two lines and then an ellipsis ("Sam's dinosaur noise, the long one"). The full title is in VoiceOver and in Edit.</li>
+            <li>It plays even with the silent switch on (A2), because it only plays when you tap it.</li>
+            <li>Fourteen sounds run past the fold. The grid scrolls vertically under the title, and the tab bar stays put.</li>
+            <li>The tint is a separate PlayTint colour: Accent mixed into Surface (45% light, 30% dark), so the title keeps its contrast (see the proposals at the end).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="menu"></div></div>
+        <div class="note">
+          <h3>3 · Long-press menu <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">S10</span><span class="chip">S7</span><span class="chip">M7</span></div>
+          <ul>
+            <li>Long-press "Ribbit": the system lifts the tile and blurs the rest, with Edit and Delete underneath. Delete is in Danger red with a trash icon.</li>
+            <li>It's the native <code>.contextMenu</code>, so it behaves like everywhere else on iOS. Tap outside to close.</li>
+            <li>"+ Record" has no menu and can't be moved.</li>
+            <li>The lift is iOS's own, which includes a small scale. That bends the "no scale" rule; see flag F2.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="dk" data-s="drag"></div></div>
+        <div class="note">
+          <h3>4 · Reorder, dragging <span class="chip mode" data-ml>Dark</span></h3>
+          <div class="chips"><span class="chip">S17</span><span class="chip">S18</span><span class="chip">S19</span><span class="chip">M7</span></div>
+          <ul>
+            <li>From state 3, keep holding "Ribbit" and move: it's heading for the spot after "Miso's meow". The menu goes and the tile follows your finger 1:1.</li>
+            <li>A dashed slot shows where it will land. Other tiles shift into their new places with a 0.2 s ease-out. They don't bounce.</li>
+            <li>Let go and the tile drops into the slot. The new order is saved for both of you, and Sam's grid changes live.</li>
+            <li>The slot before "+ Record" isn't a drop target. Dragging there keeps the tile in the first sound slot.</li>
+            <li>Dragging near the top or bottom edge scrolls the grid.</li>
+            <li>VoiceOver and Switch Control get "Move earlier" and "Move later" actions on each tile, so dragging isn't the only way.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Record and name</h2><p class="muted">Outside a call. Both steps happen in one dialog card over the dimmed tab, so you can still see where the sound will land.</p></div>
+    <div class="states">
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="rec"></div></div>
+        <div class="note">
+          <h3>5 · Recording <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">S6</span><span class="chip">S8</span><span class="chip">M4</span><span class="chip">M5</span></div>
+          <ul>
+            <li>One tap on "+ Record" and you're recording (M4). The card opens with the usual 0.2 s fade. A noise at the start can be trimmed off later.</li>
+            <li>Header: a static red dot and "Recording", in words, so colour isn't the only signal. ✕ stops the recording and asks "Discard this sound?" (state 6c). Keep goes on to naming it.</li>
+            <li>The track is the whole 10 s. Level bars build left to right as you talk, so one shape shows both "it's hearing me" and "how long is left".</li>
+            <li>"0:04" on the left and "6 s left" on the right, in tabular digits so nothing jitters.</li>
+            <li>The 88 pt Accent Stop sits under the thumb. At 10 s it stops on its own and moves to step 6, the same as tapping Stop.</li>
+            <li>Tapping the scrim does nothing while recording or naming, so a stray tap can't lose the clip.</li>
+            <li>If the app goes to the background, the recording is discarded, the same rule as S21.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="dk" data-s="nameEmpty"></div></div>
+        <div class="note">
+          <h3>6 · Name this sound, empty <span class="chip mode" data-ml>Dark</span></h3>
+          <div class="chips"><span class="chip">S9</span><span class="chip">M6</span></div>
+          <ul>
+            <li>The recording content crossfades into the naming step (0.15 s). The card moves up to sit 12 pt above the keyboard, at the keyboard's own speed and curve.</li>
+            <li>The field has focus and a visible "Name" label. The placeholder ("Like Miso's meow") is only a hint. 30 characters at most, with the count shown.</li>
+            <li>Save is disabled (40%, no sticker) until there's a non-space character. Return also saves once it's enabled.</li>
+            <li>Play plays the whole clip on your phone. The play button turns into stop, and a red playhead runs along the track.</li>
+            <li>Discard is a plain text button. It asks "Discard this sound?" first (state 6c, A3).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="nameFilled"></div></div>
+        <div class="note">
+          <h3>6b · Name this sound, ready <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">S9</span><span class="chip">S20</span></div>
+          <ul>
+            <li>Typed "Miso's meow" and tapped Play. The playhead is about halfway, and the button now reads as stop.</li>
+            <li>Save comes to full strength with its sticker. Under the scrim, "+ Record" has dropped its shadow (M2), so Save is the only sticker on screen.</li>
+            <li>Save closes the card with a 0.15 s fade. The new tile fades in right after "+ Record", and the others move along one place with a 0.2 s ease-out (S20).</li>
+            <li>A failed save keeps the card open with "Couldn't save. Try again" under the field, in Danger, and an <code>.error</code> haptic (T3).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="dk" data-s="discard"></div></div>
+        <div class="note">
+          <h3>6c · Discard this sound? <span class="chip mode" data-ml>Dark</span></h3>
+          <div class="chips"><span class="chip">A3</span><span class="chip">S9</span></div>
+          <ul>
+            <li>From Discard in the naming card, or ✕ while recording. The keyboard goes down, and the confirm opens over the naming card, which is dimmed by a second scrim.</li>
+            <li>Same wording pattern as "Discard this note?": the title asks, and the body says what happens: "You'll lose this recording. Sam never hears it."</li>
+            <li>"Keep" goes back to the naming card with the keyboard up and the name kept. "Discard" (Danger, trash icon) closes both cards with a 0.15 s fade.</li>
+            <li>A tap on the scrim counts as Keep. There's no haptic.</li>
+            <li>In a call, the same confirm opens over the call screen from the tray's ✕. If the call ends, the clip still goes without asking (S21).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Edit and delete</h2><p class="muted">For later fixes, reached from the long-press menu. Trimming and emoji live only here, so saving a new sound stays two steps.</p></div>
+    <div class="states">
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="dk" data-s="edit"></div></div>
+        <div class="note">
+          <h3>7 · Edit sheet <span class="chip mode" data-ml>Dark</span></h3>
+          <div class="chips"><span class="chip">S10</span><span class="chip">S11</span><span class="chip">S12</span><span class="chip">M8</span><span class="chip">M9</span></div>
+          <ul>
+            <li>A system sheet at the large detent with the house header: Cancel, "Edit sound", Save (the sheet's confirming action, with the sticker).</li>
+            <li><b>Name:</b> the same field as when you saved it, prefilled. Save is disabled if it's empty.</li>
+            <li><b>Emoji:</b> a 64 pt well. Tapping it opens the emoji keyboard; the first emoji typed replaces the old one and closes the keyboard. "Remove" goes back to 🔊.</li>
+            <li><b>Trim:</b> drag the Accent handles in from either end. The parts you cut are dimmed, and the kept part is framed in Outline. Times sit under the handles, and the kept length shows next to the label.</li>
+            <li>"Play trimmed" plays only the kept part, with the red playhead. The handles have 44 pt hit areas, and dragging a handle shows its time.</li>
+            <li>Trimming saves new start and end points; the original audio is kept (S11).</li>
+            <li>If you change anything and then Cancel, it asks "Discard changes?", the same as the drawn-note sheet.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph" data-mode="lt" data-s="del"></div></div>
+        <div class="note">
+          <h3>8 · Delete confirm <span class="chip mode" data-ml>Light</span></h3>
+          <div class="chips"><span class="chip">S7</span><span class="chip">M10</span></div>
+          <ul>
+            <li>The house dialog card. Title: "Delete “Ribbit”?" Body: "It goes for both of you. Sam won't have it either." That says exactly what happens.</li>
+            <li>"Keep it" and "Delete" are equal width, with Delete on the right, in Danger with a trash icon. There's no sticker on either.</li>
+            <li>A tap on the scrim keeps it, so there's no ✕ (a small departure from the dialog card; flag F4).</li>
+            <li>The tile fades out over 0.15 s and the rest move up with a 0.2 s ease-out. If Sam is playing it at that moment, it stops on his phone.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>In a call</h2><p class="muted">The same library, from the effects tray. You're mid-conversation, so the tray stays open and each tap is one sound for both of you.</p></div>
+    <div class="states">
+      <div class="state">
+        <div class="dev"><div class="ph call" data-mode="lt" data-s="tray"></div></div>
+        <div class="note">
+          <h3>9 · Tray, Sounds, one playing <span class="chip mode" data-ml>Light</span> panel</h3>
+          <div class="chips"><span class="chip">S1</span><span class="chip">S2</span><span class="chip">S24</span><span class="chip">S25</span><span class="chip">M11</span></div>
+          <ul>
+            <li>Sounds is the last pill, after Glasses. The row scrolls it into view once picked, and the tray opens on it next time (N7, last tab used).</li>
+            <li>Cells use the Stickers grid's 84 pt rows and Background cells, widened to 120 so titles fit. A fourth column peeks in at the edge to show the grid scrolls.</li>
+            <li>"+ Record" is the first cell, Accent with the sticker: the panel's one creating action, as Add is on the Text tab.</li>
+            <li>The playing cue is the same tint and stop badge as on the tab. Sam hears it at the same moment, and the tray stays open (S25).</li>
+            <li>A tap can't drag anything out and there's no long-press menu here (S19). That keeps the tray to one gesture.</li>
+            <li>Hint: "Tap to play for you both". It also covers being muted (S24).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph call" data-mode="lt" data-s="trayAudio"></div></div>
+        <div class="note">
+          <h3>9b · Audio call, tray on Sounds <span class="chip mode" data-ml>Light</span> panel</h3>
+          <div class="chips"><span class="chip">A1</span><span class="chip">M17</span><span class="chip">M18</span></div>
+          <ul>
+            <li>An audio call: both cameras are off, so the big view is Sam's camera-off layout, moved up into the top half while the panel is open.</li>
+            <li>The Stickers button is now always first in the bar (A1). Here it opens the tray straight on Sounds, whatever tab you used last.</li>
+            <li>Stickers, Emoji, Text, Draw, Hats and Glasses stay in the row at 40% and do nothing when tapped. Sounds is selected, so the row is scrolled to it.</li>
+            <li>A second hint line says why: "Stickers come back when your camera's on". VoiceOver reads each dimmed pill as "Stickers, dimmed. Turn on your front camera to use stickers."</li>
+            <li>If you turn the camera on with the tray open, the pills fade to full strength over 0.15 s and the second line goes. You stay on Sounds.</li>
+            <li>With Sam big and your camera on, the tray also opens on Sounds, but the face pills are live. Tapping one makes your view big first (M18).</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph call" data-mode="dk" data-s="trayRec"></div></div>
+        <div class="note">
+          <h3>10 · Tray, recording both voices <span class="chip mode" data-ml>Dark</span> panel</h3>
+          <div class="chips"><span class="chip">S4</span><span class="chip">S6</span><span class="chip">S21</span><span class="chip">M12</span></div>
+          <ul>
+            <li>"+ Record" swaps the panel content in place (0.15 s crossfade, like Draw to the pad). ✕ on the left discards and goes back to the grid.</li>
+            <li>The title says who is in it: "Recording you and Sam". The track and countdown match state 5. The bars show the mixed level, so Sam's laugh shows up too.</li>
+            <li>Stop is 72 pt to fit the half-height panel. After Stop (or 10 s), the panel turns into the naming step and rides on the keyboard at 292 pt, the way the Text tab does.</li>
+            <li>If the call ends here, the clip is gone without a prompt (S21). The panel closes with the call screen.</li>
+            <li>Sounds can't be played while recording; the grid isn't on screen.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="state">
+        <div class="dev"><div class="ph call" data-mode="dk" data-s="partner"></div></div>
+        <div class="note">
+          <h3>11 · Sam's screen, "Adam is recording" <span class="chip mode">Call chrome</span></h3>
+          <div class="chips"><span class="chip">S5</span><span class="chip">M13</span></div>
+          <ul>
+            <li>A second frosted pill sits 8 pt under the name pill: a static Danger dot, then "Adam is recording". The words carry the meaning; the dot is a backup.</li>
+            <li>It fades in over 0.2 s when Adam starts and out over 0.15 s when he stops, discards or saves. It doesn't pulse.</li>
+            <li>It's centred under the name, away from every corner the small tile can snap to, so nothing covers it.</li>
+            <li>VoiceOver announces "Adam is recording" once, politely, without moving focus.</li>
+            <li>When Adam only plays a sound, Sam just hears it, with no pill (A5).</li>
+            <li>Sam's bar now starts with the Stickers button, as every call bar does (A1).</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Four-tab bar</h2><p class="muted">Sounds goes third (S15). With four equal tabs, each slot is about 100 pt wide, and the 60 × 34 pill still fits with room around it.</p></div>
+    <div class="grid2">
+      <div class="mini lt" data-mode="lt"><small>Light · Sounds selected</small><div data-bar></div></div>
+      <div class="mini dk" data-mode="dk"><small>Dark · Sounds selected</small><div data-bar></div></div>
+    </div>
+    <div class="panel"><ul>
+      <li>Same rules as now: each tab has its own pill, the selected one fades in Accent over 0.15 s, the icon switches to <code>.fill</code>, and there's a <code>.selection</code> haptic on change only.</li>
+      <li>Icons: <code>phone</code>, <code>note.text</code>, <code>speaker.wave.2</code>, <code>star</code>. Labels: Calling, Notes, Sounds, Hobbies.</li>
+      <li>No badge for new sounds from Sam (S23 says no push, and design.md keeps the green New only for notes for now).</li>
+      <li>design.md §6 says "three equal tabs". That becomes four (see the proposals).</li>
+    </ul></div>
+  </section>
+
+  <section class="sec">
+    <div class="grid2">
+      <div class="panel">
+        <h3>Motion</h3>
+        <ul>
+          <li><b>Play:</b> the tile tint fills linearly over the clip's length, then fades out over 0.15 s. Stopping fades it out at once.</li>
+          <li><b>Record dialog:</b> it opens like the Notes dialog (0.2 s fade, 0.96 to 1 scale, ease-out) and closes with a 0.15 s fade. Recording to naming is a 0.15 s crossfade inside the card.</li>
+          <li><b>Level bars:</b> each new bar appears at full height, with no grow-in. They're live input, not decoration, and they stop when recording stops.</li>
+          <li><b>Reorder:</b> the dragged tile follows the finger 1:1. The others move 0.2 s ease-out. The drop is the same ease, with no overshoot.</li>
+          <li><b>New or deleted tile:</b> a 0.15 s opacity fade, and the neighbours move 0.2 s ease-out.</li>
+          <li><b>Partner pill:</b> fades in 0.2 s, out 0.15 s.</li>
+          <li><b>Reduce Motion:</b> neighbour moves and the dialog scale become crossfades. The play tint becomes a static half-tint plus the stop badge, so the state still shows without movement.</li>
+          <li>Nothing idles. The empty tab and the partner pill are still.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Haptics</h3>
+        <ul>
+          <li>None of our own on play, stop, record, save, discard, reorder or delete (M15). These are ordinary taps, and T3 keeps them quiet.</li>
+          <li>The system context menu gives its usual long-press tap. It's built in, and we don't add another.</li>
+          <li><code>.error</code> when the mic won't start or a save fails (T3).</li>
+          <li>The tab bar's <code>.selection</code> stays. None on the tray's Sounds pill, as with every tray tab.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>VoiceOver and touch</h3>
+      <div class="scroll"><table>
+        <thead><tr><th>Element</th><th>Label</th><th>Value, hint, actions</th></tr></thead>
+        <tbody>
+          <tr><td>+ Record tile</td><td>"Record a sound"</td><td>hint "Up to 10 seconds" (in a call: "Records you and Sam, up to 10 seconds")</td></tr>
+          <tr><td>Sound tile</td><td>"Miso's meow" (the emoji is left out)</td><td>hint "Double-tap to play" (in a call: "…for you both"). While playing: value "Playing", hint "Double-tap to stop". Actions: Edit, Delete, Move earlier, Move later (tab only)</td></tr>
+          <tr><td>Recording track</td><td>"Recording"</td><td>value "4 of 10 seconds", updated every 2 s. At auto-stop it announces "Stopped at 10 seconds"</td></tr>
+          <tr><td>Stop</td><td>"Stop recording"</td><td>first in focus order when the dialog opens</td></tr>
+          <tr><td>✕ while recording</td><td>"Discard recording"</td><td>the escape gesture does the same</td></tr>
+          <tr><td>Play / stop in naming and Edit</td><td>"Play sound" / "Stop"</td><td>—</td></tr>
+          <tr><td>Name field</td><td>"Name"</td><td>hint "Required"</td></tr>
+          <tr><td>Save (disabled)</td><td>"Save"</td><td>dimmed; hint "Add a name first"</td></tr>
+          <tr><td>Trim handles</td><td>"Start" / "End"</td><td>adjustable: swipe up or down moves 0.1 s; value "0.4 seconds"</td></tr>
+          <tr><td>Emoji well</td><td>"Emoji, cat" / "Emoji, none"</td><td>hint "Double-tap to choose"</td></tr>
+          <tr><td>Partner pill</td><td>"Adam is recording"</td><td>polite announcement, focus doesn't move</td></tr>
+        </tbody>
+      </table></div>
+      <p class="muted">Touch: tiles 116 × 108, tray cells 120 × 84, Stop 88 (72 in the tray), handles 44 hit. Tile titles scale with Dynamic Type up to <code>.accessibility1</code>; past that the grid goes to two columns, as the Notes grid does.</p>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Flags against design.md</h2><p class="muted">Places where the settled decisions, or what iOS gives us, rub against the system.</p></div>
+    <div class="panel"><ul>
+      <li><b class="f">F1</b> <b>Tray access, resolved (A1).</b> The Stickers button is always in the bar and opens on Sounds when stickers aren't possible. This amends the in-call spec; see the next section.</li>
+      <li><b class="f">F2</b> <b>System lift, accepted.</b> The native context menu and drag preview keep iOS's own small scale and spring.</li>
+      <li><b class="f">F3</b> <b>One sticker per screen, resolved.</b> "+ Record" drops its shadow while a dialog or sheet covers the tab, so only the card's Save carries one.</li>
+      <li><b class="f">F4</b> <b>Dialog card closing.</b> design.md says ✕ or a scrim tap closes it. Recording and naming ignore the scrim (unsaved work), and the delete confirm uses "Keep it" instead of ✕.</li>
+      <li><b class="f">F5</b> <b>Tab bar.</b> "Three equal tabs" in §6 becomes four.</li>
+    </ul></div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Amendment to the in-call spec</h2><p class="muted">For the spec run. in-call-screen.md isn't edited here.</p></div>
+    <div class="panel"><ul>
+      <li><b>R4 / C15:</b> the Stickers button is in the control bar in every call state, always first: Stickers · Mute · Camera · Route · End. It used to join only while your own view was big.</li>
+      <li><b>§3.3 step 1 and N7:</b> the tray opens on the last tab used, except when stickers aren't possible (audio call, camera off, back camera) or Sam is big. Then it opens on Sounds.</li>
+      <li><b>§8 camera off / back camera:</b> the Stickers button and the tray are no longer disabled. Only the face tabs are dimmed, with the line "Stickers come back when your camera's on". "Add stickers" on the medium tile keeps its disabled state.</li>
+      <li><b>Partner big:</b> tapping a face pill makes your view big first (state C), then shows that tab.</li>
+      <li><b>R5 tabs:</b> Stickers · Emoji · Text · Draw · Hats · Glasses · Sounds.</li>
+    </ul></div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Answered in v2</h2><p class="muted">Adam's answers to v1's questions. There are no open questions left.</p></div>
+    <div class="panel"><ol>
+      <li><b>Q1 · Audio calls and camera off:</b> the Stickers button is always in the bar, and opens on Sounds when stickers aren't possible (A1, state 9b).</li>
+      <li><b>Q2 · Silent switch:</b> sounds play anyway, using the playback audio session (A2).</li>
+      <li><b>Q3 · Discard:</b> it asks first, "Discard this sound?" with Discard and Keep (A3, state 6c).</li>
+      <li><b>Q4 · Trim:</b> keep the original file and store start and end points, already S11 (A4).</li>
+      <li><b>Q5 · Partner cue on play:</b> none. Sam just hears it (A5).</li>
+    </ol></div>
+  </section>
+
+  <section class="sec">
+    <div class="stack"><h2>Proposed design-system changes</h2><p class="muted">For the spec run. Not applied.</p></div>
+    <div class="panel"><ul>
+      <li><b>§6 Tab bar:</b> four equal tabs; add the <code>speaker.wave.2</code> icon.</li>
+      <li><b>New token PlayTint:</b> light #FFE490 (Accent 45% into Surface), dark #68571F (30%). TextPrimary on it is about 12:1 in light and 6.3:1 in dark. It's used only for "playing now" progress.</li>
+      <li><b>New component, Sound tile:</b> tab size (116 × 108, Outline) and tray size (120 × 84, Background, no Outline); rest, playing, and the "+ Record" variant.</li>
+      <li><b>New component, Waveform track:</b> a recording timeline, a playback playhead, and a trim frame with handles.</li>
+      <li><b>Dialog card:</b> add "may ignore scrim taps while it holds unsaved work".</li>
+      <li><b>Sticker shadow:</b> add "a creating tile under a scrim drops its shadow, so the card's confirming action is the only sticker".</li>
+    </ul></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var IC = {
+    phone: '<path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/>',
+    note: '<rect x="4.5" y="3.5" width="15" height="17" rx="3"/><path d="M8.5 9h7M8.5 13h7M8.5 17h4"/>',
+    speaker: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.2 6.6a7.6 7.6 0 0 1 0 10.8"/>',
+    star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    pencil: '<path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5zM13.5 7l3 3"/>',
+    trash: '<path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/>',
+    mic: '<rect x="9" y="3.5" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>',
+    video: '<rect x="3" y="6.5" width="12.5" height="11" rx="2.5"/><path d="M15.5 10.5l5-3v9l-5-3z"/>',
+    sticker: '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 14a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/>',
+    end: '<path d="M3 13.5c5-5 13-5 18 0l-2 2.5-3.5-1.5v-2.5a10 10 0 0 0-7 0v2.5L5 16z"/>'
+  };
+  var PLAY = '<path d="M8 5.5v13l11-6.5z"/>';
+  var STOPI = '<rect x="7" y="7" width="10" height="10" rx="2"/>';
+  function ic(n, cls) { return '<svg class="i' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true">' + (IC[n] || n) + '</svg>'; }
+
+  var SOUNDS = [
+    ['🐱', "Miso's meow"], ['🦖', "Sam's dinosaur noise, the long one"], ['🔊', 'Good morning song'],
+    ['😂', 'That laugh'], ['🥁', 'Ba dum tss'], ['🐸', 'Ribbit'], ['🚪', 'Knock knock'], ['💤', 'Snore'],
+    ['🎉', 'Surprise!'], ['👋', 'Byeee'], ['🍕', "Pizza's here"], ['🐝', 'Bzzz'], ['🎺', 'Toot'], ['🔊', 'Voice memo 3']
+  ];
+  var recTile = '<div class="snd rec"><span class="plus">' + ic('plus') + '</span><b>Record</b></div>';
+  function tile(s, play) {
+    return '<div class="snd">' + (play != null ? '<span class="wipe" style="width:' + play + '%"></span><span class="stopb"><i></i></span>' : '') +
+      '<span class="em">' + s[0] + '</span><b>' + s[1] + '</b></div>';
+  }
+  function grid(list, opts) {
+    opts = opts || {};
+    return '<div class="sg' + (opts.blur ? ' blurgrid' : '') + '">' + (opts.quiet ? recTile.replace('snd rec', 'snd rec quiet') : recTile) + list.map(function (s, i) {
+      if (s === null) return '<div class="snd slot"></div>';
+      return tile(s, opts.play === i ? 60 : null);
+    }).join('') + '</div>';
+  }
+
+  var sb = '<div class="sb"><span>9:41</span><span><span class="bat"></span></span></div><span class="home"></span>';
+  var sbc = '<div class="sb"><span>9:41</span><span>5G<span class="bat"></span></span></div><span class="home"></span>';
+  function bar() {
+    var t = [['phone', 'Calling'], ['note', 'Notes'], ['speaker', 'Sounds'], ['star', 'Hobbies']];
+    return '<div class="tabs">' + t.map(function (x) { return '<div class="tab' + (x[1] === 'Sounds' ? ' on' : '') + '"><span class="pill">' + ic(x[0]) + '</span>' + x[1] + '</div>'; }).join('') + '</div>';
+  }
+  function tabScreen(inner) { return sb + '<div class="scr"><div class="top"><span class="title">Sounds</span></div>' + inner + '</div>' + bar(); }
+
+  function wave(n, filled, seed, h) {
+    var out = '', s = seed || 7;
+    for (var i = 0; i < n; i++) {
+      s = (s * 9301 + 49297) % 233280;
+      var r = s / 233280;
+      var amp = 0.25 + 0.75 * Math.abs(Math.sin(i * 0.45 + seed)) * (0.55 + 0.45 * r);
+      var hh = Math.round((h || 52) * amp);
+      if (i >= filled) out += '<i class="f" style="height:4px"></i>';
+      else out += '<i style="height:' + hh + 'px"></i>';
+    }
+    return out;
+  }
+  function kb() {
+    var rows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+    var h = '<div class="kb"><div class="pred"><span>Miso’s</span><span>Meow</span><span>Morning</span></div>';
+    h += rows.map(function (r, i) {
+      var k = r.split('').map(function (c) { return '<span class="k">' + c + '</span>'; }).join('');
+      if (i === 2) k = '<span class="k m">⇧</span>' + k + '<span class="k m">⌫</span>';
+      return '<div class="r">' + k + '</div>';
+    }).join('');
+    return h + '<div class="r"><span class="k m">123</span><span class="k m">☺</span><span class="k sp">space</span><span class="k ret">done</span></div></div>';
+  }
+
+  function recCard() {
+    return '<div class="dlg mid" role="dialog" aria-label="Recording">' +
+      '<div class="hd"><span class="rdot"></span><span class="t">Recording</span><span class="ibtn" aria-label="Discard recording">' + ic('x') + '</span></div>' +
+      '<div class="track">' + wave(52, 21, 3, 54) + '</div>' +
+      '<div class="trow"><b>0:04</b><span>6 s left</span></div>' +
+      '<div class="bigstop" role="button" aria-label="Stop recording"><i></i></div>' +
+      '<div class="cap">Stops by itself at 10 seconds</div></div>';
+  }
+  function nameCard(filled) {
+    var field = filled
+      ? '<div class="field">Miso’s meow<span class="caret"></span><span class="cnt">11/30</span></div>'
+      : '<div class="field"><span class="caret"></span><span class="ph-t">Like Miso’s meow</span><span class="cnt">0/30</span></div>';
+    var track = '<div class="track sm">' + wave(44, 44, 3, 38) + (filled ? '<span class="ph-line" style="left:48%"></span>' : '') + '</div>';
+    return '<div class="dlg" style="top:290px" role="dialog" aria-label="Name this sound">' +
+      '<div class="hd"><span class="t">Name this sound</span></div>' +
+      '<div style="display:flex;gap:10px;align-items:center"><span class="ibtn acc" aria-label="' + (filled ? 'Stop' : 'Play sound') + '">' + ic(filled ? STOPI : PLAY, 'fill') + '</span>' + track + '</div>' +
+      '<div class="lbl">Name</div>' + field +
+      '<div class="foot"><span class="tbtn">Discard</span><span class="prim' + (filled ? '' : ' dis') + '">Save</span></div></div>' + kb();
+  }
+
+  function editSheet() {
+    var n = 56;
+    return '<div class="scrim"></div><div class="sheet"><div class="grab"></div>' +
+      '<div class="shd"><span class="tbtn">Cancel</span><b>Edit sound</b><span class="prim sm">Save</span></div>' +
+      '<div class="lbl">Name</div><div class="field">Miso’s meow<span class="cnt">11/30</span></div>' +
+      '<div class="lbl">Emoji</div><div class="erow"><span class="well">🐱</span><span class="smb">Remove</span><span class="hintline">Shows 🔊 when there’s none</span></div>' +
+      '<div class="lbl">Trim <span>5.5 s of 6.8 s</span></div>' +
+      '<div class="trim"><div class="track">' + wave(n, n, 5, 56) + '</div>' +
+      '<span class="out" style="left:2px;width:28px"></span><span class="out" style="right:2px;width:52px"></span>' +
+      '<span class="frame" style="left:30px;right:52px"></span>' +
+      '<span class="h" style="left:18px" aria-label="Start"></span><span class="h" style="right:40px" aria-label="End"></span>' +
+      '<span class="ph-line" style="left:150px;top:8px;bottom:8px"></span></div>' +
+      '<div class="ttimes"><span>start <b>0.4 s</b></span><span>end <b>5.9 s</b></span></div>' +
+      '<div><span class="smb">' + ic(STOPI, 'fill') + 'Stop</span> <span class="hintline" style="margin-left:8px">Playing the trimmed part</span></div>' +
+      '</div>';
+  }
+  function delCard() {
+    return '<div class="scrim"></div><div class="dlg mid" role="alertdialog">' +
+      '<div class="hd"><span class="t">Delete “Ribbit”?</span></div>' +
+      '<p class="body">It goes for both of you. Sam won’t have it either.</p>' +
+      '<div class="foot"><span class="sec2">Keep it</span><span class="sec2 danger">' + ic('trash') + 'Delete</span></div></div>';
+  }
+
+  var TABS = ['Stickers', 'Emoji', 'Text', 'Draw', 'Hats', 'Glasses', 'Sounds'];
+  function tabRow(dim) { return '<div class="tabsc"><div class="tabsr">' + TABS.map(function (t) { return '<span class="tb' + (t === 'Sounds' ? ' on' : (dim ? ' dis' : '')) + '">' + t + '</span>'; }).join('') + '</div></div>'; }
+  function trayCells() {
+    var c = '<div class="tc rec"><span class="plus">' + ic('plus') + '</span><b>Record</b></div>';
+    c += SOUNDS.slice(0, 11).map(function (s, i) {
+      return '<div class="tc">' + (i === 3 ? '<span class="wipe" style="width:40%"></span><span class="stopb"><i></i></span>' : '') + '<span class="em">' + s[0] + '</span><b>' + s[1] + '</b></div>';
+    }).join('');
+    return '<div class="tg">' + c + '</div>';
+  }
+  function callBase(self) {
+    return '<svg class="vid" aria-hidden="true"><use href="#v-adam"/></svg>' + sbc +
+      '<div class="who fr">' + (self ? 'Sam' : 'Adam') + ' <span>6:40</span></div>';
+  }
+  function discardCard() {
+    return '<div class="scrim" style="z-index:9;background:rgba(0,0,0,.3)"></div><div class="dlg mid" style="z-index:10" role="alertdialog">' +
+      '<div class="hd"><span class="t">Discard this sound?</span></div>' +
+      '<p class="body">You’ll lose this recording. Sam never hears it.</p>' +
+      '<div class="foot"><span class="sec2">Keep</span><span class="sec2 danger">' + ic('trash') + 'Discard</span></div></div>';
+  }
+  var callBar = '<div class="cb"><span class="cbtn fr">' + ic('sticker') + '</span><span class="cbtn fr">' + ic('mic') + '</span><span class="cbtn fr">' + ic('video') + '</span><span class="cbtn fr">' + ic('speaker') + '</span><span class="cbtn end">' + ic('end') + '</span></div>';
+  var S = {
+    empty: tabScreen('<div class="sg">' + recTile + '</div><div class="empty"><b>No sounds yet. Record one for Sam?</b><span>Up to 10 seconds. Sounds you save show up for you both.</span></div>'),
+    grid: tabScreen(grid(SOUNDS, { play: 0 })),
+    menu: tabScreen(grid(SOUNDS, { blur: true })) +
+      '<div class="lift" style="left:20px;top:364px">' + tile(SOUNDS[5]) + '</div>' +
+      '<div class="menu" style="left:20px;top:482px"><div>Edit' + ic('pencil') + '</div><div class="d">Delete' + ic('trash') + '</div></div>',
+    drag: tabScreen(grid([SOUNDS[0], null, SOUNDS[1], SOUNDS[2], SOUNDS[3], SOUNDS[4], SOUNDS[6], SOUNDS[7], SOUNDS[8], SOUNDS[9], SOUNDS[10], SOUNDS[11], SOUNDS[12], SOUNDS[13]])) +
+      '<div class="snd ghost" style="left:262px;top:150px"><span class="em">🐸</span><b>Ribbit</b></div><span class="finger" style="left:300px;top:200px"></span>',
+    rec: tabScreen(grid(SOUNDS, { quiet: true })) + '<div class="scrim"></div>' + recCard(),
+    nameEmpty: tabScreen(grid(SOUNDS, { quiet: true })) + '<div class="scrim"></div>' + nameCard(false),
+    nameFilled: tabScreen(grid(SOUNDS, { quiet: true })) + '<div class="scrim"></div>' + nameCard(true),
+    edit: tabScreen(grid(SOUNDS, { quiet: true })) + editSheet(),
+    del: tabScreen(grid(SOUNDS, { quiet: true })) + delCard(),
+    tray: callBase(true) + '<div class="st"><svg class="vid"><use href="#v-sam"/></svg></div>' +
+      '<div class="pn"><div class="grab"></div><div class="phead"><span class="ibtn" aria-label="Close stickers">' + ic('x') + '</span>' + tabRow() + '</div>' + trayCells() +
+      '<div class="phint">Tap to play for you both</div><span class="home"></span></div>',
+    trayRec: callBase(true) + '<div class="st"><svg class="vid"><use href="#v-sam"/></svg></div>' +
+      '<div class="pn"><div class="grab"></div><div class="phead"><span class="ibtn" aria-label="Discard recording">' + ic('x') + '</span><span class="t">Recording you and Sam</span><span class="sp"></span></div>' +
+      '<div class="pbody"><div class="track">' + wave(54, 30, 9, 54) + '</div><div class="trow"><b>0:06</b><span>4 s left</span></div>' +
+      '<div class="bigstop s72" role="button" aria-label="Stop recording"><i></i></div><div class="cap">Sam is told you’re recording</div></div><span class="home"></span></div>',
+    discard: tabScreen(grid(SOUNDS, { quiet: true })) + '<div class="scrim"></div>' + nameCard(false).replace(/<div class="kb">[\s\S]*$/, '').replace('top:290px', 'top:300px') + discardCard(),
+    trayAudio: sbc + '<div class="off" style="bottom:448px"><span class="big-ava">S</span><b>Sam</b><span>' + ic('phone') + 'Audio call</span></div>' +
+      '<div class="who fr">Sam <span>2:15</span></div>' +
+      '<div class="pn"><div class="grab"></div><div class="phead"><span class="ibtn" aria-label="Close tray">' + ic('x') + '</span>' + tabRow(true) + '</div>' + trayCells() +
+      '<div class="phint">Tap to play for you both<br><span style="font-size:13px">Stickers come back when your camera’s on</span></div><span class="home"></span></div>',
+    partner: callBase(false).replace('#v-adam', '#v-adam') + '<div class="recpill fr" role="status"><i></i>Adam is recording</div>' +
+      '<div class="st"><svg class="vid"><use href="#v-sam"/></svg></div>' +
+      callBar
+  };
+  document.querySelectorAll('.ph[data-s]').forEach(function (p) { p.innerHTML = S[p.getAttribute('data-s')]; });
+  document.querySelectorAll('[data-bar]').forEach(function (b) { b.outerHTML = bar(); });
+  document.querySelectorAll('.tabsc').forEach(function (c) { c.scrollLeft = c.scrollWidth; });
+
+  var phones = document.querySelectorAll('[data-mode]');
+  function apply(m) {
+    phones.forEach(function (p) {
+      var mode = m === 'as' ? p.getAttribute('data-mode') : m;
+      p.classList.remove('lt', 'dk');
+      p.classList.add(mode);
+      var st = p.closest('.state');
+      var lab = st && st.querySelector('[data-ml]');
+      if (lab) lab.textContent = mode === 'lt' ? 'Light' : 'Dark';
+    });
+    document.querySelectorAll('.switch button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-m') === m)); });
+    try { localStorage.setItem('snd-mode', m); } catch (e) {}
+  }
+  document.querySelectorAll('.switch button').forEach(function (b) { b.addEventListener('click', function () { apply(b.getAttribute('data-m')); }); });
+  var saved = 'as';
+  try { saved = localStorage.getItem('snd-mode') || 'as'; } catch (e) {}
+  apply(saved);
+  requestAnimationFrame(function () { document.querySelectorAll('.tabsc').forEach(function (c) { c.scrollLeft = c.scrollWidth; }); });
+})();
+</script>
