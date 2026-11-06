@@ -3,6 +3,9 @@ import SwiftUI
 struct StickerGestures: View {
     @Environment(StickerLayer.self) private var stickers
     let mirror: Bool
+    let panelTop: CGFloat
+    @Binding var hovering: Bool
+    let onDrop: () -> Void
     @State private var dragging = false
     @State private var moving: UUID?
     @State private var target: (id: UUID, scale: Float, rotation: Float)?
@@ -50,11 +53,22 @@ struct StickerGestures: View {
                         }
                         .onEnded { _ in target = nil }
                 )
-                .dropDestination(for: String.self) { _, point in
-                    guard let sticker = stickers.dragging else { return false }
-                    stickers.dragging = nil
-                    stickers.add(sticker, at: map().toDisplay(point))
-                    return true
+                .onDrop(of: [.plainText], delegate: TrayDrop(panelTop: panelTop, hovering: $hovering) { payload, point in
+                    if let payload, stickers.add(Sticker(kind: Sticker.dropped(payload)), at: map().toDisplay(point)) {
+                        onDrop()
+                    } else {
+                        withAnimation(.easeOut(duration: 0.25)) { hovering = false }
+                    }
+                })
+                .accessibilityElement(children: .contain)
+                .accessibilityChildren {
+                    ForEach(stickers.items) { item in
+                        Color.clear
+                            .accessibilityLabel(label(item.sticker.kind))
+                            .accessibilityAction(named: "Remove") { stickers.remove(item.id) }
+                            .accessibilityAction(named: "Make bigger") { resize(item.id, by: 1.25) }
+                            .accessibilityAction(named: "Make smaller") { resize(item.id, by: 0.8) }
+                    }
                 }
         }
     }
@@ -63,12 +77,53 @@ struct StickerGestures: View {
         if let id = stickers.selected {
             TimelineView(.animation) { _ in
                 if let p = stickers.compositor.placement(id) {
-                    Path { $0.addLines(p.corners.map(map().toView)); $0.closeSubpath() }
-                        .stroke(.white, style: StrokeStyle(lineWidth: 2.5, lineJoin: .round, dash: [8, 6]))
+                    let quad = Path { $0.addLines(p.corners.map(map().toView)); $0.closeSubpath() }
+                    quad.union(quad.strokedPath(StrokeStyle(lineWidth: 16, lineJoin: .round)))
+                        .stroke(Color("Accent"), lineWidth: 2.5)
                 }
             }
             .allowsHitTesting(false)
+            .transition(.opacity)
         }
+    }
+
+    private func resize(_ id: UUID, by factor: Float) {
+        stickers.update(id) { $0.scale = min(max($0.scale * factor, 0.3), 5) }
+    }
+
+    private func label(_ kind: Sticker.Kind) -> String {
+        switch kind {
+        case .image(let name): "\(Stickers.label(name)) sticker"
+        case .emoji(let emoji): "\(Emoji.names[emoji] ?? emoji) sticker"
+        case .text(let text, _): "Text sticker, \(text)"
+        }
+    }
+}
+
+private struct TrayDrop: DropDelegate {
+    let panelTop: CGFloat
+    @Binding var hovering: Bool
+    let drop: @MainActor (String?, CGPoint) -> Void
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        let above = info.location.y < panelTop
+        if hovering != above { withAnimation(.easeOut(duration: 0.25)) { hovering = above } }
+        return DropProposal(operation: above ? .copy : .cancel)
+    }
+
+    func dropExited(info _: DropInfo) {
+        withAnimation(.easeOut(duration: 0.25)) { hovering = false }
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        guard info.location.y < panelTop, let provider = info.itemProviders(for: [.plainText]).first else { return false }
+        let point = info.location
+        let drop = drop
+        _ = provider.loadTransferable(type: String.self) { result in
+            let payload = try? result.get()
+            Task { @MainActor in drop(payload, point) }
+        }
+        return true
     }
 }
 

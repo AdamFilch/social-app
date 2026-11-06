@@ -1,5 +1,6 @@
 import ARKit
 import ButtercupKit
+import SwiftData
 import SwiftUI
 
 @main
@@ -7,9 +8,11 @@ struct ButtercupApp: App {
     @State private var session: SessionStore
     @State private var calls: CallStore
     @State private var stickers: StickerLayer
+    @State private var notes: NotesStore
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        assert(UIFont(name: "Noteworthy-Bold", size: 18) != nil)
         let session = SessionStore()
         let calls = CallStore(session: session)
         let stickers = StickerLayer()
@@ -32,6 +35,10 @@ struct ButtercupApp: App {
         _session = State(initialValue: session)
         _calls = State(initialValue: calls)
         _stickers = State(initialValue: stickers)
+        let container = try! ModelContainer(for: Note.self, OutboxAction.self, configurations: ModelConfiguration(groupContainer: .identifier(Outbox.appGroup)))
+        let outbox = Outbox(client: session.client, container: container)
+        outbox.onOnline = { Task { await session.refresh() } }
+        _notes = State(initialValue: NotesStore(outbox: outbox))
     }
 
     var body: some Scene {
@@ -39,6 +46,12 @@ struct ButtercupApp: App {
             Group {
                 switch session.state {
                 case .loading: ProgressView()
+                case .offline:
+                    ContentUnavailableView {
+                        Label("Couldn't connect", systemImage: "wifi.slash")
+                    } actions: {
+                        Button("Try again") { Task { await session.refresh() } }
+                    }
                 case .signedOut: SignInView()
                 case .needsName: NameView()
                 case .unpaired: PairView()
@@ -51,12 +64,14 @@ struct ButtercupApp: App {
             .onChange(of: calls.phase) { _, phase in
                 if phase == .idle { stickers.clear() }
             }
+            .environment(notes)
             .onOpenURL { url in Task { await session.openInvite(url) } }
             .onChange(of: scenePhase, initial: true) { _, phase in
                 if phase == .active {
                     Task {
                         await session.refresh()
                         await calls.resync()
+                        await notes.outbox.flush()
                     }
                 }
             }

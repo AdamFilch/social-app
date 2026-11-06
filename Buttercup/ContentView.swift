@@ -25,15 +25,21 @@ struct ContentView: View {
     @Environment(SessionStore.self) private var session
     @Environment(CallStore.self) private var calls
     @State private var selection: AppTab = .calling
+    @State private var toast: NoteSendResult?
+    @State private var toastCount = 0
+    @State private var openNotes: OpenNotes?
 
     var body: some View {
         TabView(selection: $selection) {
             ForEach(AppTab.allCases, id: \.self) { tab in
                 Tab(value: tab) {
                     Group {
-                        if tab == .calling {
+                        switch tab {
+                        case .calling:
                             CallingView()
-                        } else {
+                        case .notes:
+                            NotesTab(onSent: showToast, open: $openNotes)
+                        case .hobbies:
                             Text(tab.title)
                         }
                     }
@@ -41,8 +47,36 @@ struct ContentView: View {
                 }
             }
         }
+        .overlay(alignment: .bottom) {
+            if let toast {
+                NoteToast(
+                    message: toastMessage(toast),
+                    symbol: toast == .online ? "checkmark" : "wifi.slash"
+                )
+                .padding(.bottom, 12)
+                .onTapGesture { withAnimation(.easeOut(duration: 0.2)) { self.toast = nil } }
+                .transition(.opacity)
+            }
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             TabBar(selection: $selection)
+        }
+        .accessibilityHidden(openNotes != nil)
+        .overlay {
+            DialogCard(isPresented: Binding(get: { openNotes != nil }, set: { if !$0 { openNotes = nil } })) {
+                if let open = openNotes {
+                    NoteDialog(
+                        notes: open.notes,
+                        current: Binding(get: { openNotes?.current ?? open.current }, set: { openNotes?.current = $0 })
+                    ) { openNotes = nil }
+                }
+            }
+        }
+        .sensoryFeedback(.success, trigger: toastCount)
+        .task(id: toastCount) {
+            guard toast != nil else { return }
+            try? await Task.sleep(for: .seconds(2.65))
+            withAnimation(.easeOut(duration: 0.2)) { toast = nil }
         }
         .accessibilityHidden(calls.showsCallScreen)
         .overlay {
@@ -60,6 +94,16 @@ struct ContentView: View {
         .sensoryFeedback(.success, trigger: calls.connectedAt) { _, new in new != nil }
         .sensoryFeedback(.error, trigger: calls.failure) { _, new in new != nil }
         .task { await calls.listen() }
+    }
+
+    private func toastMessage(_ result: NoteSendResult) -> String {
+        result == .online ? "Sent to \(session.partner?.displayName ?? "")" : "Sends when you're back online"
+    }
+
+    private func showToast(_ result: NoteSendResult) {
+        withAnimation(.easeOut(duration: 0.15)) { toast = result }
+        toastCount += 1
+        AccessibilityNotification.Announcement(toastMessage(result)).post()
     }
 
     private var failureMessage: String {

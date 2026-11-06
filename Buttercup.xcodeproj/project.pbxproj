@@ -8,12 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		B00000000000000000000019 /* ButtercupKit in Frameworks */ = {isa = PBXBuildFile; productRef = B0000000000000000000001A /* ButtercupKit */; };
-		B0000000000000000000001E /* stickers in Resources */ = {isa = PBXBuildFile; fileRef = B0000000000000000000001D /* stickers */; };
+		B00000000000000000000021 /* stickers in Resources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000020 /* stickers */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		B0000000000000000000000A /* Buttercup.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Buttercup.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B0000000000000000000001D /* stickers */ = {isa = PBXFileReference; lastKnownFileType = folder; name = stickers; path = assets/stickers; sourceTree = "<group>"; };
+		B0000000000000000000001D /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		B00000000000000000000020 /* stickers */ = {isa = PBXFileReference; lastKnownFileType = folder; name = stickers; path = assets/stickers; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -53,7 +54,8 @@
 			isa = PBXGroup;
 			children = (
 				B0000000000000000000000B /* Buttercup */,
-				B0000000000000000000001D /* stickers */,
+				B0000000000000000000001E /* Config */,
+				B00000000000000000000020 /* stickers */,
 				B0000000000000000000000E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -64,6 +66,14 @@
 				B0000000000000000000000A /* Buttercup.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		B0000000000000000000001E /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				B0000000000000000000001D /* Debug.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -134,7 +144,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B0000000000000000000001E /* stickers in Resources */,
+				B00000000000000000000021 /* stickers in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -200,7 +210,9 @@
 		};
 		B00000000000000000000017 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B0000000000000000000001D /* Debug.xcconfig */;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Buttercup/Buttercup.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q2D95HYTG5;
@@ -219,7 +231,6 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.adamfilchoir.buttercup;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0;
-				SUPABASE_URL = "http://192.168.100.56:54321";
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
 			};
@@ -228,6 +239,7 @@
 		B00000000000000000000018 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Buttercup/Buttercup.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Q2D95HYTG5;
