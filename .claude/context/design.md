@@ -49,6 +49,7 @@ The six existing asset-catalog names first, then proposed additions (*new*). Eac
 | OnDanger *new* | n/a | #1B1814 | Symbol on a Danger fill (End call). Call chrome only |
 | NoteDotMine *new* | #2F6FDB | #79AEFF | Dot and legend for your own notes in the Notes month view |
 | NoteDotPartner *new* | #E5483B | #FF7A6E | Dot and legend for your partner's notes in the Notes month view |
+| PlayTint *new* | #FFE490 | #68571F | Fill showing how far a sound has played (Sounds tiles). Nothing else |
 
 **NotePaper pastels** (*new*, the same in both modes because they are part of the note image):
 
@@ -92,6 +93,7 @@ Avatar tints are per person, not per device: each person keeps the same tint on 
 | OnDanger | Danger | 4.5 | n/a | 6.9 |
 | NoteDotMine | Surface | 3 (non-text) | 4.67 | 6.83 |
 | NoteDotPartner | Surface | 3 (non-text) | 3.87 | 6.06 |
+| TextPrimary | PlayTint | 4.5 | 11.95 | 6.66 |
 | NoteDotMine | Accent | n/a* | 3.02 | 1.49 |
 | NoteDotPartner | Accent | n/a* | 2.51 | 1.67 |
 | TextPrimary (dark) | CallFrost over white video (≈#8F8B86) | 3 (non-text) | n/a | 3.1 |
@@ -169,6 +171,7 @@ A solid copy of the shape in `Outline`, offset 3 pt right and 3 pt down, with no
 | Notes | "Make a note" |
 | Hobbies | Nothing. Every +1 is equal. |
 | Sheets | The confirming action ("Send", "Add") |
+| Sounds | "+ Record" (the first tile); in the call tray, the "+ Record" cell |
 
 **Exception, floating video tiles:** the small and medium call tiles get a soft black shadow (small `radius 10, y 6, 35%`; medium `radius 20, y 12, 45%`). These are the only blurred shadows in the app, because the tiles really do float over moving video.
 
@@ -206,12 +209,12 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 
 ### Tab bar (T6)
 
-- Surface fill, a 2.5 pt Outline top edge, three equal tabs. Replaces `.background(.bar)` in `ContentView.swift`.
+- Surface fill, a 2.5 pt Outline top edge, four equal tabs. Replaces `.background(.bar)` in `ContentView.swift`.
 - Each tab has its own 60 × 34 pt pill behind a 21 pt icon, with a caption-bold label under it.
 - Selected: the pill fills with Accent and gets a 2 pt Outline, the icon switches to `.fill`, and the label turns TextPrimary. Unselected: no pill fill, TextSecondary.
 - Changing tabs fades the old pill out and the new one in over 0.15 s ease-out. Nothing moves between tabs.
 - `.selection` haptic on change only.
-- Icons: `phone` / `note.text` / `star`, with `.fill` versions when selected.
+- Icons: `phone` / `note.text` / `speaker.wave.2` / `star`, with `.fill` versions when selected. Labels: Calling, Notes, Sounds, Hobbies.
 
 ### Chips
 
@@ -283,6 +286,13 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 
 - Two fixed 8 pt places (left = you, right = partner), 1.5 pt Outline rings (OnAccent on an Accent cell), with a legend beside them.
 
+### Sound tile
+
+- Tab: 3 columns, 108 pt tall, radius 20, Surface, 2.5 pt Outline, 12 pt gaps. Emoji 30 pt top-left (🔊 when none), title subheadline bold bottom-left, 2 lines.
+- Tray: 120 × 84, radius 16, Background, no border, 3 rows that scroll sideways.
+- Playing: PlayTint fills from the left at the clip's pace, with a stop badge (TextPrimary circle, Surface square) top-right.
+- "+ Record" tile: Accent, OnAccent plus-in-circle and "Record", sticker shadow; always first.
+
 ### Dialog card
 
 - A centred Surface card, 20 pt from the screen edges, radius 28 (radius.sheet), with a 2.5 pt Outline, 16 pt padding and 14 pt between rows. There's no sticker and no blurred shadow.
@@ -303,6 +313,7 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
   - Then the week strip and the selected day's header and 2-column grid, or the month card with dots and a summary.
   - There is no doodle.
   - Spec: [notes-tab.md](../design/specs/notes-tab.md).
+- **Sounds:** the title, then a 3-column grid of sound tiles with "+ Record" first. No doodle, no other button. Spec: [soundboard.md](../design/specs/soundboard.md).
 - **Hobbies:**
   - One card per hobby. The header has an icon tile, the hobby name and both avatars with done badges, and a status sentence sits under it.
   - Your current item has a cover placeholder, title, progress text, progress bar and a +1 button.
@@ -334,6 +345,7 @@ These are design-system references, not feature specs. Each tab still gets its o
   - `.impact(weight: .light)` when a sticker drops.
   - Nothing on ordinary buttons, chips or +1.
   - No `.selection` haptic on tabs inside the effects tray. The tab-change haptic is only for the app's tab bar.
+  - No haptics on sounds (play, record, save, reorder); `.error` when the mic or a sound fails.
 
 ## 9. Iconography
 
