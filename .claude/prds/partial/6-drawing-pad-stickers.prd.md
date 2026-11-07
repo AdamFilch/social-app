@@ -90,7 +90,7 @@ Done stays disabled ─ Cancel ─► back to tray, nothing added
 | Tool picker hidden behind the sheet on iPhone | Med | No tools | Show the picker as the canvas becomes first responder; full-height detent |
 
 ---
-*Status: PARTIAL — PR #TBD*
+*Status: PARTIAL — PR #24*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
