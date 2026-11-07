@@ -84,7 +84,10 @@ private struct PadCanvas: UIViewRepresentable {
 
         func toolPickerFramesObscuredDidChange(_ toolPicker: PKToolPicker) { measure(toolPicker) }
 
-        func toolPickerVisibilityDidChange(_ toolPicker: PKToolPicker) { measure(toolPicker) }
+        func toolPickerVisibilityDidChange(_ toolPicker: PKToolPicker) {
+            measure(toolPicker)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in self?.measure(toolPicker) }
+        }
 
         private func measure(_ toolPicker: PKToolPicker) {
             guard let window = canvas?.window else { return }

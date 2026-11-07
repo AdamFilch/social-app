@@ -90,6 +90,8 @@ Done stays disabled ─ Cancel ─► back to tray, nothing added
 | Tool picker hidden behind the sheet on iPhone | Med | No tools | Show the picker as the canvas becomes first responder; full-height detent |
 
 ---
+**Update:** the pad now opens inside the effects panel as in the in-call mockup (spec R3 and §4.9 layout), keeping Apple's `PKToolPicker` for the tools instead of the spec's custom toolbar (R2), at Adam's request. Simulator-checked: header ✕ · Draw · ✓, canvas sits above the picker, ✓ dimmed until a stroke, ✓ produced a cropped `.drawing` CIImage and returned to the previous tab.
+
 *Status: PARTIAL — PR #24*
 
 ## Implementation Status
@@ -103,11 +105,11 @@ Done stays disabled ─ Cancel ─► back to tray, nothing added
 
 ### Needs attention
 Manual on-device checklist (iPhone, in a call with the partner):
-- [ ] Open Stickers → Draw → Open drawing pad. The tool picker shows at the bottom and Done is disabled.
-- [ ] Draw a heart and tap Done. The sheet closes, the panel closes and the heart sits on your nose, selected, with no white box around it.
+- [ ] Open Stickers → Draw. The pad opens inside the panel with ✕ · Draw · ✓, the tool picker shows at the bottom without covering the canvas, and ✓ is dimmed.
+- [ ] Draw a heart and tap ✓. The panel closes and the heart sits on your nose, selected, with no white box around it.
 - [ ] Drag the heart to your forehead. It pins there, and on the partner's phone it follows your head as you turn and tilt.
 - [ ] Pinch, twist and trash work on the drawing as they do for an emoji.
-- [ ] Open the pad, draw, tap Cancel. Nothing is added.
+- [ ] Open the pad, draw, tap ✕ (or swipe the header down). Nothing is added and the tray is back on the tab you came from.
 - [ ] With the system in dark mode, draw in black. The sticker stays black, not inverted.
 - [ ] Place 10 stickers. Draw's button is disabled with "That's 10. Remove one to add more."
 
