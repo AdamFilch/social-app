@@ -2,12 +2,13 @@ import ButtercupKit
 import SwiftUI
 
 enum AppTab: CaseIterable {
-    case calling, notes, hobbies, settings
+    case calling, notes, sounds, hobbies, settings
 
     var title: String {
         switch self {
         case .calling: "Calling"
         case .notes: "Notes"
+        case .sounds: "Sounds"
         case .hobbies: "Hobbies"
         case .settings: "Settings"
         }
@@ -17,6 +18,7 @@ enum AppTab: CaseIterable {
         switch self {
         case .calling: "phone"
         case .notes: "note.text"
+        case .sounds: "speaker.wave.2"
         case .hobbies: "star"
         case .settings: "gearshape"
         }
@@ -27,7 +29,9 @@ struct ContentView: View {
     @Environment(SessionStore.self) private var session
     @Environment(CallStore.self) private var calls
     @Environment(NotesStore.self) private var notes
+    @Environment(SoundsStore.self) private var sounds
     @State private var notesChanged = 0
+    @State private var soundsChanged = 0
     @State private var selection: AppTab = .calling
     @State private var toast: NoteSendResult?
     @State private var toastCount = 0
@@ -43,6 +47,8 @@ struct ContentView: View {
                             CallingView(onSent: showToast, open: $openNotes, notesChanged: notesChanged)
                         case .notes:
                             NotesTab(onSent: showToast, open: $openNotes, notesChanged: notesChanged)
+                        case .sounds:
+                            SoundsTab(soundsChanged: soundsChanged)
                         case .hobbies:
                             Text(tab.title)
                         case .settings:
@@ -101,6 +107,7 @@ struct ContentView: View {
         .sensoryFeedback(.error, trigger: calls.failure) { _, new in new != nil }
         .task { await calls.listen() }
         .task { for await _ in notes.changes() { notesChanged += 1 } }
+        .task { for await _ in sounds.changes() { soundsChanged += 1 } }
     }
 
     private func toastMessage(_ result: NoteSendResult) -> String {
@@ -131,9 +138,13 @@ struct TabBar: View {
                     VStack(spacing: 4) {
                         Image(systemName: tab.systemImage)
                             .font(.system(size: 20))
+                            .symbolVariant(selection == tab ? .fill : .none)
                         Text(tab.title)
                             .font(.caption2)
+                            .lineLimit(1)
                     }
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                    .accessibilityShowsLargeContentViewer()
                     .frame(maxWidth: .infinity)
                     .contentShape(Rectangle())
                     .foregroundStyle(selection == tab ? Color.primary : Color.secondary)
