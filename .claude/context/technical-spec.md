@@ -232,6 +232,23 @@ Index on (`user_id`, `status`).
 
 Primary key (`user_id`, `hobby`, `day`), so checking in twice is harmless.
 
+### sounds
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | uuid pk | made on the phone (S28) |
+| sender_id | uuid | → profiles; who recorded it |
+| title | text | 1–30 characters, required |
+| emoji | text null | one emoji; null shows 🔊 |
+| audio_path | text | `{sender_id}/{id}.m4a` in the `sounds` bucket |
+| duration_ms | int | ≤ 10000 |
+| trim_start_ms | int | default 0 |
+| trim_end_ms | int | default `duration_ms`; `0 ≤ start`, `end ≤ duration_ms`, `end − start ≥ 500` |
+| position | int | shared order for the pair; set by a `before insert` trigger to the pair's minimum − 1 (new sounds first); rewritten by `reorder_sounds` |
+| created_at | timestamptz | |
+
+The pair's library is every row whose `sender_id` is you or your partner. No push is sent for sounds.
+
 ## 3. Rules, functions and pushes
 
 ### Row-level security
@@ -239,6 +256,7 @@ Primary key (`user_id`, `hobby`, `day`), so checking in twice is harmless.
 - Helper `is_paired_with(other uuid) returns boolean`, `security definer`, checks `pairs`.
 - Every user table: **read** your own rows or your partner's (`user_id = auth.uid() or is_paired_with(user_id)`); **write** only your own.
 - `calls` and `catalog_entries` are read-only to the app; Edge Functions write them with the service role.
+- `sounds` is the exception to 'write only your own': select, update and delete are allowed when `sender_id = auth.uid() or is_paired_with(sender_id)`; insert only with `sender_id = auth.uid()`. A stranger sees and changes nothing.
 
 ### Postgres functions (RPC)
 
@@ -252,6 +270,9 @@ Actions that touch several rows run as one function, so they fully succeed or fu
 | `check_in(hobby, day)` | Upserts the `checkins` row |
 | `finish_item(item_id)` | Sets `status = finished`, `finished_at` |
 | `unsend_note(note_id)` | Checks sender and the 4-hour window, sets `unsent_at`, deletes the image and favourites |
+| `reorder_sounds(ordered_ids uuid[])` | Locks the pair's sound rows, checks the ids are exactly that set, rewrites `position` 1…n in one transaction |
+
+No delete RPC for sounds: the app deletes the row under RLS, then removes the file with the Storage API under the bucket delete policy. Supabase Storage blocks deleting `storage.objects` rows from SQL (PRD [21] B3).
 
 ### Edge Functions
 
@@ -265,7 +286,7 @@ Actions that touch several rows run as one function, so they fully succeed or fu
 
 **Ring timeout:** the caller's app calls `end-call` with `missed` after 45 seconds. A `pg_cron` job marks any call still `ringing` after 60 seconds as missed, in case the caller's app died.
 
-**Realtime publication:** `notes`, `items`, `checkins`, `calls`.
+**Realtime publication:** `notes`, `items`, `checkins`, `calls`, `sounds`.
 
 ## 4. Images
 
@@ -280,6 +301,11 @@ Actions that touch several rows run as one function, so they fully succeed or fu
 - **Covers:** only `catalog_entries.cover_url` is stored; the phone caches the image.
 - **Face-effect assets:** bundled in the app from `assets/`.
 - **Call video:** streamed through LiveKit, never stored.
+
+## 4b. Sounds (audio)
+
+- Storage rules: write to your own folder; read and delete your own or your partner's.
+- Trim is stored as `trim_start_ms` / `trim_end_ms`; the file is never rewritten.
 
 ## 5. Testing calls
 

@@ -84,14 +84,14 @@ stranger select / update / delete / upload ─► nothing returned or changed
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: After the reset and both seed scripts, the 6 seed rows exist and each has its object in `sounds`.
-- [ ] AC2: pgTAP: Adam and Partner can each select, update and delete each other's sounds. Insert works only as yourself. `stranger@example.com` selects nothing and changes nothing.
-- [ ] AC3: pgTAP: inserting a sound gives it a lower `position` than every existing pair sound.
-- [ ] AC4: pgTAP: `reorder_sounds` with the pair's ids in a new order gives positions 1…n in that order. A missing, extra or foreign id raises `sounds_mismatch` and changes nothing. A stranger can't reorder.
-- [ ] AC5: Storage: uploading to your own folder works and to your partner's is denied. Your partner can read and delete your file. A stranger can do neither. Checked with pgTAP on `storage.objects` policies or a function test.
-- [ ] AC6: The check constraints reject an empty title, a 31-character title, a duration over 10000 and a trim under 0.5 s.
-- [ ] AC7: `sounds` is in `supabase_realtime`.
-- [ ] AC8: `supabase test db` and `supabase db lint` pass.
+- [x] AC1: After the reset and both seed scripts, the 6 seed rows exist and each has its object in `sounds`.
+- [x] AC2: pgTAP: Adam and Partner can each select, update and delete each other's sounds. Insert works only as yourself. `stranger@example.com` selects nothing and changes nothing.
+- [x] AC3: pgTAP: inserting a sound gives it a lower `position` than every existing pair sound.
+- [x] AC4: pgTAP: `reorder_sounds` with the pair's ids in a new order gives positions 1…n in that order. A missing, extra or foreign id raises `sounds_mismatch` and changes nothing. A stranger can't reorder.
+- [x] AC5: Storage: uploading to your own folder works and to your partner's is denied. Your partner can read and delete your file. A stranger can do neither. Checked with pgTAP on `storage.objects` policies or a function test.
+- [x] AC6: The check constraints reject an empty title, a 31-character title, a duration over 10000 and a trim under 0.5 s.
+- [x] AC7: `sounds` is in `supabase_realtime`.
+- [x] AC8: `supabase test db` and `supabase db lint` pass.
 
 ## Required Changes
 - **technical-spec.md:** paste spec §12 technical-spec items 3, 4, 5 (only the `reorder_sounds` row, noting B3) and 6, plus the storage-rules and trim bullets of item 7.
@@ -106,4 +106,4 @@ stranger select / update / delete / upload ─► nothing returned or changed
 | The trigger computes the pair minimum without seeing the partner's rows (RLS inside the trigger) | Med | New sounds don't land first | Make the trigger `security definer` with a fixed `search_path`, as the existing RPCs do |
 
 ---
-*Status: READY — ticket [21]*
+*Status: COMPLETED — PR #TBD*

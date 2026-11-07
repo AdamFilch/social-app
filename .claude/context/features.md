@@ -9,6 +9,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 | 1 | [Accounts and pairing](#1-accounts-and-pairing) | Built |
 | 2 | [Calls](#2-calls) | Built (partial) |
 | 3 | [Notes](#3-notes) | Built (partial) |
+| 4 | [Sounds](#4-sounds) | Built (partial) |
 
 ---
 
@@ -164,3 +165,33 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 - [20] AC8 unverified: VoiceOver speech and the month actions on the month view need a person.
 - At accessibility text sizes the month summary's last line can sit under the custom tab bar: the bar's `safeAreaInset` doesn't reach the tab pages, so the scroll view doesn't see the overflow (the day grid has the same exposure).
 - No widget, favourites or unsend.
+
+---
+
+## 4. Sounds
+
+**Status:** Built (partial): the backend only (table, rules, trigger, `reorder_sounds`, bucket, realtime, seed). The Sounds tab, recording and editing ([22]–[27]) aren't built.
+
+**What it does:** Keeps one shared soundboard per pair. A sound is a short clip (up to 10 s) with a title and an optional emoji. Both partners can play, rename, re-emoji, trim, reorder and delete every sound in the pair's library.
+
+**Flow:**
+1. A new sound is one `sounds` row plus one `.m4a` file at `{sender_id}/{id}.m4a` in the private `sounds` bucket.
+2. On insert, the `sounds_set_position` trigger sets `position` to the pair's minimum minus 1 (0 when the pair has none), so new sounds come first without the app knowing the order.
+3. Reordering calls `reorder_sounds(ordered_ids)`, which locks the pair's rows, checks the ids are exactly the pair's sounds and rewrites `position` 1…n. Any other set raises `sounds_mismatch` and changes nothing; the last commit wins.
+4. Deleting removes the row under RLS, then the file with the Storage API (no delete RPC).
+5. Changes reach the partner over Realtime (`sounds` is in `supabase_realtime`); no push is sent.
+
+**Rules:**
+- RLS: select, update and delete when `sender_id = auth.uid() or is_paired_with(sender_id)`; insert only as yourself. A stranger sees and changes nothing.
+- Only `title`, `emoji`, `trim_start_ms` and `trim_end_ms` are updatable by the app; `position` changes only through `reorder_sounds`.
+- Checks: title 1–30 characters after trimming; emoji null or 1–16 characters; `duration_ms` 1–10000; `trim_start_ms ≥ 0`; `trim_end_ms ≤ duration_ms`; `trim_end_ms − trim_start_ms ≥ 500`, or the full clip when it's under 0.5 s; `audio_path` must be `{sender_id}/{id}.m4a`.
+- Bucket `sounds`: upload to your own folder; read and delete your own or your partner's folder.
+- Trim is stored as `trim_start_ms` / `trim_end_ms`; the file is never rewritten.
+- Seed data: sounds `c0000000-…-0001` to `-0006` from both people (`-0003` has no emoji, `-0004` is trimmed, `-0002` is under 0.5 s), with mono AAC files in `supabase/seed-sounds/` uploaded by `supabase/seed-sounds.sh` after `supabase db reset`.
+
+**Code:** `supabase/migrations/20261107121844_sounds.sql` (table, RLS, trigger, `reorder_sounds`, bucket policies, publication), `supabase/seed.sql` (seed rows), `supabase/seed-sounds/` + `supabase/seed-sounds.sh` (seed files), `supabase/tests/database/sounds.test.sql` (pgTAP). Spec: [design/specs/soundboard.md](../design/specs/soundboard.md), [prds/completed/21-sounds-backend.prd.md](../prds/completed/21-sounds-backend.prd.md).
+
+**Known gaps:**
+- No app UI: the Sounds tab, playback, recording, editing and in-call sounds are tickets [22]–[27].
+- Orphan files (a row deleted but the file removal failed) aren't cleaned up.
+- Two inserts at the same moment can get the same `position`; the next `reorder_sounds` renumbers.
