@@ -67,6 +67,13 @@ private struct PadCanvas: UIViewRepresentable {
 
     func updateUIView(_ canvas: PKCanvasView, context: Context) {}
 
+    static func dismantleUIView(_ canvas: PKCanvasView, coordinator: Coordinator) {
+        coordinator.picker.setVisible(false, forFirstResponder: canvas)
+        coordinator.picker.removeObserver(canvas)
+        coordinator.picker.removeObserver(coordinator)
+        canvas.resignFirstResponder()
+    }
+
     final class Coordinator: NSObject, PKCanvasViewDelegate, PKToolPickerObserver {
         let picker = PKToolPicker()
         weak var canvas: PKCanvasView?
