@@ -215,4 +215,4 @@ Run `supabase db reset && supabase/seed-notes.sh`, then sign in as `adam@example
 ### Needs attention
 - Install an iOS 18 simulator runtime (Xcode → Settings → Components), launch the app on it as adam@example.com and check the Calling tab, then move this PRD to `completed/`.
 
-*Status: PARTIAL — PR #TBD*
+*Status: PARTIAL — PR #28*
