@@ -169,16 +169,16 @@ Content padding is 16 pt horizontally, with 16 pt between blocks. The tab bar is
 ## Acceptance Criteria
 Run `supabase db reset && supabase/seed-notes.sh`, then sign in as `adam@example.com` on the iPhone 17 simulator.
 
-- [ ] AC1: The tab matches the mockup in light and dark: title, doodle and date; the partner card; the latest-note card; Recent calls. Check with screenshots in both modes.
-- [ ] AC2: The subtitle follows D5 for the seed history. With every call deleted locally (`delete from calls`), it reads "No calls yet" and the empty Recent calls card shows the doodle, with no doodle by the title.
-- [ ] AC3: Audio and Video each start a call (the outgoing screen appears). Both are at 40% while a call is active.
-- [ ] AC4: The latest-note card shows partner note `b0000000-0000-0000-0000-000000000002` with the Highlight ring and "New".
-- [ ] AC5: Tapping the tile opens `NoteDialog` on that note, with today's partner and own notes pageable. After closing, the ring and badge are gone, and they stay gone after a relaunch.
-- [ ] AC6: A new note sent from partner (second simulator) appears in the card with "New" without restarting the app.
-- [ ] AC7: "Send one back" opens New Note; sending shows the same toast as the Notes tab.
-- [ ] AC8: Missed rows show `phone.down` and the word "Missed" in Danger. Answered rows show the day and duration.
-- [ ] AC9: Sign out is gone from Calling and works from Settings → Account.
-- [ ] AC10: At an accessibility text size the call pair stacks full width and nothing clips. VoiceOver reads the note tile label, and the doodle is skipped.
+- [x] AC1: The tab matches the mockup in light and dark: title, doodle and date; the partner card; the latest-note card; Recent calls. Check with screenshots in both modes.
+- [x] AC2: The subtitle follows D5 for the seed history. With every call deleted locally (`delete from calls`), it reads "No calls yet" and the empty Recent calls card shows the doodle, with no doodle by the title.
+- [x] AC3: Audio and Video each start a call (the outgoing screen appears). Both are at 40% while a call is active.
+- [x] AC4: The latest-note card shows partner note `b0000000-0000-0000-0000-000000000002` with the Highlight ring and "New".
+- [x] AC5: Tapping the tile opens `NoteDialog` on that note, with today's partner and own notes pageable. After closing, the ring and badge are gone, and they stay gone after a relaunch.
+- [x] AC6: A new note sent from partner (second simulator) appears in the card with "New" without restarting the app.
+- [x] AC7: "Send one back" opens New Note; sending shows the same toast as the Notes tab.
+- [x] AC8: Missed rows show `phone.down` and the word "Missed" in Danger. Answered rows show the day and duration.
+- [x] AC9: Sign out is gone from Calling and works from Settings → Account.
+- [x] AC10: At an accessibility text size the call pair stacks full width and nothing clips. VoiceOver reads the note tile label, and the doodle is skipped.
 - [ ] AC11: Builds with the build check in CLAUDE.md. The iOS 18 runtime launches the tab.
 
 ## Required Changes
@@ -196,3 +196,23 @@ Run `supabase db reset && supabase/seed-notes.sh`, then sign in as `adam@example
 |---|---|---|---|
 | The "seen" flag differs between two devices on one account | Low | "New" shows again on the other device | Accepted (D2); a server seen state can come later |
 | A 30-day fetch on every `changes()` tick | Low | Extra requests | `notes(in:)` returns a few dozen rows; same pattern as `DayGrid` |
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | Light and dark screenshots on iPhone 17 (iOS 26.1) as adam: title + flower + "Sat, 7 Nov", partner card, latest-note card with ring and badge, Recent calls rows |
+| AC2 | ✅ done | Seed history reads "Last call today · 1 min"; with an answered row deleted it reads "Missed call today"; after `delete from calls` it reads "No calls yet", the empty card shows the doodle and the title has none |
+| AC3 | ✅ done | Audio and Video each showed "Calling Partner…"; while ringing both pills were disabled in the UI tree (the outgoing screen covers the tab, so the 40% opacity from `PillButtonStyle` is not visible) |
+| AC4 | ✅ done | Card showed `b0000000-…0002` (14.36) with the ring and "New"; VoiceOver label "New note from Partner, 5 hours ago" |
+| AC5 | ✅ done | Tile opened `NoteDialog` on 14.36 and paged to 10.48 and to adam's 18.24; after closing and relaunching the ring and badge stayed gone |
+| AC6 | ✅ done | partner@example.com on a second simulator (iPhone 17 Pro) sent a note; adam's card switched to it with "New" and "now" without a restart |
+| AC7 | ✅ done | "Send one back" opened New Note; sending showed the "Sent to Partner" toast |
+| AC8 | ✅ done | Local test rows: missed shows `phone.down` and bold "Missed" in Danger; answered shows "Yesterday · 42 min" |
+| AC9 | ✅ done | No Sign out on Calling; Settings → Account → Sign out returned to the email screen |
+| AC10 | ✅ done | At AX5 the call pair stacks full width, the note card and call rows stack their contents and nothing clips; the tile reads as one element with its label, the doodle is absent from the accessibility tree |
+| AC11 | ⚠️ unverified | Build check passes; no iOS 18 simulator runtime is installed, so the iOS 18 launch was not run |
+
+### Needs attention
+- Install an iOS 18 simulator runtime (Xcode → Settings → Components), launch the app on it as adam@example.com and check the Calling tab, then move this PRD to `completed/`.
+
+*Status: PARTIAL — PR #TBD*
