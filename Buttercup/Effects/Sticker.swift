@@ -3,13 +3,14 @@ import SwiftUI
 import UIKit
 
 enum EffectTab: CaseIterable {
-    case stickers, emoji, text
+    case stickers, emoji, text, draw
 
     var title: String {
         switch self {
         case .stickers: "Stickers"
         case .emoji: "Emoji"
         case .text: "Text"
+        case .draw: "Draw"
         }
     }
 }
@@ -19,6 +20,7 @@ struct Sticker: Identifiable {
         case emoji(String)
         case text(String, InkColour)
         case image(String)
+        case drawing(CIImage)
 
         var isText: Bool {
             if case .text = self { true } else { false }
@@ -46,6 +48,8 @@ struct Sticker: Identifiable {
             Self.draw(emoji, font: .systemFont(ofSize: 360), color: .black, outline: nil)
         case .text(let text, let color):
             Self.draw(text, font: .systemFont(ofSize: 160, weight: .heavy).rounded, color: color.uiColor, outline: InkColour.ink.uiColor)
+        case .drawing(let image):
+            image
         }
     }
 
