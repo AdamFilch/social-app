@@ -63,7 +63,7 @@ Minimal. Tab changes get only `.selection`, the lightest haptic. Ordinary button
 
 ### Motion
 
-- Custom bottom tab bar (Calling / Notes / Hobbies) that replaces the system Liquid Glass bar, whose stretchy selection animation felt jarring. Each tab has its own pill. Changing tabs cross-fades the old and new pills over 0.15 s ease-out, and no indicator moves between them. The selected icon uses its `.fill` variant. The bar has a Surface background with a 2.5 pt `Outline` top edge.
+- Custom bottom tab bar (Calling / Notes / Sounds / Hobbies) that replaces the system Liquid Glass bar, whose stretchy selection animation felt jarring. Each tab has its own pill. Changing tabs cross-fades the old and new pills over 0.15 s ease-out, and no indicator moves between them. The selected icon uses its `.fill` variant. The bar has a Surface background with a 2.5 pt `Outline` top edge.
 - Highlight and selection rings fade in over 0.15 s ease-out. Nothing idles, loops or animates on appear.
 - Cards (a note, a book, a call) open into their detail screen with a zoom transition (`.navigationTransition(.zoom)` + `.matchedTransitionSource`).
 - Creating something (note, item, call options) opens a sheet with detents.
@@ -73,7 +73,7 @@ Minimal. Tab changes get only `.selection`, the lightest haptic. Ordinary button
 
 - **On launch:** pull rows changed since the last sync into SwiftData.
 - **Session offline:** `SessionStore` saves `me`, `partner` and `pairedAt` to the App Group `UserDefaults` after each refresh and restores them when a launch can't reach the server, so a stored session opens the tabs offline. Only a missing or rejected session shows sign-in.
-- **While open:** Supabase Realtime subscriptions on `notes`, `items`, `checkins` and `calls` apply partner changes live.
+- **While open:** Supabase Realtime subscriptions on `notes`, `items`, `checkins`, `calls` and `sounds` apply partner changes live.
 - **While closed:** notifications and WidgetKit pushes (sent by `push-partner`) wake the widgets.
 - **Outbox:** every write (send note, +1, set progress, check-in, finish item, favourite, unsend) is saved as an `OutboxAction` in SwiftData first, then sent. A flusher retries when `NWPathMonitor` reports a connection. Rows use ids made on the phone, so a retry never creates a duplicate. Calls need a connection and skip the outbox.
 - **Widgets** read the shared SwiftData store and the note thumbnails in the App Group; they never call the network.
@@ -304,6 +304,8 @@ No delete RPC for sounds: the app deletes the row under RLS, then removes the fi
 
 ## 4b. Sounds (audio)
 
+- Every sound file is cached in the App Group (`Sounds/{id}.m4a`) so playback starts at once; files are fetched when a row first arrives and removed when the row is deleted.
+- Audio session: outside calls, `.playback` while playing (plays with the silent switch on) and `.playAndRecord` while recording. In calls, LiveKit's session; a played sound goes to the partner through the call audio even while muted, and plays locally.
 - Storage rules: write to your own folder; read and delete your own or your partner's.
 - Trim is stored as `trim_start_ms` / `trim_end_ms`; the file is never rewritten.
 
