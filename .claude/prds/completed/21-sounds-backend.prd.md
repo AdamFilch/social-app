@@ -106,4 +106,4 @@ stranger select / update / delete / upload ─► nothing returned or changed
 | The trigger computes the pair minimum without seeing the partner's rows (RLS inside the trigger) | Med | New sounds don't land first | Make the trigger `security definer` with a fixed `search_path`, as the existing RPCs do |
 
 ---
-*Status: COMPLETED — PR #TBD*
+*Status: COMPLETED — PR #26*
