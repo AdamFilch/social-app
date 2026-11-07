@@ -27,7 +27,7 @@ Prereqs: `brew install supabase/tap/supabase livekit livekit-cli deno`, Docker D
 | Tests | `supabase test db` |
 | Lint | `supabase db lint` |
 | New migration | `supabase migration new <name>` |
-| LiveKit dev server (keys `devkey` / `secret`) | `livekit-server --dev` |
+| LiveKit dev server (keys `devkey` / `secret`) | `livekit-server --dev --bind 0.0.0.0` |
 | Serve Edge Functions | `cp -n supabase/functions/.env.example supabase/functions/.env && supabase functions serve --env-file supabase/functions/.env` |
 | Function tests (needs the two above running) | `supabase status -o env > supabase/functions/tests/.env && deno test --allow-net --allow-env --allow-read --env-file=supabase/functions/tests/.env supabase/functions/tests/` |
 | Deploy to hosted | `supabase db push` (project `nxqcwchrigseounzkvvz`) |
@@ -72,7 +72,7 @@ Run the loop in this order and stop at the first failure:
 2. `supabase db reset && supabase/seed-notes.sh`: rebuild from migrations and seed, so tests never run against leftover state, then upload the seed notes' images (a reset empties the bucket).
 3. `supabase test db`: pgTAP tests.
 4. `supabase db lint`: must report no errors.
-5. When `supabase/functions/` changed: start `livekit-server --dev` and `supabase functions serve` (see Backend), wait out the 502 and 503 responses, then run the function tests.
+5. When `supabase/functions/` changed: start `livekit-server --dev --bind 0.0.0.0` and `supabase functions serve` (see Backend), wait out the 502 and 503 responses, then run the function tests.
 6. When the app changed: run the build check above, then sign in on a simulator with the seed user that reaches the screen you touched and step through it.
 
 What to add with a change:
