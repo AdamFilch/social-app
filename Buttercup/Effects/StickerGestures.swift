@@ -96,6 +96,7 @@ struct StickerGestures: View {
         case .image(let name): "\(Stickers.label(name)) sticker"
         case .emoji(let emoji): "\(Emoji.names[emoji] ?? emoji) sticker"
         case .text(let text, _): "Text sticker, \(text)"
+        case .drawing: "Drawing sticker"
         }
     }
 }

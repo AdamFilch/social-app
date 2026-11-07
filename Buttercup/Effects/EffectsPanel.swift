@@ -10,6 +10,8 @@ struct EffectsPanel: View {
     @State private var text = ""
     @State private var colour = InkColour.ink
     @State private var drag: CGFloat = 0
+    @State private var padOpen = false
+    @State private var drawn: CIImage?
     @FocusState private var focused: Bool
 
     private var reason: String? {
@@ -94,6 +96,18 @@ struct EffectsPanel: View {
             }
             .onAppear { if !blocked { focused = true } }
             .transition(.opacity)
+        case .draw:
+            VStack(spacing: 12) {
+                Button("Open drawing pad") { padOpen = true }
+                    .buttonStyle(PillButtonStyle())
+                    .padding(.horizontal, 16)
+                    .disabled(blocked)
+                line(reason ?? "Draw something, then drag it onto your face")
+            }
+            .transition(.opacity)
+            .sheet(isPresented: $padOpen, onDismiss: addDrawing) {
+                DrawingPad { drawn = $0 }
+            }
         }
     }
 
@@ -110,6 +124,12 @@ struct EffectsPanel: View {
         guard !trimmed.isEmpty else { return }
         focused = false
         onAdd(.text(trimmed, colour))
+    }
+
+    private func addDrawing() {
+        guard let drawn else { return }
+        self.drawn = nil
+        onAdd(.drawing(drawn))
     }
 
     private var swipeDown: some Gesture {
