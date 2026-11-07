@@ -8,7 +8,7 @@ $$;
 
 select is(
   (select count(*)::int from pg_tables where schemaname = 'public' and rowsecurity),
-  12, 'AC2: 12 public tables with RLS enabled'
+  13, 'AC2: 13 public tables with RLS enabled'
 );
 
 insert into auth.users (instance_id, id, aud, role, email)
@@ -20,8 +20,8 @@ select ok(
 
 select set_eq(
   $$select tablename::text from pg_publication_tables where pubname = 'supabase_realtime' and schemaname = 'public'$$,
-  array['notes', 'items', 'checkins', 'calls'],
-  'AC13: realtime publication holds notes, items, checkins, calls'
+  array['notes', 'items', 'checkins', 'calls', 'sounds'],
+  'AC13: realtime publication holds notes, items, checkins, calls, sounds'
 );
 
 select pg_temp.login('33333333-3333-3333-3333-333333333333');
