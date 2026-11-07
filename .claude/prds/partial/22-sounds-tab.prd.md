@@ -97,7 +97,7 @@ offline ─► cached sounds play; uncached tile shows "Couldn't load. Try again
 | Four tabs crowd the bar at large text | Med | Labels clip | Follow the design.md tab-bar rule; labels use the Large Content Viewer |
 
 ---
-*Status: PARTIAL — PR #TBD*
+*Status: PARTIAL — PR #29*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
