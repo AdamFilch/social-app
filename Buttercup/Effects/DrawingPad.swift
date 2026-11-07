@@ -3,46 +3,50 @@ import PencilKit
 import SwiftUI
 
 struct DrawingPad: View {
-    let onDone: (CIImage) -> Void
-    @Environment(\.dismiss) private var dismiss
-    @State private var drawing = PKDrawing()
+    @Binding var drawing: PKDrawing
+    @State private var pickerTop = CGFloat.infinity
 
     var body: some View {
-        NavigationStack {
-            PadCanvas(drawing: $drawing)
+        GeometryReader { geo in
+            let covered = max(0, geo.frame(in: .global).maxY - pickerTop)
+            PadCanvas(drawing: $drawing, pickerTop: $pickerTop)
                 .background(Checkerboard().environment(\.colorScheme, .light))
-                .ignoresSafeArea(.container, edges: .bottom)
-                .navigationTitle("Draw")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { dismiss() }
-                    }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("Done", action: done)
-                            .disabled(drawing.strokes.isEmpty)
-                            .accessibilityHint(drawing.strokes.isEmpty ? "Draw something first" : "")
+                .overlay {
+                    if drawing.strokes.isEmpty {
+                        Text("Draw something to wear")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color("TextSecondary"))
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 12)
+                            .background(Capsule().fill(Color("Surface")))
+                            .allowsHitTesting(false)
+                            .transition(.opacity)
                     }
                 }
+                .animation(.easeOut(duration: 0.15), value: drawing.strokes.isEmpty)
+                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Color("Outline"), lineWidth: 2))
+                .padding(.horizontal, 16)
+                .padding(.bottom, covered > 0 ? covered + 12 : 16)
         }
-        .presentationDetents([.large])
-        .interactiveDismissDisabled()
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Drawing canvas")
     }
 
-    private func done() {
+    static func image(of drawing: PKDrawing) -> CIImage? {
         var image: UIImage?
         UITraitCollection(userInterfaceStyle: .light).performAsCurrent {
             image = drawing.image(from: drawing.bounds, scale: 2)
         }
-        if let cgImage = image?.cgImage { onDone(CIImage(cgImage: cgImage)) }
-        dismiss()
+        return image?.cgImage.map { CIImage(cgImage: $0) }
     }
 }
 
 private struct PadCanvas: UIViewRepresentable {
     @Binding var drawing: PKDrawing
+    @Binding var pickerTop: CGFloat
 
-    func makeCoordinator() -> Coordinator { Coordinator(drawing: $drawing) }
+    func makeCoordinator() -> Coordinator { Coordinator(drawing: $drawing, pickerTop: $pickerTop) }
 
     func makeUIView(context: Context) -> PKCanvasView {
         let canvas = PKCanvasView()
@@ -51,23 +55,41 @@ private struct PadCanvas: UIViewRepresentable {
         canvas.isOpaque = false
         canvas.overrideUserInterfaceStyle = .light
         canvas.delegate = context.coordinator
-        context.coordinator.picker.colorUserInterfaceStyle = .light
-        context.coordinator.picker.setVisible(true, forFirstResponder: canvas)
-        context.coordinator.picker.addObserver(canvas)
+        context.coordinator.canvas = canvas
+        let picker = context.coordinator.picker
+        picker.colorUserInterfaceStyle = .light
+        picker.setVisible(true, forFirstResponder: canvas)
+        picker.addObserver(canvas)
+        picker.addObserver(context.coordinator)
         DispatchQueue.main.async { canvas.becomeFirstResponder() }
         return canvas
     }
 
     func updateUIView(_ canvas: PKCanvasView, context: Context) {}
 
-    final class Coordinator: NSObject, PKCanvasViewDelegate {
+    final class Coordinator: NSObject, PKCanvasViewDelegate, PKToolPickerObserver {
         let picker = PKToolPicker()
+        weak var canvas: PKCanvasView?
         var drawing: Binding<PKDrawing>
+        var pickerTop: Binding<CGFloat>
 
-        init(drawing: Binding<PKDrawing>) { self.drawing = drawing }
+        init(drawing: Binding<PKDrawing>, pickerTop: Binding<CGFloat>) {
+            self.drawing = drawing
+            self.pickerTop = pickerTop
+        }
 
         func canvasViewDrawingDidChange(_ canvas: PKCanvasView) {
             drawing.wrappedValue = canvas.drawing
+        }
+
+        func toolPickerFramesObscuredDidChange(_ toolPicker: PKToolPicker) { measure(toolPicker) }
+
+        func toolPickerVisibilityDidChange(_ toolPicker: PKToolPicker) { measure(toolPicker) }
+
+        private func measure(_ toolPicker: PKToolPicker) {
+            guard let window = canvas?.window else { return }
+            let frame = toolPicker.frameObscured(in: window)
+            pickerTop.wrappedValue = toolPicker.isVisible && !frame.isNull ? frame.minY : .infinity
         }
     }
 }

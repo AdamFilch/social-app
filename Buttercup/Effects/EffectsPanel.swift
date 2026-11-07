@@ -1,3 +1,4 @@
+import PencilKit
 import SwiftUI
 
 struct EffectsPanel: View {
@@ -10,13 +11,17 @@ struct EffectsPanel: View {
     @State private var text = ""
     @State private var colour = InkColour.ink
     @State private var drag: CGFloat = 0
-    @State private var padOpen = false
-    @State private var drawn: CIImage?
+    @State private var drawing = PKDrawing()
+    @State private var beforeDraw = EffectTab.stickers
     @FocusState private var focused: Bool
 
     private var reason: String? {
         faceAllowed ? stickers.blockedReason : "Stickers come back when your camera's on"
     }
+
+    private var blocked: Bool { !faceAllowed || stickers.blocked }
+
+    private var padShowing: Bool { stickers.tab == .draw && !blocked }
 
     var body: some View {
         @Bindable var stickers = stickers
@@ -26,20 +31,38 @@ struct EffectsPanel: View {
                     .fill(Color("TextSecondary").opacity(0.45))
                     .frame(width: 36, height: 5)
                     .padding(.top, 7)
-                HStack(spacing: 0) {
-                    IconCircleButton(symbol: "xmark", label: "Close stickers", action: onClose)
-                    PillTabRow(
-                        tabs: EffectTab.allCases,
-                        selection: $stickers.tab,
-                        disabled: faceAllowed ? [] : Set(EffectTab.allCases),
-                        title: \.title
-                    )
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Effects")
-                    .accessibilityAddTraits(.isHeader)
+                if padShowing {
+                    HStack(spacing: 0) {
+                        IconCircleButton(symbol: "xmark", label: "Discard drawing", action: leavePad)
+                        Spacer()
+                        Text("Draw")
+                            .font(.headline)
+                            .foregroundStyle(Color("TextPrimary"))
+                            .accessibilityAddTraits(.isHeader)
+                        Spacer()
+                        IconCircleButton(symbol: "checkmark", label: "Add drawing", style: .accent, action: addDrawing)
+                            .disabled(drawing.strokes.isEmpty)
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(height: 44)
+                    .transition(.opacity)
+                } else {
+                    HStack(spacing: 0) {
+                        IconCircleButton(symbol: "xmark", label: "Close stickers", action: onClose)
+                        PillTabRow(
+                            tabs: EffectTab.allCases,
+                            selection: $stickers.tab,
+                            disabled: faceAllowed ? [] : Set(EffectTab.allCases),
+                            title: \.title
+                        )
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel("Effects")
+                        .accessibilityAddTraits(.isHeader)
+                    }
+                    .padding(.leading, 16)
+                    .frame(height: 44)
+                    .transition(.opacity)
                 }
-                .padding(.leading, 16)
-                .frame(height: 44)
             }
             .contentShape(Rectangle())
             .gesture(swipeDown)
@@ -56,11 +79,14 @@ struct EffectsPanel: View {
         }
         .offset(y: drag)
         .animation(.easeOut(duration: 0.25), value: focused)
-        .accessibilityAction(.escape, onClose)
+        .animation(.easeOut(duration: 0.15), value: padShowing)
+        .onChange(of: stickers.tab) { old, new in
+            if new == .draw { beforeDraw = old }
+        }
+        .accessibilityAction(.escape) { padShowing ? leavePad() : onClose() }
     }
 
     @ViewBuilder private var content: some View {
-        let blocked = !faceAllowed || stickers.blocked
         switch stickers.tab {
         case .stickers:
             if Stickers.names.isEmpty {
@@ -97,17 +123,14 @@ struct EffectsPanel: View {
             .onAppear { if !blocked { focused = true } }
             .transition(.opacity)
         case .draw:
-            VStack(spacing: 12) {
-                Button("Open drawing pad") { padOpen = true }
-                    .buttonStyle(PillButtonStyle())
-                    .padding(.horizontal, 16)
-                    .disabled(blocked)
-                line(reason ?? "Draw something, then drag it onto your face")
+            Group {
+                if let reason, blocked {
+                    line(reason)
+                } else {
+                    DrawingPad(drawing: $drawing)
+                }
             }
             .transition(.opacity)
-            .sheet(isPresented: $padOpen, onDismiss: addDrawing) {
-                DrawingPad { drawn = $0 }
-            }
         }
     }
 
@@ -127,9 +150,14 @@ struct EffectsPanel: View {
     }
 
     private func addDrawing() {
-        guard let drawn else { return }
-        self.drawn = nil
-        onAdd(.drawing(drawn))
+        guard let image = DrawingPad.image(of: drawing) else { return }
+        leavePad()
+        onAdd(.drawing(image))
+    }
+
+    private func leavePad() {
+        drawing = PKDrawing()
+        stickers.tab = beforeDraw
     }
 
     private var swipeDown: some Gesture {
@@ -138,9 +166,11 @@ struct EffectsPanel: View {
                 if !reduceMotion { drag = max(0, value.translation.height) }
             }
             .onEnded { value in
-                if value.translation.height > height * 0.3 || value.velocity.height > 600 {
+                let dismissed = value.translation.height > height * 0.3 || value.velocity.height > 600
+                if dismissed, !padShowing {
                     onClose()
                 } else {
+                    if dismissed { leavePad() }
                     withAnimation(.easeOut(duration: 0.2)) { drag = 0 }
                 }
             }
