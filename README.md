@@ -58,7 +58,7 @@ Both move on to the tabs within a few seconds.
 Calls need LiveKit and the functions server, each in its own terminal:
 
 ```sh
-livekit-server --dev
+livekit-server --dev --bind 0.0.0.0
 ```
 
 ```sh
@@ -162,7 +162,7 @@ Your iPhone is one side and a simulator on your Mac is the other. Both talk to t
 
    This is the address the app gets for joining a call. Leave `LIVEKIT_API_URL` as it is, because the functions use it from inside Docker.
 
-3. **Start the call servers**, each in its own terminal, alongside `supabase start`. LiveKit needs `--bind 0.0.0.0`, because in dev mode it otherwise only accepts connections from the Mac itself.
+3. **Start the call servers**, each in its own terminal, alongside `supabase start`. This is the same `--bind 0.0.0.0` command as everywhere else; without it, dev mode only accepts connections from the Mac itself and calls fail with "Couldn't reach".
 
    ```sh
    livekit-server --dev --bind 0.0.0.0
@@ -197,7 +197,7 @@ supabase db lint    # schema lint
 The Edge Function tests also need LiveKit and the functions server, each in its own terminal:
 
 ```sh
-livekit-server --dev
+livekit-server --dev --bind 0.0.0.0
 ```
 
 ```sh
