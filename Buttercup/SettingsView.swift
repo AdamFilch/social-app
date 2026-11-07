@@ -1,6 +1,8 @@
+import ButtercupKit
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(SessionStore.self) private var session
     @AppStorage("appearance") private var appearance = "system"
 
     var body: some View {
@@ -13,6 +15,9 @@ struct SettingsView: View {
                         Text("Dark").tag("dark")
                     }
                     .pickerStyle(.segmented)
+                }
+                Section("Account") {
+                    Button("Sign out", role: .destructive) { Task { await session.signOut() } }
                 }
             }
             .navigationTitle("Settings")
