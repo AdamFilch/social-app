@@ -26,6 +26,8 @@ enum AppTab: CaseIterable {
 struct ContentView: View {
     @Environment(SessionStore.self) private var session
     @Environment(CallStore.self) private var calls
+    @Environment(NotesStore.self) private var notes
+    @State private var notesChanged = 0
     @State private var selection: AppTab = .calling
     @State private var toast: NoteSendResult?
     @State private var toastCount = 0
@@ -38,9 +40,9 @@ struct ContentView: View {
                     Group {
                         switch tab {
                         case .calling:
-                            CallingView()
+                            CallingView(onSent: showToast, open: $openNotes, notesChanged: notesChanged)
                         case .notes:
-                            NotesTab(onSent: showToast, open: $openNotes)
+                            NotesTab(onSent: showToast, open: $openNotes, notesChanged: notesChanged)
                         case .hobbies:
                             Text(tab.title)
                         case .settings:
@@ -98,6 +100,7 @@ struct ContentView: View {
         .sensoryFeedback(.success, trigger: calls.connectedAt) { _, new in new != nil }
         .sensoryFeedback(.error, trigger: calls.failure) { _, new in new != nil }
         .task { await calls.listen() }
+        .task { for await _ in notes.changes() { notesChanged += 1 } }
     }
 
     private func toastMessage(_ result: NoteSendResult) -> String {

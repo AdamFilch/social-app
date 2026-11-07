@@ -15,6 +15,7 @@ struct NotesTab: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let onSent: (NoteSendResult) -> Void
     @Binding var open: OpenNotes?
+    let notesChanged: Int
     @State private var isComposing = false
     @State private var sent: NoteSendResult?
     @State private var today = Self.calendar.startOfDay(for: .now)
@@ -115,9 +116,7 @@ struct NotesTab: View {
         .task(id: [showsMonth, showsMonth ? visibleMonth : week, refresh] as [AnyHashable]) {
             if showsMonth { await loadMonth(visibleMonth) } else { await load(week) }
         }
-        .task {
-            for await _ in store.changes() { refresh += 1 }
-        }
+        .onChange(of: notesChanged) { refresh += 1 }
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             let now = Self.calendar.startOfDay(for: .now)
