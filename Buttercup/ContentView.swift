@@ -33,6 +33,7 @@ struct ContentView: View {
     @State private var notesChanged = 0
     @State private var soundsChanged = 0
     @State private var recordOpen = false
+    @State private var deletingSound: SoundRecord?
     @State private var selection: AppTab = .calling
     @State private var toast: NoteSendResult?
     @State private var toastCount = 0
@@ -49,7 +50,7 @@ struct ContentView: View {
                         case .notes:
                             NotesTab(onSent: showToast, open: $openNotes, notesChanged: notesChanged)
                         case .sounds:
-                            SoundsTab(soundsChanged: soundsChanged, recordOpen: $recordOpen)
+                            SoundsTab(soundsChanged: soundsChanged, recordOpen: $recordOpen, deleting: $deletingSound)
                         case .hobbies:
                             Text(tab.title)
                         case .settings:
@@ -74,8 +75,15 @@ struct ContentView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             TabBar(selection: $selection)
         }
-        .accessibilityHidden(openNotes != nil || recordOpen)
+        .accessibilityHidden(openNotes != nil || recordOpen || deletingSound != nil)
         .overlay { RecordFlow(open: $recordOpen) }
+        .overlay {
+            DialogCard(isPresented: Binding(get: { deletingSound != nil }, set: { if !$0 { deletingSound = nil } })) {
+                if let sound = deletingSound {
+                    DeleteSoundCard(sound: sound) { deletingSound = nil }
+                }
+            }
+        }
         .overlay {
             DialogCard(isPresented: Binding(get: { openNotes != nil }, set: { if !$0 { openNotes = nil } })) {
                 if let open = openNotes {

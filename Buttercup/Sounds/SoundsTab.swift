@@ -8,7 +8,10 @@ struct SoundsTab: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     let soundsChanged: Int
     @Binding var recordOpen: Bool
+    @Binding var deleting: SoundRecord?
     @State private var sounds: [SoundRecord]?
+    @State private var editing: SoundRecord?
+    @State private var dragging: UUID?
     @State private var player = SoundPlayer()
     @State private var refresh = 0
 
@@ -20,7 +23,8 @@ struct SoundsTab: View {
                     .foregroundStyle(Color("TextPrimary"))
                     .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: typeSize.isAccessibilitySize ? 2 : 3), spacing: 12) {
-                    RecordTile(sticker: !recordOpen) { recordOpen = true }
+                    RecordTile(sticker: !recordOpen && deleting == nil) { recordOpen = true }
+                        .onDrop(of: [.text], delegate: TileDrop(target: nil, sounds: $sounds, dragging: dragging, commit: commit))
                     ForEach(sounds ?? []) { sound in
                         tile(sound)
                             .transition(.opacity)
@@ -48,16 +52,23 @@ struct SoundsTab: View {
             .padding(.bottom, 24)
         }
         .background(Color("Background"))
+        .onDrop(of: [.text], isTargeted: nil) { _ in
+            let wasDragging = dragging != nil
+            commit()
+            return wasDragging
+        }
+        .sheet(item: $editing) { EditSoundSheet(sound: $0) }
         .sensoryFeedback(.error, trigger: player.failures)
         .onAppear { if sounds == nil { sounds = store.all } }
         .task(id: refresh) { await load() }
-        .onChange(of: store.pending) { withAnimation(.easeOut(duration: 0.2)) { sounds = store.all } }
+        .onChange(of: store.all) { _, rows in if let rows { show(rows) } }
         .onChange(of: soundsChanged) { refresh += 1 }
         .onChange(of: scenePhase) { _, phase in if phase == .active { refresh += 1 } }
     }
 
     private func tile(_ sound: SoundRecord) -> some View {
         let playing = player.playingID == sound.id
+        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
         return TimelineView(.animation(paused: !playing)) { context in
             SoundTile(
                 sound: sound,
@@ -66,11 +77,115 @@ struct SoundsTab: View {
                 failed: player.failedID == sound.id
             ) { player.tap(sound, store: store) }
         }
+        .accessibilityAction(named: "Edit") { editing = sound }
+        .accessibilityAction(named: "Delete") { deleting = sound }
+        .accessibilityAction(named: "Move earlier") { move(sound, by: -1) }
+        .accessibilityAction(named: "Move later") { move(sound, by: 1) }
+        .opacity(dragging == sound.id ? 0 : 1)
+        .overlay {
+            if dragging == sound.id {
+                shape.strokeBorder(Color("TextSecondary"), style: StrokeStyle(lineWidth: 2.5, dash: [8, 6]))
+            }
+        }
+        .contentShape(.contextMenuPreview, shape)
+        .contextMenu {
+            Button("Edit", systemImage: "pencil") { editing = sound }
+            Button("Delete", systemImage: "trash", role: .destructive) { deleting = sound }
+        }
+        .onDrag {
+            player.stop()
+            dragging = sound.id
+            return NSItemProvider(object: sound.id.uuidString as NSString)
+        } preview: {
+            SoundTile(sound: sound, progress: nil) {}
+                .frame(width: 116, height: 108)
+        }
+        .onDrop(of: [.text], delegate: TileDrop(target: sound.id, sounds: $sounds, dragging: dragging, commit: commit))
+    }
+
+    private func move(_ sound: SoundRecord, by offset: Int) {
+        guard var ids = sounds?.map(\.id), let from = ids.firstIndex(of: sound.id), ids.indices.contains(from + offset) else { return }
+        ids.swapAt(from, from + offset)
+        store.reorder(ids)
+    }
+
+    private func commit() {
+        guard dragging != nil else { return }
+        dragging = nil
+        guard let ids = sounds?.map(\.id) else { return }
+        if ids != store.all?.map(\.id) { store.reorder(ids) }
     }
 
     private func load() async {
         guard let rows = try? await store.sounds() else { return }
+        show(rows)
+    }
+
+    private func show(_ rows: [SoundRecord]) {
+        guard dragging == nil else { return }
         if let id = player.playingID ?? player.loadingID, !rows.contains(where: { $0.id == id }) { player.stop() }
+        if let editing, !rows.contains(where: { $0.id == editing.id }) { self.editing = nil }
+        if let deleting, !rows.contains(where: { $0.id == deleting.id }) { self.deleting = nil }
         withAnimation(.easeOut(duration: 0.2)) { sounds = rows }
+    }
+}
+
+private struct TileDrop: DropDelegate {
+    let target: UUID?
+    @Binding var sounds: [SoundRecord]?
+    let dragging: UUID?
+    let commit: () -> Void
+
+    func dropEntered(info: DropInfo) {
+        guard let dragging, var list = sounds, let from = list.firstIndex(where: { $0.id == dragging }) else { return }
+        let to = target.flatMap { id in list.firstIndex { $0.id == id } } ?? 0
+        guard from != to else { return }
+        list.move(fromOffsets: [from], toOffset: to > from ? to + 1 : to)
+        withAnimation(.easeOut(duration: 0.2)) { sounds = list }
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        commit()
+        return true
+    }
+}
+
+struct DeleteSoundCard: View {
+    let sound: SoundRecord
+    let close: () -> Void
+    @Environment(SoundsStore.self) private var store
+    @Environment(SessionStore.self) private var session
+    @AccessibilityFocusState private var titleFocused: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Delete “\(sound.title)”?")
+                .font(.title3.weight(.heavy))
+                .foregroundStyle(Color("TextPrimary"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityFocused($titleFocused)
+            Text("It goes for both of you. \(session.partner?.displayName ?? "Your partner") won't have it either.")
+                .font(.body)
+                .foregroundStyle(Color("TextPrimary"))
+                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack(spacing: 12) {
+                Button(action: close) { Text("Keep it").frame(maxWidth: .infinity) }
+                Button {
+                    store.delete(sound)
+                    close()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                        .foregroundStyle(Color("Danger"))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .buttonStyle(PillButtonStyle(kind: .secondary))
+        }
+        .task { titleFocused = true }
     }
 }
