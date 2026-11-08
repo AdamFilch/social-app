@@ -65,6 +65,17 @@ To test pairing, run two simulators: one shows its invite code on the pair scree
 
 `127.0.0.1` only reaches the Mac from the Simulator. On a physical iPhone, copy `Config/Local.xcconfig.example` to the gitignored `Config/Local.xcconfig` with the Mac's LAN IP, and set `LIVEKIT_URL` in `supabase/functions/.env` to the same IP (see the README).
 
+### Troubleshooting
+
+Check these first when the local app misbehaves:
+
+| Symptom | Usual cause | Fix |
+| --- | --- | --- |
+| Login code never shows in Mailpit, or the app hangs on the loading spinner on a phone | The Mac's IP changed (an iPhone hotspot hands out `172.20.10.x`, and it changes with the network) | `ipconfig getifaddr en0`, then update `SUPABASE_URL` in `Config/Local.xcconfig` and `LIVEKIT_URL` in `supabase/functions/.env`. Restart `supabase functions serve` |
+| `http://<LAN IP>:54321` won't load | Supabase is down, or the IP is stale | `supabase status`, then `supabase start`, then recheck the IP |
+| Call fails with "Couldn't reach …" | LiveKit not running, a stale `LIVEKIT_URL`, or `functions serve` started before the `.env` changed | Simulator only: `livekit-server --dev --node-ip 127.0.0.1`, no `--bind 0.0.0.0` (it stalls the second joiner about 37 s). Phone: use the LAN IP in `.env` and restart `functions serve` |
+| Two simulators on one Mac can't call each other | A known limitation | Use one simulator plus a phone, or a browser at https://meet.livekit.io (Chrome, Custom tab) |
+
 ## Testing well
 
 Run the loop in this order and stop at the first failure:
