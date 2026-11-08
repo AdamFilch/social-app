@@ -94,7 +94,7 @@ partner reorders while you drag ─► your drop wins ─► server order shown
 | A file removal fails after the row is gone | Low | An orphan file in storage | Accepted; out of scope in [21] |
 
 ---
-*Status: PARTIAL — PR #PRNUM*
+*Status: PARTIAL — PR #31*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
