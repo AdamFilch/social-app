@@ -86,7 +86,7 @@ background mid-record ─► clip discarded, card closed
 | Simulator mic input differs from a device | Med | Levels and quality untested | Check AC1–AC3 on a device once |
 
 ---
-*Status: PARTIAL — PR #PRNUM*
+*Status: PARTIAL — PR #30*
 
 ## Implementation Status
 | AC | Status | Evidence / notes |
