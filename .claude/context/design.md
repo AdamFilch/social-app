@@ -39,7 +39,7 @@ The six existing asset-catalog names first, then proposed additions (*new*). Eac
 | Surface | #FFFDF5 | #28241F | Cards, list groups, tab bar, sheets, secondary buttons |
 | TextPrimary | #1E2A1A | #FFF8E2 | Titles, body, labels |
 | TextSecondary | #56634F | #B7AC9E | Metadata, unselected tab labels |
-| Danger | #C2362B | #FF7A6E | "Missed", "Unsend", error text and icons |
+| Danger | #C2362B | #FF7A6E | "Missed", "Unsend", error text and icons, the recording dot and the playback playhead |
 | OnAccent *new* | #1E2A1A | #1B1814 | Text and icons on Accent |
 | Outline *new* | #1E2A1A | #EDE3CC | All borders, the sticker shadow |
 | Highlight *new* | #377D33 | #8BD06E | "New to you" ring and badge fill |
@@ -173,6 +173,8 @@ A solid copy of the shape in `Outline`, offset 3 pt right and 3 pt down, with no
 | Sheets | The confirming action ("Send", "Add") |
 | Sounds | "+ Record" (the first tile); in the call tray, the "+ Record" cell |
 
+A creating tile or button under a scrim (a dialog or sheet is open) drops its sticker shadow, so the card's confirming action is the only sticker on screen.
+
 **Exception, floating video tiles:** the small and medium call tiles get a soft black shadow (small `radius 10, y 6, 35%`; medium `radius 20, y 12, 45%`). These are the only blurred shadows in the app, because the tiles really do float over moving video.
 
 ## 6. Components
@@ -200,7 +202,7 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 | Secondary | 52 tall | Surface / TextPrimary | 2.5 Outline | |
 | Small | 40 visible, 44 hit | Surface / TextPrimary | 2 Outline | Inline actions, e.g. "Send one back" |
 | Text | 44 hit | none / TextPrimary | none | Sheet "Cancel" |
-| Destructive | Small or Secondary size | Surface / Danger | Outline | Icon + word, e.g. "Unsend". Always confirm first |
+| Destructive | Small or Secondary size | Surface / Danger | Outline | Icon + word, e.g. "Unsend". Always confirm first. This includes throwing away fresh work: "Discard this note?" and "Discard this sound?" both confirm, with "Keep" / "Keep drawing" as the safe choice |
 
 - **Pressed:** the fill mixes 12% OnAccent (or 6% TextPrimary on Surface buttons) and the sticker offset goes to 0, over 0.1 s ease-out. No scale, no spring, no haptic (T3).
 - **Disabled:** 40% opacity, Outline kept, no sticker.
@@ -293,11 +295,16 @@ All touch targets are at least 44 × 44 pt. Where the visible shape is smaller, 
 - Playing: PlayTint fills from the left at the clip's pace, with a stop badge (TextPrimary circle, Surface square) top-right.
 - "+ Record" tile: Accent, OnAccent plus-in-circle and "Record", sticker shadow; always first.
 
+### Waveform track
+
+Background, 2 pt Outline, radius 16. Recording: 3 pt level bars fill a fixed 10 s width; unrecorded time is 4 pt dots. Playback: a 2.5 pt Danger playhead. Trim: Accent handles with an Outline frame; the cut parts are dimmed.
+
 ### Dialog card
 
 - A centred Surface card, 20 pt from the screen edges, radius 28 (radius.sheet), with a 2.5 pt Outline, 16 pt padding and 14 pt between rows. There's no sticker and no blurred shadow.
 - The scrim is black at 42% (light) or 60% (dark) and covers the tab bar.
 - It closes with a 44 pt ✕ Icon circle button or a tap on the scrim.
+- While it holds unsaved work (a recording, a name being typed), scrim taps do nothing. A confirm card can stack over another card with its own 30% scrim. Confirms (Delete, Discard) close with their safe button or a scrim tap and have no ✕.
 - It opens with a 0.2 s ease-out fade and a 0.96 → 1 scale, and closes with a 0.15 s fade. With Reduce Motion it's a fade only.
 - First use: the Notes note dialog.
 

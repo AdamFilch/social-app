@@ -41,7 +41,7 @@ struct ButtercupApp: App {
         let outbox = Outbox(client: session.client, container: container)
         outbox.onOnline = { Task { await session.refresh() } }
         _notes = State(initialValue: NotesStore(outbox: outbox))
-        _sounds = State(initialValue: SoundsStore(client: session.client))
+        _sounds = State(initialValue: SoundsStore(client: session.client, outbox: outbox))
     }
 
     var body: some Scene {

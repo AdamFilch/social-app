@@ -6,12 +6,28 @@ import SwiftData
 @Model
 public final class OutboxAction {
     public enum Kind: String, Codable {
-        case sendNote
+        case sendNote, uploadSound
     }
 
     public struct SendNote: Codable {
         public let noteId: UUID
         public let imagePath: String
+    }
+
+    public struct UploadSound: Codable {
+        public let soundId: UUID
+        public let senderId: UUID
+        public let filePath: String
+        public let title: String
+        public let durationMs: Int
+
+        public init(soundId: UUID, senderId: UUID, filePath: String, title: String, durationMs: Int) {
+            self.soundId = soundId
+            self.senderId = senderId
+            self.filePath = filePath
+            self.title = title
+            self.durationMs = durationMs
+        }
     }
 
     @Attribute(.unique) public var id: UUID
@@ -27,6 +43,24 @@ public final class OutboxAction {
         createdAt = .now
         attempts = 0
     }
+
+    public init(uploadSound: UploadSound) {
+        id = UUID()
+        kind = .uploadSound
+        payload = (try? JSONEncoder().encode(uploadSound)) ?? Data()
+        createdAt = .now
+        attempts = 0
+    }
+}
+
+private struct SoundRow: Encodable {
+    let id: String
+    let sender_id: String
+    let title: String
+    let audio_path: String
+    let duration_ms: Int
+    let trim_start_ms = 0
+    let trim_end_ms: Int
 }
 
 @MainActor
@@ -96,6 +130,17 @@ public final class Outbox {
             } catch let error as StorageError where error.statusCode == "409" || error.error == "Duplicate" || error.message.localizedCaseInsensitiveContains("already exists") {}
             do {
                 try await client.from("notes").insert(["id": note.noteId.uuidString, "sender_id": sender.uuidString, "image_path": path]).execute()
+            } catch let error as PostgrestError where error.code == "23505" {}
+        case .uploadSound:
+            let sound = try JSONDecoder().decode(OutboxAction.UploadSound.self, from: action.payload)
+            let id = sound.soundId.uuidString.lowercased()
+            let path = "\(sound.senderId.uuidString.lowercased())/\(id).m4a"
+            let data = try Data(contentsOf: Self.directory.appending(path: sound.filePath))
+            do {
+                try await client.storage.from("sounds").upload(path, data: data, options: FileOptions(contentType: "audio/mp4", upsert: false))
+            } catch let error as StorageError where error.statusCode == "409" || error.error == "Duplicate" || error.message.localizedCaseInsensitiveContains("already exists") {}
+            do {
+                try await client.from("sounds").insert(SoundRow(id: id, sender_id: sound.senderId.uuidString.lowercased(), title: sound.title, audio_path: path, duration_ms: sound.durationMs, trim_end_ms: sound.durationMs)).execute()
             } catch let error as PostgrestError where error.code == "23505" {}
         }
     }

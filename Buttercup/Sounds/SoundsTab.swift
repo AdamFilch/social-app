@@ -7,6 +7,7 @@ struct SoundsTab: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dynamicTypeSize) private var typeSize
     let soundsChanged: Int
+    @Binding var recordOpen: Bool
     @State private var sounds: [SoundRecord]?
     @State private var player = SoundPlayer()
     @State private var refresh = 0
@@ -19,7 +20,7 @@ struct SoundsTab: View {
                     .foregroundStyle(Color("TextPrimary"))
                     .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: typeSize.isAccessibilitySize ? 2 : 3), spacing: 12) {
-                    RecordTile {}
+                    RecordTile(sticker: !recordOpen) { recordOpen = true }
                     ForEach(sounds ?? []) { sound in
                         tile(sound)
                             .transition(.opacity)
@@ -48,8 +49,9 @@ struct SoundsTab: View {
         }
         .background(Color("Background"))
         .sensoryFeedback(.error, trigger: player.failures)
-        .onAppear { if sounds == nil { sounds = store.cached } }
+        .onAppear { if sounds == nil { sounds = store.all } }
         .task(id: refresh) { await load() }
+        .onChange(of: store.pending) { withAnimation(.easeOut(duration: 0.2)) { sounds = store.all } }
         .onChange(of: soundsChanged) { refresh += 1 }
         .onChange(of: scenePhase) { _, phase in if phase == .active { refresh += 1 } }
     }

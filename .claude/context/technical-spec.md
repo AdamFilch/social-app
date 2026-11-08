@@ -75,7 +75,7 @@ Minimal. Tab changes get only `.selection`, the lightest haptic. Ordinary button
 - **Session offline:** `SessionStore` saves `me`, `partner` and `pairedAt` to the App Group `UserDefaults` after each refresh and restores them when a launch can't reach the server, so a stored session opens the tabs offline. Only a missing or rejected session shows sign-in.
 - **While open:** Supabase Realtime subscriptions on `notes`, `items`, `checkins`, `calls` and `sounds` apply partner changes live.
 - **While closed:** notifications and WidgetKit pushes (sent by `push-partner`) wake the widgets.
-- **Outbox:** every write (send note, +1, set progress, check-in, finish item, favourite, unsend) is saved as an `OutboxAction` in SwiftData first, then sent. A flusher retries when `NWPathMonitor` reports a connection. Rows use ids made on the phone, so a retry never creates a duplicate. Calls need a connection and skip the outbox.
+- **Outbox:** every write (send note, +1, set progress, check-in, finish item, favourite, unsend, upload sound) is saved as an `OutboxAction` in SwiftData first, then sent. A flusher retries when `NWPathMonitor` reports a connection. Rows use ids made on the phone, so a retry never creates a duplicate. Calls need a connection and skip the outbox.
 - **Widgets** read the shared SwiftData store and the note thumbnails in the App Group; they never call the network.
 
 ## 2. Database
@@ -304,6 +304,8 @@ No delete RPC for sounds: the app deletes the row under RLS, then removes the fi
 
 ## 4b. Sounds (audio)
 
+- Recorded on the phone as mono AAC (`.m4a`, 44.1 kHz, about 64 kbps; 10 s ≈ 80 KB), at most 10 s. Outside a call, mic only. In a call, your mic mixed with the partner's remote LiveKit track.
+- Offline, the file waits in the App Group with its `uploadSound` outbox entry; then it's uploaded to the private bucket `sounds` at `{sender_id}/{id}.m4a` and the row is inserted.
 - Every sound file is cached in the App Group (`Sounds/{id}.m4a`) so playback starts at once; files are fetched when a row first arrives and removed when the row is deleted.
 - Audio session: outside calls, `.playback` while playing (plays with the silent switch on) and `.playAndRecord` while recording. In calls, LiveKit's session; a played sound goes to the partner through the call audio even while muted, and plays locally.
 - Storage rules: write to your own folder; read and delete your own or your partner's.
