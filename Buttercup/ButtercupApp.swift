@@ -9,6 +9,7 @@ struct ButtercupApp: App {
     @State private var calls: CallStore
     @State private var stickers: StickerLayer
     @State private var notes: NotesStore
+    @State private var sounds: SoundsStore
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("appearance") private var appearance = "system"
 
@@ -40,6 +41,7 @@ struct ButtercupApp: App {
         let outbox = Outbox(client: session.client, container: container)
         outbox.onOnline = { Task { await session.refresh() } }
         _notes = State(initialValue: NotesStore(outbox: outbox))
+        _sounds = State(initialValue: SoundsStore(client: session.client))
     }
 
     var body: some Scene {
@@ -67,6 +69,7 @@ struct ButtercupApp: App {
                 if phase == .idle { stickers.clear() }
             }
             .environment(notes)
+            .environment(sounds)
             .onOpenURL { url in Task { await session.openInvite(url) } }
             .onChange(of: scenePhase, initial: true) { _, phase in
                 if phase == .active {

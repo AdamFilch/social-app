@@ -75,14 +75,14 @@ offline ─► cached sounds play; uncached tile shows "Couldn't load. Try again
 
 ## Acceptance Criteria
 - [ ] AC1: The tab bar shows four equal tabs in the order Calling · Notes · Sounds · Hobbies.
-- [ ] AC2: As adam, Sounds shows "+ Record" and then the 6 seed sounds in `position` order, with 🔊 on the one without an emoji.
+- [x] AC2: As adam, Sounds shows "+ Record" and then the 6 seed sounds in `position` order, with 🔊 on the one without an emoji.
 - [ ] AC3: Tapping a sound plays only its trimmed range (check the trimmed seed sound), with the silent switch on too, and the tile fills at the clip's pace.
-- [ ] AC4: Tapping the playing tile stops it; tapping another switches.
-- [ ] AC5: Inserting, updating and deleting a partner sound with SQL shows on the grid within a few seconds. Deleting the playing sound stops it.
-- [ ] AC6: After the files are cached, stopping the local stack and relaunching still shows the grid and plays the sounds.
-- [ ] AC7: With no sounds (delete them with SQL) the empty copy shows; "+ Record" does nothing.
-- [ ] AC8: VoiceOver labels match §9 for tiles and "+ Record"; accessibility sizes give two columns.
-- [ ] AC9: Checked in light and dark against mockup states 1–2 and the tab bar, and the build check passes.
+- [x] AC4: Tapping the playing tile stops it; tapping another switches.
+- [x] AC5: Inserting, updating and deleting a partner sound with SQL shows on the grid within a few seconds. Deleting the playing sound stops it.
+- [x] AC6: After the files are cached, stopping the local stack and relaunching still shows the grid and plays the sounds.
+- [x] AC7: With no sounds (delete them with SQL) the empty copy shows; "+ Record" does nothing.
+- [x] AC8: VoiceOver labels match §9 for tiles and "+ Record"; accessibility sizes give two columns.
+- [x] AC9: Checked in light and dark against mockup states 1–2 and the tab bar, and the build check passes.
 
 ## Required Changes
 - **design.md:** paste spec §12 design items 1, 2 (the row only), 5, 6, 9 and 10.
@@ -97,4 +97,22 @@ offline ─► cached sounds play; uncached tile shows "Couldn't load. Try again
 | Four tabs crowd the bar at large text | Med | Labels clip | Follow the design.md tab-bar rule; labels use the Large Content Viewer |
 
 ---
-*Status: READY — ticket [22]*
+*Status: PARTIAL — PR #29*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ❌ not done | Order is Calling · Notes · Sounds · Hobbies, but the bar has five tabs: the Settings tab (added after this PRD, holds Sign out and appearance) is kept last |
+| AC2 | ✅ done | As adam: "+ Record", then Good morning, Boop, Ta-da (🔊), Love you, Dinner is ready, Night night, matching `position` -5…0 |
+| AC3 | ⚠️ unverified | Trim and fill verified: "Love you" (1.2 s of 2.3 s) fills at pace and stops after about 1.2 s. The silent switch can't be toggled on the simulator; the player uses `.playback` |
+| AC4 | ✅ done | Screenshot burst: Dinner playing, tap Good morning switches, tap again stops it well before its 1.66 s end |
+| AC5 | ✅ done | SQL insert (Miso's meow), update (Boop → "Boop boop", emoji) and delete each showed within about 5 s; deleting it while playing removed the tile and stopped it |
+| AC6 | ✅ done | `supabase stop`, relaunch: grid shown from `Sounds/list.json`, Dinner is ready played from the cached file |
+| AC7 | ✅ done | `delete from sounds`: "+ Record" plus "No sounds yet. Record one for Partner?" and the second line; tapping "+ Record" does nothing |
+| AC8 | ✅ done | AX tree: tiles labelled by title (emoji not read), value "Playing" while playing, "+ Record" reads "Record a sound"; two columns at accessibility-large |
+| AC9 | ✅ done | Checked in light and dark (grid, playing, empty) against spec §4.1–§4.4; build check passes |
+
+### Needs attention
+- Decide whether Settings stays a fifth tab or moves (for example into the Calling header); then AC1 can close.
+- Check the silent switch on a device: with the ringer off, tapping a sound still plays.
+

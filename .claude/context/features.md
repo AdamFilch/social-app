@@ -171,7 +171,7 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 
 ## 4. Sounds
 
-**Status:** Built (partial): the backend only (table, rules, trigger, `reorder_sounds`, bucket, realtime, seed). The Sounds tab, recording and editing ([22]–[27]) aren't built.
+**Status:** Built (partial): the backend and the Sounds tab with playback ([22]); the tab bar still has Settings as a fifth tab, and playing with the silent switch on is unchecked on a device. Recording, editing and in-call sounds ([23]–[27]) aren't built.
 
 **What it does:** Keeps one shared soundboard per pair. A sound is a short clip (up to 10 s) with a title and an optional emoji. Both partners can play, rename, re-emoji, trim, reorder and delete every sound in the pair's library.
 
@@ -181,6 +181,9 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 3. Reordering calls `reorder_sounds(ordered_ids)`, which locks the pair's rows, checks the ids are exactly the pair's sounds and rewrites `position` 1…n. Any other set raises `sounds_mismatch` and changes nothing; the last commit wins.
 4. Deleting removes the row under RLS, then the file with the Storage API (no delete RPC).
 5. Changes reach the partner over Realtime (`sounds` is in `supabase_realtime`); no push is sent.
+6. App ([22]): the Sounds tab sits between Notes and Hobbies (`speaker.wave.2`, `.fill` when selected). It shows "Sounds" (largeTitle heavy), then a 3-column grid (2 at accessibility sizes) of 108 pt tiles with 12 pt gaps: the Accent "+ Record" tile with the sticker shadow first (drawn, no action until [23]), then the pair's sounds by `position`. A sound tile is Surface with a 2.5 pt Outline, radius 20, the emoji (🔊 when null) and the title in 2 lines. With no sounds it shows "No sounds yet. Record one for {name}?" and "Up to 10 seconds. Sounds you save show up for you both."
+7. Tapping a tile plays `trim_start_ms`…`trim_end_ms` on this phone only through `AVAudioSession` `.playback`; a PlayTint fill grows from the left at the clip's pace with a stop badge, and fades out over 0.15 s at the end. Tapping the playing tile stops it; tapping another switches. A file not cached yet shows a small `ProgressView` in the badge spot (tap again cancels); if the download fails, `.error` plays and the title reads "Couldn't load. Try again" in Danger for 3 s.
+8. The tab opens on the last list saved in the App Group, then refetches on appear, on becoming active and on every `sounds` Realtime change (one `SoundsStore.changes()` subscription in `ContentView`, which retries joining every 5 s if the server was unreachable). Each fetch saves the list, downloads missing files to `Sounds/{id}.m4a` and removes files whose row is gone. If the playing sound is deleted, it stops. Offline, cached sounds still play.
 
 **Rules:**
 - RLS: select, update and delete when `sender_id = auth.uid() or is_paired_with(sender_id)`; insert only as yourself. A stranger sees and changes nothing.
@@ -188,11 +191,14 @@ What the app does today, one entry per feature. Status words: **Built**, **Built
 - Checks: title 1–30 characters after trimming; emoji null or 1–16 characters; `duration_ms` 1–10000; `trim_start_ms ≥ 0`; `trim_end_ms ≤ duration_ms`; `trim_end_ms − trim_start_ms ≥ 500`, or the full clip when it's under 0.5 s; `audio_path` must be `{sender_id}/{id}.m4a`.
 - Bucket `sounds`: upload to your own folder; read and delete your own or your partner's folder.
 - Trim is stored as `trim_start_ms` / `trim_end_ms`; the file is never rewritten.
+- App: no haptics on play or stop; VoiceOver reads the title (not the emoji), hint "Double-tap to play", value "Playing" and hint "Double-tap to stop" while playing; "+ Record" reads "Record a sound". The scroll position is kept across tab switches.
 - Seed data: sounds `c0000000-…-0001` to `-0006` from both people (`-0003` has no emoji, `-0004` is trimmed, `-0002` is under 0.5 s), with mono AAC files in `supabase/seed-sounds/` uploaded by `supabase/seed-sounds.sh` after `supabase db reset`.
 
-**Code:** `supabase/migrations/20261107121844_sounds.sql` (table, RLS, trigger, `reorder_sounds`, bucket policies, publication), `supabase/seed.sql` (seed rows), `supabase/seed-sounds/` + `supabase/seed-sounds.sh` (seed files), `supabase/tests/database/sounds.test.sql` (pgTAP). Spec: [design/specs/soundboard.md](../design/specs/soundboard.md), [prds/completed/21-sounds-backend.prd.md](../prds/completed/21-sounds-backend.prd.md).
+**Code:** `supabase/migrations/20261107121844_sounds.sql` (table, RLS, trigger, `reorder_sounds`, bucket policies, publication), `supabase/seed.sql` (seed rows), `supabase/seed-sounds/` + `supabase/seed-sounds.sh` (seed files), `supabase/tests/database/sounds.test.sql` (pgTAP), `ButtercupKit/Sources/ButtercupKit/SoundsStore.swift` (`SoundRecord`, `sounds()`, `file(for:)`, `changes()`, App Group cache), `Buttercup/Sounds/` (`SoundsTab`, `SoundTile` + `RecordTile`, `SoundPlayer`), `Buttercup/ContentView.swift` (Sounds tab, the `changes()` subscription), `Buttercup/ButtercupApp.swift` (injects `SoundsStore`), `Buttercup/Assets.xcassets/PlayTint.colorset`. Spec: [design/specs/soundboard.md](../design/specs/soundboard.md), [prds/completed/21-sounds-backend.prd.md](../prds/completed/21-sounds-backend.prd.md), [prds/partial/22-sounds-tab.prd.md](../prds/partial/22-sounds-tab.prd.md).
 
 **Known gaps:**
-- No app UI: the Sounds tab, playback, recording, editing and in-call sounds are tickets [22]–[27].
+- Recording, editing, reordering and in-call sounds are tickets [23]–[27]; "+ Record" does nothing yet.
+- [22] AC1: the tab bar has five tabs (Settings is kept last), not the four the spec asks for.
+- [22] AC3 unverified: playing with the silent switch on has only been checked in code (`.playback`), not on a device.
 - Orphan files (a row deleted but the file removal failed) aren't cleaned up.
 - Two inserts at the same moment can get the same `position`; the next `reorder_sounds` renumbers.
