@@ -62,15 +62,15 @@ background mid-record ─► clip discarded, card closed
 ---
 
 ## Acceptance Criteria
-- [ ] AC1: One tap on "+ Record" starts recording; the track fills over 10 s with live bars, and elapsed and time left update each second.
-- [ ] AC2: Stop, or 10 s, moves to naming above the keyboard. Save stays disabled for spaces only; the field stops at 30 characters.
-- [ ] AC3: Play re-listens with a playhead.
-- [ ] AC4: Discard and ✕ ask first; Keep returns; Discard stores nothing (no row, no file, no outbox action).
-- [ ] AC5: Scrim taps do nothing while recording or naming, and "+ Record" has no sticker shadow under the scrim.
-- [ ] AC6: Save shows the new tile right after "+ Record", and it appears on partner's grid. One row and one `.m4a` exist in `sounds`.
+- [x] AC1: One tap on "+ Record" starts recording; the track fills over 10 s with live bars, and elapsed and time left update each second.
+- [x] AC2: Stop, or 10 s, moves to naming above the keyboard. Save stays disabled for spaces only; the field stops at 30 characters.
+- [x] AC3: Play re-listens with a playhead.
+- [x] AC4: Discard and ✕ ask first; Keep returns; Discard stores nothing (no row, no file, no outbox action).
+- [x] AC5: Scrim taps do nothing while recording or naming, and "+ Record" has no sticker shadow under the scrim.
+- [x] AC6: Save shows the new tile right after "+ Record", and it appears on partner's grid. One row and one `.m4a` exist in `sounds`.
 - [ ] AC7: With the Mac's Wi-Fi off, Save still shows the tile; after Wi-Fi is back it uploads once. (Needs a person: mark not verified otherwise.)
-- [ ] AC8: Backgrounding while recording or naming discards the clip.
-- [ ] AC9: Mic denied shows the "Microphone is off" card.
+- [x] AC8: Backgrounding while recording or naming discards the clip.
+- [x] AC9: Mic denied shows the "Microphone is off" card.
 - [ ] AC10: Checked against mockup states 5, 6, 6b and 6c in light and dark, and the build check passes.
 
 ## Required Changes
@@ -86,4 +86,23 @@ background mid-record ─► clip discarded, card closed
 | Simulator mic input differs from a device | Med | Levels and quality untested | Check AC1–AC3 on a device once |
 
 ---
-*Status: READY — ticket [23]*
+*Status: PARTIAL — PR #30*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ✅ done | iPhone 17 simulator: one tap on "+ Record" started recording; bars added left to right, "0:01 / 9 s left", "0:02 / 8 s left" |
+| AC2 | ✅ done | Stop and the 10 s auto-stop both open naming; spaces only gave "3/30" with Save disabled; 39 typed characters stopped at 30/30 |
+| AC3 | ✅ done | Play showed the stop glyph and a red playhead moving across the track |
+| AC4 | ✅ done | Discard and ✕ open "Discard this sound?"; Keep (and a scrim tap) returned to naming; Discard closed the card, `Recordings/` empty, 6 rows, no new file |
+| AC5 | ✅ done | Taps on the scrim during recording and naming did nothing; "+ Record" shows no sticker shadow under the scrim |
+| AC6 | ✅ done | "Test meow" tile appeared right after "+ Record"; one `sounds` row (1818 ms, position -6) and one `.m4a` in storage. Partner visibility checked through the row (RLS), not on a second device |
+| AC7 | ⚠️ unverified | Needs a person with the Mac's Wi-Fi off. Online upload and the flusher are verified; the offline path is not |
+| AC8 | ✅ done | Home during recording, then relaunch: card closed, nothing stored |
+| AC9 | ✅ done | `simctl privacy revoke microphone`: "Microphone is off" card with Open Settings and ✕ |
+| AC10 | ⚠️ unverified | Light mode compared with states 5, 6, 6c and the build check passes. Dark mode, the soft keyboard (simulator used the hardware keyboard) and state 6b playing were not checked against the mockup in dark |
+
+### Needs attention
+- Turn Wi-Fi off, save a sound, check the tile shows, turn Wi-Fi on and check one upload (AC7).
+- Check dark mode against the mockup, and the card above the soft keyboard.
+- Check mic levels and quality on a device (the simulator uses the Mac's mic).

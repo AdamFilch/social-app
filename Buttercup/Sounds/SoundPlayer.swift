@@ -44,6 +44,12 @@ final class SoundPlayer {
         }
     }
 
+    func preview(_ url: URL, durationMs: Int) {
+        stop()
+        let sound = SoundRecord(id: UUID(), senderId: UUID(), title: "", audioPath: "", durationMs: durationMs)
+        start(sound, url: url)
+    }
+
     func stop() {
         task?.cancel()
         task = nil

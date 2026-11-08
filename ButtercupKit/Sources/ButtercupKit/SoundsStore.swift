@@ -1,6 +1,7 @@
 import Foundation
 import Observation
 import Supabase
+import SwiftData
 
 public struct SoundRecord: Codable, Sendable, Identifiable, Equatable {
     public let id: UUID
@@ -12,6 +13,18 @@ public struct SoundRecord: Codable, Sendable, Identifiable, Equatable {
     public let trimStartMs: Int
     public let trimEndMs: Int
     public let position: Int
+
+    public init(id: UUID, senderId: UUID, title: String, emoji: String? = nil, audioPath: String, durationMs: Int, trimStartMs: Int = 0, trimEndMs: Int? = nil, position: Int = 0) {
+        self.id = id
+        self.senderId = senderId
+        self.title = title
+        self.emoji = emoji
+        self.audioPath = audioPath
+        self.durationMs = durationMs
+        self.trimStartMs = trimStartMs
+        self.trimEndMs = trimEndMs ?? durationMs
+        self.position = position
+    }
 
     enum CodingKeys: String, CodingKey {
         case id, title, emoji, position
@@ -28,12 +41,54 @@ public final class SoundsStore {
     public static let directory = Outbox.directory.appending(path: "Sounds")
     private static let listURL = directory.appending(path: "list.json")
 
-    public private(set) var cached: [SoundRecord]?
-    private let client: SupabaseClient
+    public enum SaveError: Error { case signedOut }
 
-    public init(client: SupabaseClient) {
+    public private(set) var cached: [SoundRecord]?
+    public private(set) var pending: [SoundRecord] = []
+    private let client: SupabaseClient
+    private let outbox: Outbox
+
+    public var all: [SoundRecord]? {
+        guard cached != nil || !pending.isEmpty else { return nil }
+        let known = Set((cached ?? []).map(\.id))
+        return pending.filter { !known.contains($0.id) } + (cached ?? [])
+    }
+
+    public init(client: SupabaseClient, outbox: Outbox) {
         self.client = client
+        self.outbox = outbox
+        pending = ((try? outbox.context.fetch(FetchDescriptor<OutboxAction>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)]))) ?? [])
+            .filter { $0.kind == .uploadSound }
+            .compactMap { try? JSONDecoder().decode(OutboxAction.UploadSound.self, from: $0.payload) }
+            .map(Self.record)
         cached = (try? Data(contentsOf: Self.listURL)).flatMap { try? JSONDecoder().decode([SoundRecord].self, from: $0) }
+    }
+
+    private static func record(_ sound: OutboxAction.UploadSound) -> SoundRecord {
+        SoundRecord(
+            id: sound.soundId,
+            senderId: sound.senderId,
+            title: sound.title,
+            audioPath: "\(sound.senderId.uuidString.lowercased())/\(sound.soundId.uuidString.lowercased()).m4a",
+            durationMs: sound.durationMs
+        )
+    }
+
+    public func save(fileURL: URL, title: String, durationMs: Int) throws {
+        guard let sender = client.auth.currentUser?.id else { throw SaveError.signedOut }
+        let id = UUID()
+        let upload = OutboxAction.UploadSound(
+            soundId: id,
+            senderId: sender,
+            filePath: "Sounds/\(id.uuidString.lowercased()).m4a",
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            durationMs: min(max(durationMs, 1), 10000)
+        )
+        let record = Self.record(upload)
+        try FileManager.default.createDirectory(at: Self.directory, withIntermediateDirectories: true)
+        try FileManager.default.copyItem(at: fileURL, to: localURL(for: record))
+        pending.insert(record, at: 0)
+        outbox.enqueue(OutboxAction(uploadSound: upload))
     }
 
     public func sounds() async throws -> [SoundRecord] {
@@ -45,14 +100,16 @@ public final class SoundsStore {
         cached = rows
         try? FileManager.default.createDirectory(at: Self.directory, withIntermediateDirectories: true)
         try? JSONEncoder().encode(rows).write(to: Self.listURL, options: .atomic)
-        let keep = Set(rows.map { localURL(for: $0).lastPathComponent } + [Self.listURL.lastPathComponent])
+        let arrived = Set(rows.map(\.id))
+        pending.removeAll { arrived.contains($0.id) }
+        let keep = Set((rows + pending).map { localURL(for: $0).lastPathComponent } + [Self.listURL.lastPathComponent])
         for url in (try? FileManager.default.contentsOfDirectory(at: Self.directory, includingPropertiesForKeys: nil)) ?? [] where !keep.contains(url.lastPathComponent) {
             try? FileManager.default.removeItem(at: url)
         }
         Task {
             for row in rows { _ = try? await file(for: row) }
         }
-        return rows
+        return all ?? rows
     }
 
     public func localURL(for sound: SoundRecord) -> URL {
