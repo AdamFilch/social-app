@@ -52,11 +52,7 @@ struct SoundsTab: View {
             .padding(.bottom, 24)
         }
         .background(Color("Background"))
-        .onDrop(of: [.text], isTargeted: nil) { _ in
-            let wasDragging = dragging != nil
-            commit()
-            return wasDragging
-        }
+        .onDrop(of: [.text], delegate: TileDrop(target: nil, reorders: false, sounds: $sounds, dragging: dragging, commit: commit))
         .sheet(item: $editing) { EditSoundSheet(sound: $0) }
         .sensoryFeedback(.error, trigger: player.failures)
         .onAppear { if sounds == nil { sounds = store.all } }
@@ -95,7 +91,9 @@ struct SoundsTab: View {
         .onDrag {
             player.stop()
             dragging = sound.id
-            return NSItemProvider(object: sound.id.uuidString as NSString)
+            let provider = DragProvider(object: sound.id.uuidString as NSString)
+            provider.onEnd = endDrag
+            return provider
         } preview: {
             SoundTile(sound: sound, progress: nil) {}
                 .frame(width: 116, height: 108)
@@ -109,6 +107,12 @@ struct SoundsTab: View {
         store.reorder(ids)
     }
 
+    private func endDrag() {
+        guard dragging != nil else { return }
+        dragging = nil
+        if let rows = store.all { withAnimation(.easeOut(duration: 0.2)) { sounds = rows } }
+    }
+
     private func commit() {
         guard dragging != nil else { return }
         dragging = nil
@@ -118,7 +122,7 @@ struct SoundsTab: View {
 
     private func load() async {
         guard let rows = try? await store.sounds() else { return }
-        show(rows)
+        show(store.all ?? rows)
     }
 
     private func show(_ rows: [SoundRecord]) {
@@ -132,12 +136,13 @@ struct SoundsTab: View {
 
 private struct TileDrop: DropDelegate {
     let target: UUID?
+    var reorders = true
     @Binding var sounds: [SoundRecord]?
     let dragging: UUID?
     let commit: () -> Void
 
     func dropEntered(info: DropInfo) {
-        guard let dragging, var list = sounds, let from = list.firstIndex(where: { $0.id == dragging }) else { return }
+        guard reorders, let dragging, var list = sounds, let from = list.firstIndex(where: { $0.id == dragging }) else { return }
         let to = target.flatMap { id in list.firstIndex { $0.id == id } } ?? 0
         guard from != to else { return }
         list.move(fromOffsets: [from], toOffset: to > from ? to + 1 : to)
@@ -149,8 +154,18 @@ private struct TileDrop: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        let wasDragging = dragging != nil
         commit()
-        return true
+        return wasDragging
+    }
+}
+
+private final class DragProvider: NSItemProvider {
+    var onEnd: (@MainActor () -> Void)?
+
+    deinit {
+        let end = onEnd
+        Task { @MainActor in end?() }
     }
 }
 
