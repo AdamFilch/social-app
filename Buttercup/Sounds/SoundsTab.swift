@@ -12,6 +12,7 @@ struct SoundsTab: View {
     @State private var sounds: [SoundRecord]?
     @State private var editing: SoundRecord?
     @State private var dragging: UUID?
+    @State private var dragLive = false
     @State private var player = SoundPlayer()
     @State private var refresh = 0
 
@@ -24,7 +25,7 @@ struct SoundsTab: View {
                     .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: typeSize.isAccessibilitySize ? 2 : 3), spacing: 12) {
                     RecordTile(sticker: !recordOpen && deleting == nil) { recordOpen = true }
-                        .onDrop(of: [.text], delegate: TileDrop(target: nil, sounds: $sounds, dragging: dragging, commit: commit))
+                        .onDrop(of: [.text], delegate: TileDrop(target: nil, sounds: $sounds, dragging: dragging, begin: { dragLive = true }, commit: commit))
                     ForEach(sounds ?? []) { sound in
                         tile(sound)
                             .transition(.opacity)
@@ -52,7 +53,7 @@ struct SoundsTab: View {
             .padding(.bottom, 24)
         }
         .background(Color("Background"))
-        .onDrop(of: [.text], delegate: TileDrop(target: nil, reorders: false, sounds: $sounds, dragging: dragging, commit: commit))
+        .onDrop(of: [.text], delegate: TileDrop(target: nil, reorders: false, sounds: $sounds, dragging: dragging, begin: { dragLive = true }, commit: commit))
         .sheet(item: $editing) { EditSoundSheet(sound: $0) }
         .sensoryFeedback(.error, trigger: player.failures)
         .onAppear { if sounds == nil { sounds = store.all } }
@@ -64,32 +65,27 @@ struct SoundsTab: View {
 
     private func tile(_ sound: SoundRecord) -> some View {
         let playing = player.playingID == sound.id
-        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
         return TimelineView(.animation(paused: !playing)) { context in
             SoundTile(
                 sound: sound,
                 progress: playing ? player.progress(at: context.date) : nil,
                 loading: player.loadingID == sound.id,
-                failed: player.failedID == sound.id
+                failed: player.failedID == sound.id,
+                slot: dragLive && dragging == sound.id
             ) { player.tap(sound, store: store) }
         }
         .accessibilityAction(named: "Edit") { editing = sound }
         .accessibilityAction(named: "Delete") { deleting = sound }
         .accessibilityAction(named: "Move earlier") { move(sound, by: -1) }
         .accessibilityAction(named: "Move later") { move(sound, by: 1) }
-        .opacity(dragging == sound.id ? 0 : 1)
-        .overlay {
-            if dragging == sound.id {
-                shape.strokeBorder(Color("TextSecondary"), style: StrokeStyle(lineWidth: 2.5, dash: [8, 6]))
-            }
-        }
-        .contentShape(.contextMenuPreview, shape)
+        .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 20, style: .continuous))
         .contextMenu {
-            Button("Edit", systemImage: "pencil") { editing = sound }
-            Button("Delete", systemImage: "trash", role: .destructive) { deleting = sound }
+            Button("Edit", systemImage: "pencil") { dragging = nil; editing = sound }
+            Button("Delete", systemImage: "trash", role: .destructive) { dragging = nil; deleting = sound }
         }
         .onDrag {
             player.stop()
+            dragLive = false
             dragging = sound.id
             let provider = DragProvider(object: sound.id.uuidString as NSString)
             provider.onEnd = endDrag
@@ -98,7 +94,7 @@ struct SoundsTab: View {
             SoundTile(sound: sound, progress: nil) {}
                 .frame(width: 116, height: 108)
         }
-        .onDrop(of: [.text], delegate: TileDrop(target: sound.id, sounds: $sounds, dragging: dragging, commit: commit))
+        .onDrop(of: [.text], delegate: TileDrop(target: sound.id, sounds: $sounds, dragging: dragging, begin: { dragLive = true }, commit: commit))
     }
 
     private func move(_ sound: SoundRecord, by offset: Int) {
@@ -110,12 +106,16 @@ struct SoundsTab: View {
     private func endDrag() {
         guard dragging != nil else { return }
         dragging = nil
+        dragLive = false
         if let rows = store.all { withAnimation(.easeOut(duration: 0.2)) { sounds = rows } }
     }
 
     private func commit() {
         guard dragging != nil else { return }
+        let live = dragLive
         dragging = nil
+        dragLive = false
+        guard live else { return }
         guard let ids = sounds?.map(\.id) else { return }
         if ids != store.all?.map(\.id) { store.reorder(ids) }
     }
@@ -125,8 +125,14 @@ struct SoundsTab: View {
         show(store.all ?? rows)
     }
 
-    private func show(_ rows: [SoundRecord]) {
-        guard dragging == nil else { return }
+    private func show(_ incoming: [SoundRecord]) {
+        var rows = incoming
+        if dragLive, let local = sounds?.map(\.id) {
+            let rank = Dictionary(local.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+            rows = rows.filter { rank[$0.id] == nil } + rows.filter { rank[$0.id] != nil }.sorted { rank[$0.id]! < rank[$1.id]! }
+        } else {
+            dragging = nil
+        }
         if let id = player.playingID ?? player.loadingID, !rows.contains(where: { $0.id == id }) { player.stop() }
         if let editing, !rows.contains(where: { $0.id == editing.id }) { self.editing = nil }
         if let deleting, !rows.contains(where: { $0.id == deleting.id }) { self.deleting = nil }
@@ -139,9 +145,11 @@ private struct TileDrop: DropDelegate {
     var reorders = true
     @Binding var sounds: [SoundRecord]?
     let dragging: UUID?
+    let begin: () -> Void
     let commit: () -> Void
 
     func dropEntered(info: DropInfo) {
+        if dragging != nil { begin() }
         guard reorders, let dragging, var list = sounds, let from = list.firstIndex(where: { $0.id == dragging }) else { return }
         let to = target.flatMap { id in list.firstIndex { $0.id == id } } ?? 0
         guard from != to else { return }
@@ -150,7 +158,8 @@ private struct TileDrop: DropDelegate {
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
+        if dragging != nil { begin() }
+        return DropProposal(operation: .move)
     }
 
     func performDrop(info: DropInfo) -> Bool {
