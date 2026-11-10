@@ -52,7 +52,7 @@ public final class NotesStore {
         try imageData.write(to: url)
         outbox.context.insert(note)
         let result: NoteSendResult = outbox.isOnline ? .online : .offline
-        outbox.enqueue(OutboxAction(sendNote: .init(noteId: note.id, imagePath: note.imagePath)))
+        outbox.enqueue(OutboxAction(kind: .sendNote, payload: OutboxAction.SendNote(noteId: note.id, imagePath: note.imagePath)))
         return result
     }
 

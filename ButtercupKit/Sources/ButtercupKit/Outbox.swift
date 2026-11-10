@@ -6,7 +6,9 @@ import SwiftData
 @Model
 public final class OutboxAction {
     public enum Kind: String, Codable {
-        case sendNote, uploadSound
+        case sendNote, uploadSound, updateSound, deleteSound, reorderSounds
+
+        var isSound: Bool { self != .sendNote }
     }
 
     public struct SendNote: Codable {
@@ -30,24 +32,38 @@ public final class OutboxAction {
         }
     }
 
+    public struct UpdateSound: Codable {
+        public let soundId: UUID
+        public let title: String
+        public let emoji: String?
+        public let trimStartMs: Int
+        public let trimEndMs: Int
+    }
+
+    public struct DeleteSound: Codable {
+        public let soundId: UUID
+        public let audioPath: String
+    }
+
+    public struct ReorderSounds: Codable {
+        public let ids: [UUID]
+
+        public func apply(to current: [UUID]) -> [UUID] {
+            let rank = Dictionary(ids.enumerated().map { ($1, $0) }, uniquingKeysWith: { first, _ in first })
+            return current.filter { rank[$0] == nil } + current.filter { rank[$0] != nil }.sorted { rank[$0]! < rank[$1]! }
+        }
+    }
+
     @Attribute(.unique) public var id: UUID
     public var kind: Kind
     public var payload: Data
     public var createdAt: Date
     public var attempts: Int
 
-    public init(sendNote: SendNote) {
+    public init(kind: Kind, payload: some Encodable) {
         id = UUID()
-        kind = .sendNote
-        payload = (try? JSONEncoder().encode(sendNote)) ?? Data()
-        createdAt = .now
-        attempts = 0
-    }
-
-    public init(uploadSound: UploadSound) {
-        id = UUID()
-        kind = .uploadSound
-        payload = (try? JSONEncoder().encode(uploadSound)) ?? Data()
+        self.kind = kind
+        self.payload = (try? JSONEncoder().encode(payload)) ?? Data()
         createdAt = .now
         attempts = 0
     }
@@ -106,12 +122,16 @@ public final class Outbox {
         repeat {
             again = false
             let actions = (try? context.fetch(FetchDescriptor<OutboxAction>(sortBy: [SortDescriptor(\.createdAt)]))) ?? []
+            var soundsBlocked = false
             for action in actions {
+                if action.kind.isSound && soundsBlocked { continue }
                 action.attempts += 1
                 do {
                     try await perform(action)
                     context.delete(action)
-                } catch {}
+                } catch {
+                    if action.kind.isSound { soundsBlocked = true }
+                }
                 try? context.save()
             }
         } while again
@@ -142,6 +162,27 @@ public final class Outbox {
             do {
                 try await client.from("sounds").insert(SoundRow(id: id, sender_id: sound.senderId.uuidString.lowercased(), title: sound.title, audio_path: path, duration_ms: sound.durationMs, trim_end_ms: sound.durationMs)).execute()
             } catch let error as PostgrestError where error.code == "23505" {}
+        case .updateSound:
+            let edit = try JSONDecoder().decode(OutboxAction.UpdateSound.self, from: action.payload)
+            let values: [String: AnyJSON] = [
+                "title": .string(edit.title),
+                "emoji": edit.emoji.map(AnyJSON.string) ?? .null,
+                "trim_start_ms": .integer(edit.trimStartMs),
+                "trim_end_ms": .integer(edit.trimEndMs)
+            ]
+            do {
+                try await client.from("sounds").update(values).eq("id", value: edit.soundId.uuidString.lowercased()).execute()
+            } catch let error as PostgrestError where error.code == "23514" {}
+        case .deleteSound:
+            let sound = try JSONDecoder().decode(OutboxAction.DeleteSound.self, from: action.payload)
+            try await client.from("sounds").delete().eq("id", value: sound.soundId.uuidString.lowercased()).execute()
+            _ = try await client.storage.from("sounds").remove(paths: [sound.audioPath])
+        case .reorderSounds:
+            let reorder = try JSONDecoder().decode(OutboxAction.ReorderSounds.self, from: action.payload)
+            struct Row: Decodable { let id: UUID }
+            let current: [Row] = try await client.from("sounds").select("id").order("position").execute().value
+            let ids = reorder.apply(to: current.map(\.id)).map { $0.uuidString.lowercased() }
+            try await client.rpc("reorder_sounds", params: ["ordered_ids": ids]).execute()
         }
     }
 }

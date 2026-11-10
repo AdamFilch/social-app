@@ -52,9 +52,6 @@ struct RecordFlow: View {
         .onChange(of: calls.phase) { _, new in
             if new != .idle, phase == .recording || phase == .naming { close() }
         }
-        .onChange(of: title) { _, new in
-            if new.count > 30 { title = String(new.prefix(30)) }
-        }
     }
 
     @ViewBuilder private var card: some View {
@@ -129,24 +126,7 @@ struct RecordFlow: View {
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(Color("TextSecondary"))
                     .accessibilityHidden(true)
-                HStack(spacing: 8) {
-                    TextField("Name", text: $title, prompt: Text("Like Miso's meow").foregroundStyle(Color("TextSecondary")))
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Color("TextPrimary"))
-                        .submitLabel(.done)
-                        .focused($fieldFocused)
-                        .onSubmit { if canSave { save() } }
-                        .accessibilityLabel("Name")
-                        .accessibilityHint("Required")
-                    Text("\(title.count)/30")
-                        .font(.footnote.weight(.bold).monospacedDigit())
-                        .foregroundStyle(Color("TextSecondary"))
-                        .accessibilityHidden(true)
-                }
-                .padding(.horizontal, 18)
-                .frame(height: 48)
-                .background(Color("Background"), in: Capsule())
-                .overlay(Capsule().strokeBorder(Color("Outline"), lineWidth: 2))
+                NameField(title: $title, focused: $fieldFocused) { if canSave { save() } }
                 if saveFailed {
                     Text("Couldn't save. Try again")
                         .font(.subheadline.weight(.semibold))
@@ -294,5 +274,35 @@ struct RecordFlow: View {
         confirming = false
         phase = nil
         open = false
+    }
+}
+
+struct NameField: View {
+    @Binding var title: String
+    var focused: FocusState<Bool>.Binding
+    let onSubmit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            TextField("Name", text: $title, prompt: Text("Like Miso's meow").foregroundStyle(Color("TextSecondary")))
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color("TextPrimary"))
+                .submitLabel(.done)
+                .focused(focused)
+                .onSubmit(onSubmit)
+                .accessibilityLabel("Name")
+                .accessibilityHint("Required")
+            Text("\(title.count)/30")
+                .font(.footnote.weight(.bold).monospacedDigit())
+                .foregroundStyle(Color("TextSecondary"))
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, 18)
+        .frame(height: 48)
+        .background(Color("Background"), in: Capsule())
+        .overlay(Capsule().strokeBorder(Color("Outline"), lineWidth: 2))
+        .onChange(of: title) { _, new in
+            if new.count > 30 { title = String(new.prefix(30)) }
+        }
     }
 }

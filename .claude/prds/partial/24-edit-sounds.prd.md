@@ -77,7 +77,7 @@ partner reorders while you drag ─► your drop wins ─► server order shown
 - [ ] AC4: Cancel with changes asks "Discard changes?"; Save is disabled with no changes.
 - [ ] AC5: Delete asks first, then removes the row and the file. As adam, deleting a partner's sound works.
 - [ ] AC6: Long-press and drag reorders with a dashed slot, never before "+ Record". The partner's grid shows the new order without a reload. Move earlier / later work in VoiceOver.
-- [ ] AC7: Two `reorder_sounds` calls in a row from both users leave positions 1…n with no duplicates (SQL check).
+- [x] AC7: Two `reorder_sounds` calls in a row from both users leave positions 1…n with no duplicates (SQL check).
 - [ ] AC8: Offline (stack stopped), an edit, a delete and a reorder show at once and reach the server after `supabase start` and a foreground.
 - [ ] AC9: Checked against mockup states 3, 4, 7 and 8 in light and dark, and the build check passes.
 
@@ -94,4 +94,22 @@ partner reorders while you drag ─► your drop wins ─► server order shown
 | A file removal fails after the row is gone | Low | An orphan file in storage | Accepted; out of scope in [21] |
 
 ---
-*Status: READY — ticket [24]*
+*Status: PARTIAL — PR #31*
+
+## Implementation Status
+| AC | Status | Evidence / notes |
+|---|---|---|
+| AC1 | ⚠️ unverified | `.contextMenu` with Edit and Delete on sound tiles only, built; not driven in a simulator |
+| AC2 | ⚠️ unverified | Build passes; REST calls as adam confirmed the PATCH with `emoji: null` and new trim only changes the row (file untouched); the sheet was not driven |
+| AC3 | ⚠️ unverified | Play trimmed and tile playback use the edited record; not heard |
+| AC4 | ⚠️ unverified | Save disabled with no changes and Discard changes confirm are in the code; not driven |
+| AC5 | ⚠️ unverified | REST as adam: deleting partner's row and then the file through the Storage API both succeed and the file is gone; the confirm card was not driven |
+| AC6 | ⚠️ unverified | Dashed slot, "+ Record" drop target and VoiceOver Move actions are built; no drag, no partner grid, no device check |
+| AC7 | ✅ done | Two `reorder_sounds` calls (adam, then partner) left positions {1,2,3,4,5,6}, 6 distinct |
+| AC8 | ⚠️ unverified | Outbox kinds and local overlay are built; offline run not done |
+| AC9 | ⚠️ unverified | Build check passes; mockup states 3, 4, 7, 8 in light and dark not compared |
+
+### Needs attention
+- Step through the Sounds tab on a simulator or device as adam and partner: menu vs drag, edit sheet and emoji keyboard, delete, reorder, offline (AC1-AC6, AC8, AC9).
+- A drag dropped outside the scroll view is not detected as cancelled, so the dragged tile can stay hidden until the next drop.
+

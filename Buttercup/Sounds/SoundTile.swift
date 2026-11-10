@@ -6,6 +6,7 @@ struct SoundTile: View {
     let progress: Double?
     var loading = false
     var failed = false
+    var slot = false
     let action: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -36,7 +37,7 @@ struct SoundTile: View {
                     }
                 }
             }
-            .background(Color("Surface"))
+            .background(slot ? Color.clear : Color("Surface"))
             .overlay(alignment: .topTrailing) {
                 if progress != nil {
                     Circle()
@@ -53,7 +54,7 @@ struct SoundTile: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Color("Outline"), lineWidth: 2.5))
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Color(slot ? "TextSecondary" : "Outline"), style: StrokeStyle(lineWidth: 2.5, dash: slot ? [8, 6] : [])))
             .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             .animation(.easeOut(duration: 0.15), value: progress == nil)
         }

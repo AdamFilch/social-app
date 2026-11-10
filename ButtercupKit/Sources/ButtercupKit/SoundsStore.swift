@@ -26,6 +26,10 @@ public struct SoundRecord: Codable, Sendable, Identifiable, Equatable {
         self.position = position
     }
 
+    public func edited(title: String, emoji: String?, trimStartMs: Int, trimEndMs: Int) -> SoundRecord {
+        SoundRecord(id: id, senderId: senderId, title: title, emoji: emoji, audioPath: audioPath, durationMs: durationMs, trimStartMs: trimStartMs, trimEndMs: trimEndMs, position: position)
+    }
+
     enum CodingKeys: String, CodingKey {
         case id, title, emoji, position
         case senderId = "sender_id"
@@ -45,23 +49,63 @@ public final class SoundsStore {
 
     public private(set) var cached: [SoundRecord]?
     public private(set) var pending: [SoundRecord] = []
+    private var edits: [Edit] = []
     private let client: SupabaseClient
     private let outbox: Outbox
+
+    private enum Edit {
+        case update(OutboxAction.UpdateSound)
+        case delete(UUID)
+        case reorder(OutboxAction.ReorderSounds)
+    }
 
     public var all: [SoundRecord]? {
         guard cached != nil || !pending.isEmpty else { return nil }
         let known = Set((cached ?? []).map(\.id))
-        return pending.filter { !known.contains($0.id) } + (cached ?? [])
+        var list = pending.filter { !known.contains($0.id) } + (cached ?? [])
+        for edit in edits {
+            switch edit {
+            case .update(let change):
+                guard let i = list.firstIndex(where: { $0.id == change.soundId }) else { continue }
+                list[i] = list[i].edited(title: change.title, emoji: change.emoji, trimStartMs: change.trimStartMs, trimEndMs: change.trimEndMs)
+            case .delete(let id):
+                list.removeAll { $0.id == id }
+            case .reorder(let order):
+                let byID = Dictionary(list.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+                list = order.apply(to: list.map(\.id)).compactMap { byID[$0] }
+            }
+        }
+        return list
     }
 
     public init(client: SupabaseClient, outbox: Outbox) {
         self.client = client
         self.outbox = outbox
-        pending = ((try? outbox.context.fetch(FetchDescriptor<OutboxAction>(sortBy: [SortDescriptor(\.createdAt, order: .reverse)]))) ?? [])
-            .filter { $0.kind == .uploadSound }
-            .compactMap { try? JSONDecoder().decode(OutboxAction.UploadSound.self, from: $0.payload) }
-            .map(Self.record)
         cached = (try? Data(contentsOf: Self.listURL)).flatMap { try? JSONDecoder().decode([SoundRecord].self, from: $0) }
+        reloadQueue()
+    }
+
+    private func reloadQueue() {
+        let actions = ((try? outbox.context.fetch(FetchDescriptor<OutboxAction>(sortBy: [SortDescriptor(\.createdAt)]))) ?? [])
+            .filter(\.kind.isSound)
+        let decoder = JSONDecoder()
+        pending = actions.reversed()
+            .filter { $0.kind == .uploadSound }
+            .compactMap { try? decoder.decode(OutboxAction.UploadSound.self, from: $0.payload) }
+            .map(Self.record)
+        edits = actions.compactMap { action in
+            switch action.kind {
+            case .updateSound: (try? decoder.decode(OutboxAction.UpdateSound.self, from: action.payload)).map(Edit.update)
+            case .deleteSound: (try? decoder.decode(OutboxAction.DeleteSound.self, from: action.payload)).map { .delete($0.soundId) }
+            case .reorderSounds: (try? decoder.decode(OutboxAction.ReorderSounds.self, from: action.payload)).map(Edit.reorder)
+            default: nil
+            }
+        }
+    }
+
+    private func enqueue(_ kind: OutboxAction.Kind, _ payload: some Encodable) {
+        outbox.enqueue(OutboxAction(kind: kind, payload: payload))
+        reloadQueue()
     }
 
     private static func record(_ sound: OutboxAction.UploadSound) -> SoundRecord {
@@ -87,8 +131,25 @@ public final class SoundsStore {
         let record = Self.record(upload)
         try FileManager.default.createDirectory(at: Self.directory, withIntermediateDirectories: true)
         try FileManager.default.copyItem(at: fileURL, to: localURL(for: record))
-        pending.insert(record, at: 0)
-        outbox.enqueue(OutboxAction(uploadSound: upload))
+        enqueue(.uploadSound, upload)
+    }
+
+    public func update(_ sound: SoundRecord, title: String, emoji: String?, trimStartMs: Int, trimEndMs: Int) {
+        enqueue(.updateSound, OutboxAction.UpdateSound(
+            soundId: sound.id,
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+            emoji: emoji,
+            trimStartMs: trimStartMs,
+            trimEndMs: trimEndMs
+        ))
+    }
+
+    public func delete(_ sound: SoundRecord) {
+        enqueue(.deleteSound, OutboxAction.DeleteSound(soundId: sound.id, audioPath: sound.audioPath))
+    }
+
+    public func reorder(_ ids: [UUID]) {
+        enqueue(.reorderSounds, OutboxAction.ReorderSounds(ids: ids))
     }
 
     public func sounds() async throws -> [SoundRecord] {
@@ -100,8 +161,7 @@ public final class SoundsStore {
         cached = rows
         try? FileManager.default.createDirectory(at: Self.directory, withIntermediateDirectories: true)
         try? JSONEncoder().encode(rows).write(to: Self.listURL, options: .atomic)
-        let arrived = Set(rows.map(\.id))
-        pending.removeAll { arrived.contains($0.id) }
+        reloadQueue()
         let keep = Set((rows + pending).map { localURL(for: $0).lastPathComponent } + [Self.listURL.lastPathComponent])
         for url in (try? FileManager.default.contentsOfDirectory(at: Self.directory, includingPropertiesForKeys: nil)) ?? [] where !keep.contains(url.lastPathComponent) {
             try? FileManager.default.removeItem(at: url)
